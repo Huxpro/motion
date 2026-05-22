@@ -1,3 +1,4 @@
+import { isBrowser } from "../utils/is-browser"
 import { WindowResizeHandler } from "./types"
 
 const windowCallbacks = new Set<WindowResizeHandler>()
@@ -5,6 +6,8 @@ const windowCallbacks = new Set<WindowResizeHandler>()
 let windowResizeHandler: VoidFunction | undefined
 
 function createWindowResizeHandler() {
+    if (!isBrowser) return
+
     windowResizeHandler = () => {
         const info = {
             get width() {
@@ -33,7 +36,9 @@ export function resizeWindow(callback: WindowResizeHandler) {
             !windowCallbacks.size &&
             typeof windowResizeHandler === "function"
         ) {
-            window.removeEventListener("resize", windowResizeHandler)
+            if (isBrowser) {
+                window.removeEventListener("resize", windowResizeHandler)
+            }
             windowResizeHandler = undefined
         }
     }

@@ -1,6 +1,5 @@
+import { isBrowser } from "../../../utils/is-browser"
 import { hasReducedMotionListener, prefersReducedMotion } from "./state"
-
-const isBrowser = typeof window !== "undefined"
 
 export function initPrefersReducedMotion() {
     hasReducedMotionListener.current = true

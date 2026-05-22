@@ -1,3 +1,4 @@
+import { isBrowser } from "../utils/is-browser"
 import { ElementOrSelector } from "../utils/resolve-elements"
 import { isDragActive } from "./drag/state/is-active"
 import { EventOptions } from "./types"
@@ -66,14 +67,16 @@ export function hover(
 
         const onPointerUp = (event: Event) => {
             isPressed = false
-            window.removeEventListener(
-                "pointerup",
-                onPointerUp as EventListener
-            )
-            window.removeEventListener(
-                "pointercancel",
-                onPointerUp as EventListener
-            )
+            if (isBrowser) {
+                window.removeEventListener(
+                    "pointerup",
+                    onPointerUp as EventListener
+                )
+                window.removeEventListener(
+                    "pointercancel",
+                    onPointerUp as EventListener
+                )
+            }
 
             if (deferredHoverEnd) {
                 deferredHoverEnd = false
@@ -83,16 +86,18 @@ export function hover(
 
         const onPointerDown = () => {
             isPressed = true
-            window.addEventListener(
-                "pointerup",
-                onPointerUp as EventListener,
-                eventOptions
-            )
-            window.addEventListener(
-                "pointercancel",
-                onPointerUp as EventListener,
-                eventOptions
-            )
+            if (isBrowser) {
+                window.addEventListener(
+                    "pointerup",
+                    onPointerUp as EventListener,
+                    eventOptions
+                )
+                window.addEventListener(
+                    "pointercancel",
+                    onPointerUp as EventListener,
+                    eventOptions
+                )
+            }
         }
 
         const onPointerLeave = (leaveEvent: PointerEvent) => {

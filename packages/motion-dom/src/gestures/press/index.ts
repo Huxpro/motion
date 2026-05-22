@@ -1,3 +1,4 @@
+import { isBrowser } from "../../utils/is-browser"
 import { isHTMLElement } from "../../utils/is-html-element"
 import { ElementOrSelector } from "../../utils/resolve-elements"
 import { isDragActive } from "../drag/state/is-active"
@@ -69,8 +70,10 @@ export function press(
         const onPressEnd = onPressStart(target, startEvent)
 
         const onPointerEnd = (endEvent: PointerEvent, success: boolean) => {
-            window.removeEventListener("pointerup", onPointerUp)
-            window.removeEventListener("pointercancel", onPointerCancel)
+            if (isBrowser) {
+                window.removeEventListener("pointerup", onPointerUp)
+                window.removeEventListener("pointercancel", onPointerCancel)
+            }
 
             if (isPressing.has(target)) {
                 isPressing.delete(target)
@@ -99,8 +102,10 @@ export function press(
             onPointerEnd(cancelEvent, false)
         }
 
-        window.addEventListener("pointerup", onPointerUp, eventOptions)
-        window.addEventListener("pointercancel", onPointerCancel, eventOptions)
+        if (isBrowser) {
+            window.addEventListener("pointerup", onPointerUp, eventOptions)
+            window.addEventListener("pointercancel", onPointerCancel, eventOptions)
+        }
     }
 
     targets.forEach((target: EventTarget) => {

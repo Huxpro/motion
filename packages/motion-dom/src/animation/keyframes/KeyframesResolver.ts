@@ -63,7 +63,7 @@ function measureAllKeyframes() {
 
         // Write
         resolversToMeasure.forEach((resolver) => {
-            if (resolver.suspendedScrollY !== undefined) {
+            if (resolver.suspendedScrollY !== undefined && typeof window !== "undefined") {
                 window.scrollTo(0, resolver.suspendedScrollY)
             }
         })

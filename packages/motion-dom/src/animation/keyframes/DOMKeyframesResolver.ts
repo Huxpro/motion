@@ -1,4 +1,5 @@
 import { positionalKeys } from "../../render/utils/keys-position"
+import { isBrowser } from "../../utils/is-browser"
 import { MotionValue } from "../../value"
 import { findDimensionValueType } from "../../value/types/dimensions"
 import { AnyResolvedKeyframe } from "../types"
@@ -150,9 +151,11 @@ export class DOMKeyframesResolver<
 
         if (!element || !element.current) return
 
-        if (name === "height") {
+        if (name === "height" && isBrowser) {
             this.suspendedScrollY = window.pageYOffset
         }
+
+        if (!isBrowser) return
 
         this.measuredOrigin = positionalValues[name](
             element.measureViewportBox(),
@@ -173,7 +176,7 @@ export class DOMKeyframesResolver<
     measureEndState() {
         const { element, name, unresolvedKeyframes } = this
 
-        if (!element || !element.current) return
+        if (!element || !element.current || !isBrowser) return
 
         const value = element.getValue(name)
         value && value.jump(this.measuredOrigin, false)
