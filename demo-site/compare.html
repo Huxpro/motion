@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Side by side — framer-motion vs Lynx port</title>
+<style>
+  :root { color-scheme: dark; }
+  * { margin: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; background: #0b0b14; color: #e8e8f0; }
+  header { padding: 18px 24px; border-bottom: 1px solid #23232f; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  header h1 { font-size: 17px; font-weight: 700; }
+  header a { color: #8a8aa0; font-size: 14px; text-decoration: none; }
+  header a:hover { color: #cfcfe6; }
+  .bar { color: #7a7a90; font-size: 13px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; height: calc(100vh - 61px); }
+  @media (max-width: 720px){ .grid { grid-template-columns: 1fr; height: auto; } }
+  .pane { display: flex; flex-direction: column; border-right: 1px solid #23232f; min-height: 520px; }
+  .pane:last-child { border-right: none; }
+  .cap { display: flex; align-items: center; gap: 8px; padding: 12px 16px; font-size: 14px; font-weight: 600; border-bottom: 1px solid #23232f; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; }
+  .web .dot { background: #61dafb; } .lynx .dot { background: #ff5c00; }
+  .cap .tag { color: #6a6a80; font-weight: 400; font-size: 12px; margin-left: auto; }
+  iframe { border: 0; width: 100%; flex: 1; background: #0b0b14; }
+  .reload { cursor: pointer; color: #8a8aa0; font-size: 12px; text-decoration: underline; }
+</style>
+</head>
+<body>
+<header>
+  <h1>↔ framer-motion (web) vs motion-lynx (Lynx for Web)</h1>
+  <span class="bar">Same component props · <span class="reload" onclick="document.querySelectorAll('iframe').forEach(f=>f.src=f.src)">replay both</span></span>
+  <a href="./">← back to overview</a>
+</header>
+<div class="grid">
+  <div class="pane web">
+    <div class="cap"><span class="dot"></span>Original React — framer-motion <span class="tag">&lt;motion.div&gt;</span></div>
+    <iframe src="./web/" title="framer-motion web reference"></iframe>
+  </div>
+  <div class="pane lynx">
+    <div class="cap"><span class="dot"></span>ReactLynx port — motion-lynx <span class="tag">&lt;motion.view&gt; · Lynx for Web</span></div>
+    <iframe src="./lynx/" title="Lynx for Web port"></iframe>
+  </div>
+</div>
+</body>
+</html>
