@@ -37,23 +37,39 @@ Every animation prop is byte-for-byte the same:
 
 ## How the abstraction works (`src/motion`)
 
-- **`convert.ts`** — turns a Framer-Motion target + transition into Lynx
-  `animate()` arguments: composes `x/y/scale/rotate/…` shorthands into one
-  `transform` string (in motion-dom's `transformPropOrder`, with the same
-  default units — `px`/`deg`/unitless), expands **keyframe arrays**
-  (`y: [0, -34, 0]`) into per-index keyframes, maps `ease` names to timing
-  functions, and converts `duration`/`delay` (seconds) → ms, `repeat` →
-  `iterations` (`Infinity` → a large finite count that survives the UI/
-  background thread hop).
-- **`motion.tsx`** — `motion.view` / `motion.text` / `motion.image`. On mount
-  and whenever `animate` changes it calls
-  `lynx.getElementById(id).animate(keyframes, options)` (the official Lynx
-  imperative path). `initial` is painted as the first-frame inline style.
-  For gestures, `whileTap` is wired to `bindtouchstart`/`bindtouchend` for
-  touch **and** to `bindtap` for desktop mouse — because Lynx-for-web bridges
-  native `touchstart`/`click` but has no mouse-down → touch event, so a mouse
-  click only surfaces as `tap`; the tap handler mirrors the press as a short
-  pulse (and de-dupes the synthetic click that trails a real touch).
+- **`motion.tsx`** — `motion.view` / `motion.text` / `motion.image`, plus
+  `mtAnimate`, a small **main-thread animator**. On mount and whenever `animate`
+  changes, the component hops to the main thread (`runOnMainThread`) and calls
+  `mtAnimate(element, target, transition, from)` against a `main-thread:ref`.
+  `mtAnimate` composes `x/y/scale/rotate/…` into a `transform` string (motion-dom
+  order + units), supports **keyframe arrays** (`y: [0, -34, 0]`), `repeat` /
+  `repeatType` (`loop` / `reverse` / `mirror`), colour interpolation, and per-
+  element supersede — driven by `requestAnimationFrame`, using the same
+  cubic-bezier easing curves (framer-motion's control points) Motion uses.
+  `initial` is painted as the first-frame inline style. `whileTap` is wired to
+  `bindtouchstart`/`bindtouchend` for touch **and** `bindtap` for desktop mouse
+  (Lynx-for-web bridges native `touchstart`/`click` but has no mouse-down → touch
+  event, so a mouse click only surfaces as `tap`; the tap handler pulses the
+  press and de-dupes the synthetic click that trails a real touch).
+- **`convert.ts`** — resolves `initial` into the first-paint inline style
+  (transform composition + default units), so there's no flash before the
+  main-thread animation takes over.
+
+### Why not call `@lynx-js/motion` directly?
+
+`@lynx-js/motion` **is** the real Motion.dev engine ported to Lynx, and on
+**native** Lynx it's the right call. But it ships its `animate()` as
+`'main thread'` worklets inside `node_modules`, and the ReactLynx **web** build
+does not register node_modules (or any cross-module) `'main thread'` function
+into web-core's worklet runtime — so on **Lynx-for-Web** the reference compiles
+to a non-callable worklet descriptor and throws (`animate is not a function`;
+the native bundle compiles it correctly). This was traced end to end: web-core's
+main-thread element itself is fine (`setStyleProperty` renders), and a
+**first-party, same-file** `'main thread'` function runs perfectly. So the
+animator lives inline in `motion.tsx` and uses Motion's math directly, which
+runs on both web and native. Re-enabling `@lynx-js/motion`'s own `animate()`
+here is blocked on a web-core/plugin fix (registering cross-module main-thread
+worklets for the web target).
 
 ## Lynx for Web + verification
 

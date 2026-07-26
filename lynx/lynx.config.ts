@@ -19,18 +19,4 @@ export default defineConfig({
     web: {},
     lynx: {},
   },
-  source: {
-    // @lynx-js/motion carries `'main thread'` directives, but the ReactLynx
-    // main-thread transform skips node_modules by default — so Motion's
-    // main-thread code (including its globals shim) never lands in the
-    // main-thread layer, leaving `animate` undefined there. Force it through
-    // the transform so it is compiled for the main thread.
-    include: [/[\\/]node_modules[\\/]@lynx-js[\\/]motion[\\/]/],
-    define: {
-      // Belt-and-braces: motion-dom probes the browser-only
-      // `window.MotionHandoffAnimation` (SSR optimized-appear handoff); the Lynx
-      // main thread has no such global, so compile the probe out.
-      'window.MotionHandoffAnimation': 'undefined',
-    },
-  },
 })
