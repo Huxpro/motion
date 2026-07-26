@@ -40,14 +40,20 @@ Every animation prop is byte-for-byte the same:
 - **`convert.ts`** — turns a Framer-Motion target + transition into Lynx
   `animate()` arguments: composes `x/y/scale/rotate/…` shorthands into one
   `transform` string (in motion-dom's `transformPropOrder`, with the same
-  default units — `px`/`deg`/unitless), maps `ease` names to timing functions,
-  and converts `duration`/`delay` (seconds) → ms, `repeat` → `iterations`.
+  default units — `px`/`deg`/unitless), expands **keyframe arrays**
+  (`y: [0, -34, 0]`) into per-index keyframes, maps `ease` names to timing
+  functions, and converts `duration`/`delay` (seconds) → ms, `repeat` →
+  `iterations` (`Infinity` → a large finite count that survives the UI/
+  background thread hop).
 - **`motion.tsx`** — `motion.view` / `motion.text` / `motion.image`. On mount
   and whenever `animate` changes it calls
-  `lynx.getElementById(id).animate([from, to], options)` (the official Lynx
-  imperative path). `initial` is painted as the first-frame inline style;
-  `whileTap` / `whileHover` are wired through `bindtouchstart` /
-  `bindtouchend` and animate to/from the gesture target.
+  `lynx.getElementById(id).animate(keyframes, options)` (the official Lynx
+  imperative path). `initial` is painted as the first-frame inline style.
+  For gestures, `whileTap` is wired to `bindtouchstart`/`bindtouchend` for
+  touch **and** to `bindtap` for desktop mouse — because Lynx-for-web bridges
+  native `touchstart`/`click` but has no mouse-down → touch event, so a mouse
+  click only surfaces as `tap`; the tap handler mirrors the press as a short
+  pulse (and de-dupes the synthetic click that trails a real touch).
 
 ## Lynx for Web + verification
 
@@ -61,12 +67,11 @@ bash scripts/assemble-web-host.sh   # build + serve Lynx-for-web on :8137
 ```
 
 The web reference lives in `web-reference/` (standalone Vite + `framer-motion`).
-Both were loaded in headless Chromium at 480×720 and screenshotted at the same
-moments; the composites are in `evidence/`:
+Both were loaded in headless Chromium and screenshotted the same way; the
+composites are in `evidence/`:
 
-- `evidence/compare-settled.png` — entrance settled (`initial → animate`)
-- `evidence/compare-mid.png` — mid-entrance @ ~500ms (staggered `delay` + `easeOut`)
-- `evidence/compare-tap.png` — `whileTap` held (`scale` + `backgroundColor`)
+- `evidence/compare-gallery.png` — six live examples (whileTap · loop · keyframes · reverse · color keyframes · staggered entrance)
+- `evidence/compare-tap.png` — `whileTap` held under a desktop mouse press (`scale` + `backgroundColor`)
 
 In every pair the original-React render and the ReactLynx render are visually
 indistinguishable.
@@ -74,10 +79,12 @@ indistinguishable.
 ## Scope / notes
 
 - The abstraction implements the most load-bearing slice of the `motion/react`
-  surface — `initial`, `animate`, `transition` (tween easings, `delay`,
-  `repeat`), and the `whileTap` / `whileHover` gestures — enough to make the
-  parity examples render identically. Springs, layout/`AnimatePresence`, and
-  variants are natural next steps on the same imperative foundation.
+  surface — `initial`, `animate` (including keyframe arrays), `transition`
+  (tween easings, `delay`, `repeat`/`repeatType`), and the `whileTap` gesture —
+  enough to make the gallery render identically. Springs,
+  layout/`AnimatePresence`, and variants are natural next steps on the same
+  imperative foundation. `whileHover` is kept for API parity but is inert on
+  Lynx-for-web, which exposes no hover event.
 - `web-host/static` (vendored web-core client) and the built bundle are
   git-ignored; re-create them with `scripts/assemble-web-host.sh`.
 

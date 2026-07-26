@@ -2,111 +2,261 @@ import { motion } from "framer-motion"
 import { CSSProperties } from "react"
 
 /**
- * PARITY SCENE — Framer Motion web reference.
+ * DECLARATIVE API GALLERY — Framer Motion web reference.
  *
- * This is the original-React baseline that the ReactLynx port
- * (`lynx/src/App.tsx`) is verified against, side by side, in a headless
- * browser. The two files are intentionally kept equivalent: only the element
- * names (`div`/`span` vs `view`/`text`) and the `motion` import source differ.
- * The `initial` / `animate` / `transition` / `whileTap` props are identical.
+ * The original-React baseline the ReactLynx port (`lynx/src/App.tsx`) is
+ * verified against, side by side, in a headless browser. The two files are kept
+ * equivalent: only the element names (`div`/`span` vs `view`/`text`/
+ * `scroll-view`) and the `motion` import source differ. Every motion prop is
+ * identical.
  */
 
-const COLORS = ["#ff0088", "#ff8800", "#22cc88", "#3366ff"]
-
-const container: CSSProperties = {
+const page: CSSProperties = {
     display: "flex",
     flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "flex-start",
     width: "100vw",
     height: "100vh",
     backgroundColor: "#0b0b14",
-    paddingTop: "80px",
-    boxSizing: "border-box",
     margin: 0,
+    boxSizing: "border-box",
 }
-
-const title: CSSProperties = {
+const scroll: CSSProperties = { width: "100%", height: "100%", overflowY: "auto" }
+const inner: CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    paddingTop: "28px",
+    paddingBottom: "28px",
+    paddingLeft: "20px",
+    paddingRight: "20px",
+}
+const h1: CSSProperties = {
     color: "#ffffff",
-    fontSize: "28px",
+    fontSize: "24px",
     fontWeight: "bold",
-    marginBottom: "48px",
     fontFamily: "sans-serif",
 }
-
-const row: CSSProperties = {
+const sub: CSSProperties = {
+    color: "#8a8aa0",
+    fontSize: "14px",
+    fontFamily: "sans-serif",
+    marginTop: "4px",
+    marginBottom: "20px",
+}
+const card: CSSProperties = {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#14141f",
+    borderRadius: "16px",
+    paddingTop: "18px",
+    paddingBottom: "18px",
+    paddingLeft: "20px",
+    paddingRight: "20px",
+    marginBottom: "14px",
+    height: "104px",
+    flexShrink: 0,
+}
+const info: CSSProperties = { display: "flex", flexDirection: "column", flex: 1 }
+const cardTitle: CSSProperties = {
+    color: "#ffffff",
+    fontSize: "17px",
+    fontWeight: "bold",
+    fontFamily: "sans-serif",
+    marginBottom: "4px",
+}
+const code: CSSProperties = {
+    color: "#8ab4ff",
+    fontSize: "12px",
+    fontFamily: "monospace",
+}
+const demo: CSSProperties = {
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: "56px",
+    width: "148px",
+    height: "80px",
 }
-
-const box: CSSProperties = {
+const dot: CSSProperties = {
+    width: "56px",
+    height: "56px",
+    borderRadius: "14px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    width: "72px",
-    height: "72px",
-    marginLeft: "12px",
-    marginRight: "12px",
-    borderRadius: "16px",
 }
-
-const boxLabel: CSSProperties = {
+const glyph: CSSProperties = {
     color: "#ffffff",
-    fontSize: "30px",
-    fontWeight: "bold",
+    fontSize: "26px",
     fontFamily: "sans-serif",
 }
-
-const button: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "200px",
-    height: "60px",
-    borderRadius: "30px",
-    backgroundColor: "#ffffff",
+const small: CSSProperties = {
+    width: "26px",
+    height: "26px",
+    borderRadius: "7px",
+    marginLeft: "5px",
+    marginRight: "5px",
 }
-
-const buttonText: CSSProperties = {
-    color: "#0b0b14",
-    fontSize: "20px",
-    fontWeight: "bold",
-    fontFamily: "sans-serif",
-}
+const COLORS = ["#ff0088", "#ff8800", "#22cc88", "#3366ff"]
 
 export function App() {
     return (
-        <div style={container}>
-            <span style={title}>Motion × Lynx</span>
-            <div style={row}>
-                {COLORS.map((color, i) => (
-                    <motion.div
-                        key={i}
-                        style={{ ...box, backgroundColor: color }}
-                        initial={{ opacity: 0, y: 60, scale: 0.4 }}
-                        animate={{ opacity: 1, y: 0, scale: 1, rotate: i * 90 }}
-                        transition={{
-                            duration: 0.8,
-                            delay: i * 0.15,
-                            ease: "easeOut",
-                        }}
-                    >
-                        <span style={boxLabel}>{i + 1}</span>
-                    </motion.div>
-                ))}
+        <div style={page}>
+            <div style={scroll}>
+                <div style={inner}>
+                    <span style={h1}>motion-lynx</span>
+                    <span style={sub}>
+                        the declarative motion/react API, running on Lynx
+                    </span>
+
+                    {/* whileTap — interactive */}
+                    <div style={card}>
+                        <div style={info}>
+                            <span style={cardTitle}>whileTap — press me</span>
+                            <span style={code}>
+                                whileTap={"{{"} scale: 1.15, backgroundColor {"}}"}
+                            </span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                style={{
+                                    ...dot,
+                                    width: "112px",
+                                    backgroundColor: "#ffffff",
+                                }}
+                                whileTap={{
+                                    scale: 1.15,
+                                    backgroundColor: "#ffcc00",
+                                }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
+                            >
+                                <span style={{ ...glyph, color: "#0b0b14", fontSize: "18px", fontWeight: "bold" }}>
+                                    Press
+                                </span>
+                            </motion.div>
+                        </div>
+                    </div>
+
+                    {/* loop — continuous rotate */}
+                    <div style={card}>
+                        <div style={info}>
+                            <span style={cardTitle}>Loop — spin forever</span>
+                            <span style={code}>
+                                animate={"{{"} rotate: 360 {"}}"} · repeat: Infinity
+                            </span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                style={{ ...dot, backgroundColor: "#3366ff" }}
+                                animate={{ rotate: 360 }}
+                                transition={{
+                                    repeat: Infinity,
+                                    ease: "linear",
+                                    duration: 2,
+                                }}
+                            >
+                                <span style={glyph}>↻</span>
+                            </motion.div>
+                        </div>
+                    </div>
+
+                    {/* keyframes — bounce */}
+                    <div style={card}>
+                        <div style={info}>
+                            <span style={cardTitle}>Keyframes — bounce</span>
+                            <span style={code}>animate={"{{"} y: [0, -34, 0] {"}}"}</span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                style={{ ...dot, backgroundColor: "#22cc88" }}
+                                animate={{ y: [0, -34, 0] }}
+                                transition={{
+                                    repeat: Infinity,
+                                    ease: "easeInOut",
+                                    duration: 1,
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* reverse — breathing scale */}
+                    <div style={card}>
+                        <div style={info}>
+                            <span style={cardTitle}>Reverse — breathe</span>
+                            <span style={code}>
+                                scale: 1.35 · repeatType: "reverse"
+                            </span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                style={{ ...dot, backgroundColor: "#ff0088", borderRadius: "28px" }}
+                                animate={{ scale: 1.35 }}
+                                transition={{
+                                    repeat: Infinity,
+                                    repeatType: "reverse",
+                                    ease: "easeInOut",
+                                    duration: 0.7,
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* color keyframes */}
+                    <div style={card}>
+                        <div style={info}>
+                            <span style={cardTitle}>Color keyframes</span>
+                            <span style={code}>
+                                backgroundColor: ["#ff0088", …]
+                            </span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                style={{ ...dot, width: "112px" }}
+                                animate={{
+                                    backgroundColor: [
+                                        "#ff0088",
+                                        "#ff8800",
+                                        "#22cc88",
+                                        "#3366ff",
+                                        "#ff0088",
+                                    ],
+                                }}
+                                transition={{
+                                    repeat: Infinity,
+                                    ease: "linear",
+                                    duration: 4,
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* entrance — staggered */}
+                    <div style={card}>
+                        <div style={info}>
+                            <span style={cardTitle}>Entrance — stagger</span>
+                            <span style={code}>
+                                initial → animate · delay: i * 0.12
+                            </span>
+                        </div>
+                        <div style={demo}>
+                            {COLORS.map((c, i) => (
+                                <motion.div
+                                    key={i}
+                                    style={{ ...small, backgroundColor: c }}
+                                    initial={{ opacity: 0, y: 20, scale: 0.3 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    transition={{
+                                        duration: 0.6,
+                                        delay: i * 0.12,
+                                        ease: "backOut",
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                </div>
             </div>
-            <motion.div
-                style={button}
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                whileTap={{ scale: 1.15, backgroundColor: "#ffcc00" }}
-            >
-                <span style={buttonText}>Press me</span>
-            </motion.div>
         </div>
     )
 }

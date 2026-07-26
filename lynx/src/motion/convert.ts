@@ -8,7 +8,11 @@
  * while emitting valid Lynx CSS keyframes under the hood.
  */
 
-export type Target = Record<string, string | number>
+export type Value = string | number
+/** A target value may be a single value or a keyframe array (`y: [0, -50, 0]`). */
+export type Target = Record<string, Value | Value[]>
+/** A fully-resolved target with no keyframe arrays. */
+export type ScalarTarget = Record<string, Value>
 
 export interface Transition {
     duration?: number // seconds, like Framer Motion
@@ -93,7 +97,7 @@ const PX_PROPS = new Set([
 
 const isTransform = (key: string) => key in TRANSFORM_UNIT
 
-function withUnit(key: string, value: string | number): string {
+function withUnit(key: string, value: Value): string {
     if (typeof value === "string") return value
     if (key in TRANSFORM_UNIT) return `${value}${TRANSFORM_UNIT[key]}`
     if (PX_PROPS.has(key)) return `${value}px`
@@ -105,7 +109,7 @@ function withUnit(key: string, value: string | number): string {
  * are composed into one `transform` string (in motion-dom order), everything
  * else is passed through as kebab-cased CSS with sensible default units.
  */
-export function targetToKeyframe(target: Target): Record<string, string> {
+export function targetToKeyframe(target: ScalarTarget): Record<string, string> {
     const frame: Record<string, string> = {}
     let transform = ""
 
@@ -126,12 +130,54 @@ export function targetToKeyframe(target: Target): Record<string, string> {
     return frame
 }
 
-/** Build a [from, to] keyframe pair Lynx can tween between. */
+const scalarAt = (v: Value | Value[], i: number): Value =>
+    Array.isArray(v) ? v[Math.min(i, v.length - 1)] : v
+
+/** First value of every key (array → element 0), for the initial paint. */
+export function firstFrame(target: Target): ScalarTarget {
+    const out: ScalarTarget = {}
+    for (const key in target) out[key] = scalarAt(target[key], 0)
+    return out
+}
+
+/** Last value of every key (array → last element) — the resting state after. */
+export function lastFrame(target: Target): ScalarTarget {
+    const out: ScalarTarget = {}
+    for (const key in target)
+        out[key] = scalarAt(
+            target[key],
+            Array.isArray(target[key]) ? (target[key] as Value[]).length - 1 : 0
+        )
+    return out
+}
+
+/**
+ * Build the Lynx keyframe list for an animation from `from` to `to`.
+ * - No arrays → a simple `[from, to]` tween.
+ * - Any array present (`y: [0, -50, 0]`) → one keyframe per array index, matching
+ *   Framer Motion, where the array itself is the full value sequence.
+ */
 export function buildKeyframes(
-    from: Target,
+    from: ScalarTarget,
     to: Target
 ): Array<Record<string, string>> {
-    return [targetToKeyframe(from), targetToKeyframe(to)]
+    let length = 0
+    for (const key in to) {
+        const v = to[key]
+        if (Array.isArray(v)) length = Math.max(length, v.length)
+    }
+
+    if (length < 2) {
+        return [targetToKeyframe(from), targetToKeyframe(firstFrame(to))]
+    }
+
+    const frames: Array<Record<string, string>> = []
+    for (let i = 0; i < length; i++) {
+        const frame: ScalarTarget = {}
+        for (const key in to) frame[key] = scalarAt(to[key], i)
+        frames.push(targetToKeyframe(frame))
+    }
+    return frames
 }
 
 const EASING_MAP: Record<string, string> = {
@@ -177,9 +223,12 @@ export function transitionToOptions(
     } = transition
 
     return {
+        // `repeat: Infinity` → a very large finite count. Lynx serialises the
+        // options across the UI/background thread boundary, where a literal
+        // Infinity would become null; 1e7 iterations is effectively endless.
+        iterations: repeat === Infinity ? 1e7 : repeat + 1,
         duration: duration * 1000,
         delay: delay * 1000,
-        iterations: repeat === Infinity ? Infinity : repeat + 1,
         easing: resolveEasing(ease),
         direction:
             repeatType === "reverse" || repeatType === "mirror"

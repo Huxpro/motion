@@ -19,8 +19,11 @@
 import { createElement, useEffect, useMemo, useRef } from "@lynx-js/react"
 import {
     buildKeyframes,
+    firstFrame,
+    lastFrame,
     targetToKeyframe,
     transitionToOptions,
+    type ScalarTarget,
     type Target,
     type Transition,
 } from "./convert.js"
@@ -50,7 +53,7 @@ declare const lynx: {
 let counter = 0
 
 /** Resolve a target into a camelCase inline-style object for first paint. */
-function targetToStyle(target: Target): Record<string, string> {
+function targetToStyle(target: ScalarTarget): Record<string, string> {
     const frame = targetToKeyframe(target)
     const style: Record<string, string> = {}
     for (const key in frame) {
@@ -76,9 +79,13 @@ function createMotionComponent(tag: string) {
 
         const id = useMemo(() => `motion-${tag}-${counter++}`, [])
 
-        // The current resting target the element settles on.
+        // The current resting target the element settles on (arrays resolved).
         const resting = animate ?? {}
-        const restingRef = useRef<Target>(initial ? initial : resting)
+        const restingRef = useRef<ScalarTarget>(
+            firstFrame(initial ? initial : resting)
+        )
+        // Suppresses the synthesized `tap` that follows a real touch sequence.
+        const touchedRef = useRef(false)
 
         const getEl = () =>
             typeof lynx !== "undefined" ? lynx.getElementById(id) : null
@@ -91,7 +98,7 @@ function createMotionComponent(tag: string) {
                 buildKeyframes(restingRef.current, animate),
                 transitionToOptions(transition)
             )
-            restingRef.current = animate
+            restingRef.current = lastFrame(animate)
         }, [JSON.stringify(animate)])
 
         // Identity baseline for a property, so a [from, to] pair can always
@@ -103,54 +110,67 @@ function createMotionComponent(tag: string) {
             return style?.[key] // e.g. resting backgroundColor / color
         }
 
-        // Gesture handlers (whileTap / whileHover) mirror Framer Motion.
-        const pressTo = (gesture?: Target) => () => {
-            if (!gesture) return
-            const el = getEl()
-            const base = restingRef.current
-            const from: Target = { ...base }
+        // The resting state extended with baseline values for any key the
+        // gesture touches, so [from, to] can always interpolate.
+        const complete = (gesture: Target): ScalarTarget => {
+            const base: ScalarTarget = { ...restingRef.current }
             for (const k in gesture) {
-                if (from[k] === undefined) {
+                if (base[k] === undefined) {
                     const b = baseline(k)
-                    if (b !== undefined) from[k] = b
+                    if (b !== undefined) base[k] = b
                 }
             }
-            el?.animate(
-                buildKeyframes(from, { ...from, ...gesture }),
+            return base
+        }
+        // Animate into the gesture target.
+        const press = (gesture: Target) => {
+            const base = complete(gesture)
+            getEl()?.animate(
+                buildKeyframes(base, { ...base, ...firstFrame(gesture) }),
                 transitionToOptions(transition)
             )
         }
-        const releaseFrom = (gesture?: Target) => () => {
-            if (!gesture) return
-            const el = getEl()
-            const base = restingRef.current
-            const to: Target = { ...base }
-            for (const k in gesture) {
-                if (to[k] === undefined) {
-                    const b = baseline(k)
-                    if (b !== undefined) to[k] = b
-                }
-            }
-            el?.animate(
-                buildKeyframes({ ...to, ...gesture }, to),
+        // Animate back out to the resting state.
+        const release = (gesture: Target) => {
+            const base = complete(gesture)
+            getEl()?.animate(
+                buildKeyframes({ ...base, ...firstFrame(gesture) }, base),
                 transitionToOptions(transition)
             )
         }
 
-        const handlers: Record<string, () => void> = {}
+        const handlers: Record<string, (e?: unknown) => void> = {}
         if (whileTap) {
-            handlers.bindtouchstart = pressTo(whileTap)
-            handlers.bindtouchend = releaseFrom(whileTap)
-            handlers.bindtouchcancel = releaseFrom(whileTap)
+            // Touch devices (and native Lynx): real press-and-hold.
+            handlers.bindtouchstart = () => {
+                touchedRef.current = true
+                press(whileTap)
+            }
+            handlers.bindtouchend = () => release(whileTap)
+            handlers.bindtouchcancel = () => release(whileTap)
+            // Desktop mouse: Lynx-for-web surfaces a click only as `tap` (there is
+            // no mouse-down → touch bridge), so mirror whileTap as a quick pulse.
+            handlers.bindtap = () => {
+                if (touchedRef.current) {
+                    touchedRef.current = false // this tap trails a handled touch
+                    return
+                }
+                press(whileTap)
+                setTimeout(() => release(whileTap), 160)
+            }
         }
         if (whileHover) {
-            handlers.bindmouseenter = pressTo(whileHover)
-            handlers.bindmouseleave = releaseFrom(whileHover)
+            // Note: Lynx-for-web has no hover bridge; effective on hover-capable
+            // targets only. Kept for API parity with motion/react.
+            handlers.bindmouseenter = () => press(whileHover)
+            handlers.bindmouseleave = () => release(whileHover)
         }
 
         // First paint reflects `initial` (or `animate` when initial===false).
         const firstTarget = initial === false ? animate : initial
-        const initialStyle = firstTarget ? targetToStyle(firstTarget) : {}
+        const initialStyle = firstTarget
+            ? targetToStyle(firstFrame(firstTarget))
+            : {}
 
         return createElement(
             tag,

@@ -20,7 +20,8 @@ const MIME = {
 
 http.createServer((req, res) => {
     const urlPath = decodeURIComponent(req.url.split("?")[0])
-    const rel = urlPath === "/" ? "/index.html" : urlPath
+    // Resolve directory indexes: "/" and any "/foo/" → ".../index.html".
+    const rel = urlPath.endsWith("/") ? urlPath + "index.html" : urlPath
     const filePath = path.join(path.resolve(root), rel)
     fs.readFile(filePath, (err, data) => {
         if (err) {

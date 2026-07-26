@@ -104,13 +104,11 @@
 
   <section>
     <h2>Verified side by side</h2>
-    <p class="sub">Both editions built, served, and screenshotted in headless Chromium at 480×720, at the same moments, with the same component props. Left = original React · right = ReactLynx port.</p>
-    <figure><img src="./evidence/compare-settled.png" alt="Entrance settled comparison" />
-      <figcaption>Entrance settled — initial → animate (opacity · y · scale · rotate)</figcaption></figure>
-    <figure><img src="./evidence/compare-mid.png" alt="Mid-entrance comparison" />
-      <figcaption>Mid-entrance @ ~500ms — staggered delay + easeOut in progress</figcaption></figure>
-    <figure><img src="./evidence/compare-tap.png" alt="whileTap comparison" />
-      <figcaption>whileTap held — scale 1.15 + backgroundColor #ffcc00</figcaption></figure>
+    <p class="sub">Both editions built, served, and screenshotted in headless Chromium, with the same component props. Left = original React · right = ReactLynx port. (The looping cards run on independent clocks, so their phase differs frame to frame — but the layout, easing, and behaviour match.)</p>
+    <figure><img src="./evidence/compare-gallery.png" alt="Declarative API gallery comparison" />
+      <figcaption>Six live examples — whileTap · loop · keyframes · reverse · color keyframes · staggered entrance</figcaption></figure>
+    <figure><img src="./evidence/compare-tap.png" alt="whileTap held comparison" />
+      <figcaption>whileTap held under a desktop mouse press — scale 1.15 + backgroundColor #ffcc00</figcaption></figure>
   </section>
 
   <footer>

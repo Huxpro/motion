@@ -3,108 +3,257 @@ import { motion } from "./motion/index.js"
 import "./App.css"
 
 /**
- * PARITY SCENE — ReactLynx edition.
+ * DECLARATIVE API GALLERY — ReactLynx edition.
  *
- * This file is intentionally kept equivalent to the Framer Motion web
- * reference at `dev/react/src/tests/lynx-parity.tsx`. The only differences
- * are the element names (`view`/`text` vs `div`/`span`) and the import
- * source of `motion`. The animation props are identical.
+ * Kept equivalent to the Framer Motion web reference at
+ * `lynx/web-reference/src/scene.tsx` (and `dev/react/src/tests/lynx-parity.tsx`).
+ * The only differences are element names (`view`/`text`/`scroll-view` vs
+ * `div`/`span`) and the `motion` import source. Every motion prop is identical.
  */
 
-const COLORS = ["#ff0088", "#ff8800", "#22cc88", "#3366ff"]
-
-const container: CSSProperties = {
+const page: CSSProperties = {
     display: "flex",
     flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "flex-start",
     width: "100%",
     height: "100%",
     backgroundColor: "#0b0b14",
-    paddingTop: "80px",
 }
-
-const title: CSSProperties = {
+const scroll: CSSProperties = { width: "100%", height: "100%" }
+const inner: CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    paddingTop: "28px",
+    paddingBottom: "28px",
+    paddingLeft: "20px",
+    paddingRight: "20px",
+}
+const h1: CSSProperties = {
     color: "#ffffff",
-    fontSize: "28px",
+    fontSize: "24px",
     fontWeight: "bold",
-    marginBottom: "48px",
     fontFamily: "sans-serif",
 }
-
-const row: CSSProperties = {
+const sub: CSSProperties = {
+    color: "#8a8aa0",
+    fontSize: "14px",
+    fontFamily: "sans-serif",
+    marginTop: "4px",
+    marginBottom: "20px",
+}
+const card: CSSProperties = {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#14141f",
+    borderRadius: "16px",
+    paddingTop: "18px",
+    paddingBottom: "18px",
+    paddingLeft: "20px",
+    paddingRight: "20px",
+    marginBottom: "14px",
+    height: "104px",
+}
+const info: CSSProperties = { display: "flex", flexDirection: "column", flex: 1 }
+const cardTitle: CSSProperties = {
+    color: "#ffffff",
+    fontSize: "17px",
+    fontWeight: "bold",
+    fontFamily: "sans-serif",
+    marginBottom: "4px",
+}
+const code: CSSProperties = {
+    color: "#8ab4ff",
+    fontSize: "12px",
+    fontFamily: "monospace",
+}
+const demo: CSSProperties = {
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: "56px",
+    width: "148px",
+    height: "80px",
 }
-
-const box: CSSProperties = {
+const dot: CSSProperties = {
+    width: "56px",
+    height: "56px",
+    borderRadius: "14px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    width: "72px",
-    height: "72px",
-    marginLeft: "12px",
-    marginRight: "12px",
-    borderRadius: "16px",
 }
-
-const boxLabel: CSSProperties = {
+const glyph: CSSProperties = {
     color: "#ffffff",
-    fontSize: "30px",
-    fontWeight: "bold",
+    fontSize: "26px",
     fontFamily: "sans-serif",
 }
-
-const button: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "200px",
-    height: "60px",
-    borderRadius: "30px",
-    backgroundColor: "#ffffff",
+const small: CSSProperties = {
+    width: "26px",
+    height: "26px",
+    borderRadius: "7px",
+    marginLeft: "5px",
+    marginRight: "5px",
 }
-
-const buttonText: CSSProperties = {
-    color: "#0b0b14",
-    fontSize: "20px",
-    fontWeight: "bold",
-    fontFamily: "sans-serif",
-}
+const COLORS = ["#ff0088", "#ff8800", "#22cc88", "#3366ff"]
 
 export function App() {
     return (
-        <view style={container}>
-            <text style={title}>Motion × Lynx</text>
-            <view style={row}>
-                {COLORS.map((color, i) => (
-                    <motion.view
-                        key={i}
-                        style={{ ...box, backgroundColor: color }}
-                        initial={{ opacity: 0, y: 60, scale: 0.4 }}
-                        animate={{ opacity: 1, y: 0, scale: 1, rotate: i * 90 }}
-                        transition={{
-                            duration: 0.8,
-                            delay: i * 0.15,
-                            ease: "easeOut",
-                        }}
-                    >
-                        <text style={boxLabel}>{i + 1}</text>
-                    </motion.view>
-                ))}
-            </view>
-            <motion.view
-                style={button}
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                whileTap={{ scale: 1.15, backgroundColor: "#ffcc00" }}
-            >
-                <text style={buttonText}>Press me</text>
-            </motion.view>
+        <view style={page}>
+            <scroll-view scroll-orientation="vertical" style={scroll}>
+                <view style={inner}>
+                    <text style={h1}>motion-lynx</text>
+                    <text style={sub}>
+                        the declarative motion/react API, running on Lynx
+                    </text>
+
+                    {/* whileTap — interactive */}
+                    <view style={card}>
+                        <view style={info}>
+                            <text style={cardTitle}>whileTap — press me</text>
+                            <text style={code}>
+                                whileTap={"{{"} scale: 1.15, backgroundColor {"}}"}
+                            </text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                style={{
+                                    ...dot,
+                                    width: "112px",
+                                    backgroundColor: "#ffffff",
+                                }}
+                                whileTap={{
+                                    scale: 1.15,
+                                    backgroundColor: "#ffcc00",
+                                }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
+                            >
+                                <text style={{ ...glyph, color: "#0b0b14", fontSize: "18px", fontWeight: "bold" }}>
+                                    Press
+                                </text>
+                            </motion.view>
+                        </view>
+                    </view>
+
+                    {/* loop — continuous rotate */}
+                    <view style={card}>
+                        <view style={info}>
+                            <text style={cardTitle}>Loop — spin forever</text>
+                            <text style={code}>
+                                animate={"{{"} rotate: 360 {"}}"} · repeat: Infinity
+                            </text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                style={{ ...dot, backgroundColor: "#3366ff" }}
+                                animate={{ rotate: 360 }}
+                                transition={{
+                                    repeat: Infinity,
+                                    ease: "linear",
+                                    duration: 2,
+                                }}
+                            >
+                                <text style={glyph}>↻</text>
+                            </motion.view>
+                        </view>
+                    </view>
+
+                    {/* keyframes — bounce */}
+                    <view style={card}>
+                        <view style={info}>
+                            <text style={cardTitle}>Keyframes — bounce</text>
+                            <text style={code}>animate={"{{"} y: [0, -34, 0] {"}}"}</text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                style={{ ...dot, backgroundColor: "#22cc88" }}
+                                animate={{ y: [0, -34, 0] }}
+                                transition={{
+                                    repeat: Infinity,
+                                    ease: "easeInOut",
+                                    duration: 1,
+                                }}
+                            />
+                        </view>
+                    </view>
+
+                    {/* reverse — breathing scale */}
+                    <view style={card}>
+                        <view style={info}>
+                            <text style={cardTitle}>Reverse — breathe</text>
+                            <text style={code}>
+                                scale: 1.35 · repeatType: "reverse"
+                            </text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                style={{ ...dot, backgroundColor: "#ff0088", borderRadius: "28px" }}
+                                animate={{ scale: 1.35 }}
+                                transition={{
+                                    repeat: Infinity,
+                                    repeatType: "reverse",
+                                    ease: "easeInOut",
+                                    duration: 0.7,
+                                }}
+                            />
+                        </view>
+                    </view>
+
+                    {/* color keyframes */}
+                    <view style={card}>
+                        <view style={info}>
+                            <text style={cardTitle}>Color keyframes</text>
+                            <text style={code}>
+                                backgroundColor: ["#ff0088", …]
+                            </text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                style={{ ...dot, width: "112px" }}
+                                animate={{
+                                    backgroundColor: [
+                                        "#ff0088",
+                                        "#ff8800",
+                                        "#22cc88",
+                                        "#3366ff",
+                                        "#ff0088",
+                                    ],
+                                }}
+                                transition={{
+                                    repeat: Infinity,
+                                    ease: "linear",
+                                    duration: 4,
+                                }}
+                            />
+                        </view>
+                    </view>
+
+                    {/* entrance — staggered */}
+                    <view style={card}>
+                        <view style={info}>
+                            <text style={cardTitle}>Entrance — stagger</text>
+                            <text style={code}>
+                                initial → animate · delay: i * 0.12
+                            </text>
+                        </view>
+                        <view style={demo}>
+                            {COLORS.map((c, i) => (
+                                <motion.view
+                                    key={i}
+                                    style={{ ...small, backgroundColor: c }}
+                                    initial={{ opacity: 0, y: 20, scale: 0.3 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    transition={{
+                                        duration: 0.6,
+                                        delay: i * 0.12,
+                                        ease: "backOut",
+                                    }}
+                                />
+                            ))}
+                        </view>
+                    </view>
+                </view>
+            </scroll-view>
         </view>
     )
 }
