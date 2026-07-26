@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "builds": [{ "src": "motion-lynx-demo/**", "use": "@vercel/static" }],
+  "routes": [
+    { "src": "/", "dest": "/motion-lynx-demo/index.html" },
+    { "src": "/(.*)", "dest": "/motion-lynx-demo/$1" }
+  ]
+}
