@@ -1,32 +1,30 @@
 /**
- * `motion-lynx` — a Framer-Motion-shaped declarative animation layer for
- * ReactLynx, built on top of Lynx's imperative `element.animate()` engine
- * (the adapted Motion.dev imperative API).
- *
- *   import { motion } from "./motion"
+ * `motion-lynx` — a Framer-Motion-shaped declarative layer for ReactLynx, built
+ * directly on **`@lynx-js/motion`** (Motion.dev's imperative engine, ported to
+ * Lynx). The declarative props are handed straight to Motion's `animate()`, so
+ * springs, `repeat`/`repeatType`, keyframe arrays, easings and colour
+ * interpolation are Motion's own — identical to `motion/react`.
  *
  *   <motion.view
  *       initial={{ opacity: 0, scale: 0.5 }}
  *       animate={{ opacity: 1, scale: 1 }}
- *       transition={{ duration: 0.6, ease: "easeOut" }}
+ *       transition={{ type: "spring", stiffness: 200 }}
  *       whileTap={{ scale: 0.9 }}
  *   />
  *
- * The props above are intentionally identical to `motion/react`; only the
- * element name differs (`view`/`text`/`image` instead of `div`/`span`/`img`),
- * because that is the Lynx element set.
+ * Motion runs on the main thread, so each element is reached through a
+ * `main-thread:ref`, and `animate()` is invoked inside a `runOnMainThread`
+ * worklet (the pattern from @lynx-js/motion's own docs).
  */
-import { createElement, useEffect, useMemo, useRef } from "@lynx-js/react"
 import {
-    buildKeyframes,
-    firstFrame,
-    lastFrame,
-    targetToKeyframe,
-    transitionToOptions,
-    type ScalarTarget,
-    type Target,
-    type Transition,
-} from "./convert.js"
+    runOnMainThread,
+    useEffect,
+    useMainThreadRef,
+    useRef,
+} from "@lynx-js/react"
+import { animate } from "@lynx-js/motion" with { runtime: "shared" }
+import type { MainThread } from "@lynx-js/types"
+import { targetToStyle, type Target, type Transition } from "./convert.js"
 
 export interface MotionProps {
     initial?: Target | false
@@ -41,154 +39,110 @@ export interface MotionProps {
     [key: string]: unknown
 }
 
-declare const lynx: {
-    getElementById(id: string): {
-        animate(
-            keyframes: Array<Record<string, string>>,
-            options: object
-        ): unknown
-    } | null
+/** Shared logic: resolves the main-thread ref, initial style, and handlers. */
+function useMotion(props: MotionProps) {
+    const {
+        initial,
+        animate: target,
+        transition,
+        whileTap,
+        style,
+        children,
+        ...rest
+    } = props
+
+    const elRef = useMainThreadRef<MainThread.Element>(null)
+    const touchedRef = useRef(false)
+
+    // Hop to the main thread and let Motion drive the element. The worklet
+    // boundary JSON-serializes captured values, which turns `Infinity` into
+    // `null`; encode `repeat: Infinity` as a sentinel and rebuild it on the
+    // main thread so looping/`repeatType` reach Motion intact.
+    const play = (to?: Target, t?: Transition) => {
+        if (!to) return
+        const opts: Transition = { ...(t ?? {}) }
+        const repeatForever = opts.repeat === Infinity
+        if (repeatForever) delete opts.repeat
+        runOnMainThread(() => {
+            "main thread"
+            const el = elRef.current
+            if (!el) return
+            const resolved = { ...opts }
+            if (repeatForever) resolved.repeat = Infinity
+            animate(el, to as never, resolved as never)
+        })()
+    }
+
+    // Enter + `animate` prop changes.
+    useEffect(() => {
+        play(target, transition)
+    }, [JSON.stringify(target), JSON.stringify(transition)])
+
+    // Gestures — whileTap mirrors motion/react.
+    const handlers: Record<string, () => void> = {}
+    if (whileTap) {
+        const press = () => play(whileTap, transition)
+        const release = () => play(target, transition)
+        // Touch devices (and native Lynx): true press-and-hold.
+        handlers.bindtouchstart = () => {
+            touchedRef.current = true
+            press()
+        }
+        handlers.bindtouchend = release
+        handlers.bindtouchcancel = release
+        // Desktop mouse: Lynx-for-web surfaces a click only as `tap` (no
+        // mouse-down → touch bridge), so mirror whileTap as a quick pulse.
+        handlers.bindtap = () => {
+            if (touchedRef.current) {
+                touchedRef.current = false
+                return
+            }
+            press()
+            setTimeout(release, 160)
+        }
+    }
+
+    // First paint reflects `initial` (or `animate` when initial===false),
+    // before Motion takes over on the main thread.
+    const firstTarget = initial === false ? target : initial
+    const initialStyle = firstTarget ? targetToStyle(firstTarget) : {}
+
+    return {
+        elRef,
+        style: { ...initialStyle, ...style },
+        handlers,
+        rest,
+        children,
+    }
 }
 
-let counter = 0
-
-/** Resolve a target into a camelCase inline-style object for first paint. */
-function targetToStyle(target: ScalarTarget): Record<string, string> {
-    const frame = targetToKeyframe(target)
-    const style: Record<string, string> = {}
-    for (const key in frame) {
-        // keyframe keys are kebab-cased CSS; `transform`/`opacity` stay as-is.
-        const camel = key.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
-        style[camel] = frame[key]
-    }
-    return style
+const MotionView = (props: MotionProps) => {
+    const m = useMotion(props)
+    return (
+        <view main-thread:ref={m.elRef} style={m.style} {...m.handlers} {...m.rest}>
+            {m.children}
+        </view>
+    )
 }
-
-function createMotionComponent(tag: string) {
-    return function MotionComponent(props: MotionProps) {
-        const {
-            initial,
-            animate,
-            transition,
-            whileTap,
-            whileHover,
-            style,
-            children,
-            ...rest
-        } = props
-
-        const id = useMemo(() => `motion-${tag}-${counter++}`, [])
-
-        // The current resting target the element settles on (arrays resolved).
-        const resting = animate ?? {}
-        const restingRef = useRef<ScalarTarget>(
-            firstFrame(initial ? initial : resting)
-        )
-        // Suppresses the synthesized `tap` that follows a real touch sequence.
-        const touchedRef = useRef(false)
-
-        const getEl = () =>
-            typeof lynx !== "undefined" ? lynx.getElementById(id) : null
-
-        // Enter + `animate` prop changes.
-        useEffect(() => {
-            if (!animate) return
-            const el = getEl()
-            el?.animate(
-                buildKeyframes(restingRef.current, animate),
-                transitionToOptions(transition)
-            )
-            restingRef.current = lastFrame(animate)
-        }, [JSON.stringify(animate)])
-
-        // Identity baseline for a property, so a [from, to] pair can always
-        // interpolate even when the resting target didn't list that key.
-        const baseline = (key: string): string | number | undefined => {
-            if (/^scale/.test(key)) return 1
-            if (/^(x|y|z|translate|rotate|skew)/.test(key)) return 0
-            if (key === "opacity") return 1
-            return style?.[key] // e.g. resting backgroundColor / color
-        }
-
-        // The resting state extended with baseline values for any key the
-        // gesture touches, so [from, to] can always interpolate.
-        const complete = (gesture: Target): ScalarTarget => {
-            const base: ScalarTarget = { ...restingRef.current }
-            for (const k in gesture) {
-                if (base[k] === undefined) {
-                    const b = baseline(k)
-                    if (b !== undefined) base[k] = b
-                }
-            }
-            return base
-        }
-        // Animate into the gesture target.
-        const press = (gesture: Target) => {
-            const base = complete(gesture)
-            getEl()?.animate(
-                buildKeyframes(base, { ...base, ...firstFrame(gesture) }),
-                transitionToOptions(transition)
-            )
-        }
-        // Animate back out to the resting state.
-        const release = (gesture: Target) => {
-            const base = complete(gesture)
-            getEl()?.animate(
-                buildKeyframes({ ...base, ...firstFrame(gesture) }, base),
-                transitionToOptions(transition)
-            )
-        }
-
-        const handlers: Record<string, (e?: unknown) => void> = {}
-        if (whileTap) {
-            // Touch devices (and native Lynx): real press-and-hold.
-            handlers.bindtouchstart = () => {
-                touchedRef.current = true
-                press(whileTap)
-            }
-            handlers.bindtouchend = () => release(whileTap)
-            handlers.bindtouchcancel = () => release(whileTap)
-            // Desktop mouse: Lynx-for-web surfaces a click only as `tap` (there is
-            // no mouse-down → touch bridge), so mirror whileTap as a quick pulse.
-            handlers.bindtap = () => {
-                if (touchedRef.current) {
-                    touchedRef.current = false // this tap trails a handled touch
-                    return
-                }
-                press(whileTap)
-                setTimeout(() => release(whileTap), 160)
-            }
-        }
-        if (whileHover) {
-            // Note: Lynx-for-web has no hover bridge; effective on hover-capable
-            // targets only. Kept for API parity with motion/react.
-            handlers.bindmouseenter = () => press(whileHover)
-            handlers.bindmouseleave = () => release(whileHover)
-        }
-
-        // First paint reflects `initial` (or `animate` when initial===false).
-        const firstTarget = initial === false ? animate : initial
-        const initialStyle = firstTarget
-            ? targetToStyle(firstFrame(firstTarget))
-            : {}
-
-        return createElement(
-            tag,
-            {
-                id,
-                style: { ...initialStyle, ...style },
-                ...handlers,
-                ...rest,
-            },
-            children
-        )
-    }
+const MotionText = (props: MotionProps) => {
+    const m = useMotion(props)
+    return (
+        <text main-thread:ref={m.elRef} style={m.style} {...m.handlers} {...m.rest}>
+            {m.children}
+        </text>
+    )
+}
+const MotionImage = (props: MotionProps) => {
+    const m = useMotion(props)
+    return (
+        <image main-thread:ref={m.elRef} style={m.style} {...m.handlers} {...m.rest} />
+    )
 }
 
 export const motion = {
-    view: createMotionComponent("view"),
-    text: createMotionComponent("text"),
-    image: createMotionComponent("image"),
+    view: MotionView,
+    text: MotionText,
+    image: MotionImage,
 }
 
 export type { Target, Transition }
