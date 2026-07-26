@@ -1,7 +1,8 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": null,
-  "installCommand": "echo 'no install — serving prebuilt demo-site/'",
-  "buildCommand": "echo 'no build — demo-site/ is committed prebuilt'",
-  "outputDirectory": "demo-site"
+  "version": 2,
+  "builds": [{ "src": "demo-site/**", "use": "@vercel/static" }],
+  "routes": [
+    { "src": "/", "dest": "/demo-site/index.html" },
+    { "src": "/(.*)", "dest": "/demo-site/$1" }
+  ]
 }
