@@ -1,53 +1,45 @@
-# Lynx-for-Web: cross-module `'main thread'` functions aren't callable
+# Lynx-for-Web: `@lynx-js/motion` can't be driven on the web target
 
-**TL;DR** — On the **web** target, a `'main thread'` function that lives in a
-*different module* from the worklet that calls it is emitted as a non-callable
-worklet **descriptor** at the call site, so invoking it throws
-`X is not a function`. Same-file `'main thread'` functions work. This is why
-`@lynx-js/motion` (whose `animate()` is a cross-module `'main thread'` function)
-runs on native but not on Lynx-for-Web.
+**TL;DR** — Running `@lynx-js/motion`'s `animate()` on **Lynx-for-Web** fails.
+The [cross-thread shared modules](https://lynxjs.org/4.0/react/main-thread-script.html#cross-thread-shared-modules)
+pattern (`with { runtime: "shared" }` + a same-file `'main thread'` wrapper)
+**does clear the first blocker** — it makes the engine callable — but two
+web-target defects remain underneath it. Native works for all of this; only the
+**web** target is affected, so these are **react-rsbuild-plugin / web-runtime**
+issues, not `@lynx-js/motion` source issues.
 
-This is a **react-rsbuild-plugin (web target)** issue, not a `@lynx-js/motion`
-issue — motion's `animate()` *is* just Motion's source running in Main Thread
-Script; the problem is purely how the web build links a cross-module MTS call.
-
-## Environment
+## Environment (all latest at time of writing)
 
 - `@lynx-js/react` 0.123.1, `@lynx-js/react-rsbuild-plugin` 0.18.1,
   `@lynx-js/rspeedy` 0.16.1
-- `@lynx-js/web-core` 0.22.2, `@lynx-js/web-elements` 0.12.6
-- `@lynx-js/motion` 0.0.3
+- `@lynx-js/web-core` 0.23.0, `@lynx-js/web-elements` 0.12.7
+- `@lynx-js/motion` 0.0.4 (deps: `motion` / `motion-dom` 12.42.2)
 
-## Minimal reproduction
+All three findings below were reproduced on these versions in a real browser
+(`<lynx-view>` + `client_prod`), driving the **main thread** via
+`runOnMainThread(() => { 'main thread'; … })`.
+
+---
+
+## Blocker 1 — cross-module `'main thread'` functions are non-callable descriptors
+
+Using the adapter exactly as its README shows:
 
 ```tsx
-// spin.ts  — a 'main thread' function in its OWN module
-export function spin(el: any, deg: number) {
+import { animate } from "@lynx-js/motion"
+runOnMainThread(() => {
   "main thread"
-  el.setStyleProperty("transform", "rotate(" + deg + "deg)")
-}
+  animate(el, { rotate: 360 }, { duration: 2, repeat: Infinity, ease: "linear" })
+})()
 ```
 
-```tsx
-// App.tsx
-import { runOnMainThread, useEffect, useMainThreadRef } from "@lynx-js/react"
-import { spin } from "./spin.js"                 // cross-module → BROKEN on web
-// function spin(...) { "main thread"; ... }      // same-file → WORKS on web
+throws at worklet **hydration** on web (before the body runs):
 
-export function App() {
-  const el = useMainThreadRef(null)
-  useEffect(() => {
-    runOnMainThread(() => { "main thread"; if (el.current) spin(el.current, 45) })()
-  }, [])
-  return <view main-thread:ref={el} style={{ width: "90px", height: "90px", backgroundColor: "#3366ff" }} />
-}
+```
+TypeError: Cannot read properties of undefined (reading 'bind')
 ```
 
-- **Same-file `spin`** → box rotates 45°. ✅
-- **Cross-module `spin`** → `TypeError: Cannot read properties of undefined (reading 'bind')`, box does not rotate. ❌
-- Native build (`main.lynx.bundle`) compiles both correctly.
-
-## Root cause (from the compiled `main.web.bundle`)
+### Root cause (from the compiled `main.web.bundle`)
 
 A **same-file** `'main thread'` function is captured into the caller worklet's
 closure `_c` and hydrated to a callable before the body runs:
@@ -59,49 +51,119 @@ registerWorkletInternal("main-thread","<caller>", function(){
 })
 ```
 
-A **cross-module** function is instead referenced as a bare module binding that
-holds a raw **descriptor object**, and the call site calls it directly:
+A **cross-module** `'main thread'` function is instead referenced as a bare
+module binding holding a raw **descriptor object**, and the call site invokes it
+directly:
 
 ```js
-var spin = { _wkltId: "c8e3:a6a4a:1" };           // descriptor, NOT a function
-registerWorkletInternal("main-thread","c8e3:a6a4a:1", function(e,t){ /* body */ });  // body IS registered
-// caller:
-function(){ var { el:e } = this._c; e.current && spin(e.current, 45) }  // spin(...) → "not a function"
+var spin = { _wkltId: "c8e3:a6a4a:1" };          // descriptor, NOT a function
+registerWorkletInternal("main-thread","c8e3:a6a4a:1", function(e,t){ /* body */ });
+// caller: e.current && spin(e.current, 45)        // spin(...) → "not a function"
 ```
 
-Without `with { runtime: "shared" }` the body is dropped from the web bundle
-entirely; **with** it the body is registered (as above) but the call site still
-references the raw descriptor.
+The web bundle carries **23** `_wkltId` descriptors but only **2**
+`registerWorkletInternal` bodies. Native (`main.lynx.bundle`) compiles both
+same-file and cross-module correctly.
 
-The runtime already knows how to resolve descriptors elsewhere
-(`lynxWorkletImpl._workletMap[desc._wkltId]`). Proof: resolving it by hand works
-for a leaf function —
+### Minimal repro
 
-```js
-runOnMainThread(() => {
+```tsx
+// spin.ts  — a 'main thread' function in its OWN module
+export function spin(el: any, deg: number) {
   "main thread"
-  const fn = globalThis.lynxWorkletImpl._workletMap[(spin as any)._wkltId]
-  fn(el.current, 45)   // ✅ rotates
-})
+  el.setStyleProperty("transform", "rotate(" + deg + "deg)")
+}
+```
+```tsx
+// App.tsx
+import { spin } from "./spin.js"      // cross-module → BROKEN on web
+// function spin(...) { "main thread"; ... }  // same-file → WORKS on web
+runOnMainThread(() => { "main thread"; if (el.current) spin(el.current, 45) })()
 ```
 
-…but this manual bridge is not enough for functions that call **nested** shared
-worklets (e.g. motion's `animate` → `elementOrSelector2Dom` → …): the nested
-descriptors need the runtime's normal `this._c` hydration, which a hand call
-can't reproduce (`Cannot read properties of undefined (reading '_c')`).
+---
 
-## Suggested fix
+## The shared-modules pattern clears blocker 1
 
-At a cross-module `'main thread'` call site on the **web** target, emit the
-resolved callable instead of the raw descriptor — i.e. treat it exactly like a
-same-file / `_c`-captured worklet (hydrate `desc._wkltId` through
-`_workletMap`, including nested worklets). The native target already does this.
+The docs prescribe wrapping a third-party main-thread lib like this:
+
+```ts
+import { animate as _animate } from "motion" with { runtime: "shared" }
+export function animate(...args) { "main thread"; return _animate(...args) }
+```
+
+With this pattern the engine **is** callable on web — the `.bind` hydration
+crash is gone and the wrapped `animate` runs. This is real progress over
+"cross-module main-thread functions simply don't work." But it then surfaces the
+two deeper defects below.
+
+---
+
+## Blocker 2 — the adapter uses cross-module worklets *internally*
+
+`@lynx-js/motion`'s own `animate` (a `'main thread'` fn) calls its element
+bridge — `elementOrSelector2Dom` → `isMainThreadElement` — which live in
+**sibling modules** and are plain `'main thread'` functions (not `runtime:
+"shared"`). Consuming the adapter's `animate` through the shared wrapper gets
+past blocker 1, but the first internal cross-module hop then fails:
+
+```
+TypeError: tx is not a function     // tx == elementOrSelector2Dom, a descriptor
+```
+
+So even with the shared wrapper, `@lynx-js/motion` can't be reused **as-is** on
+web, because its internal element bridge is exactly the blocker-1 shape.
+
+## Blocker 3 — engine's internal `motion-dom` binding is undefined under the web shared runtime
+
+Bypassing the adapter and wiring the raw engine by hand — same-file
+`ElementCompt` bridge + shared `animate` from `motion` — gets **all the way to
+DOM visual-element construction**. After forcing the DOM branch
+(`globalThis.Element = ElementCompt`, so `subject instanceof Element` is true),
+it throws inside the engine:
+
+```
+TypeError: t is not a constructor
+// at:  thisSubject instanceof Element ? createDOMVisualElement : createObjectVisualElement
+//      → new motionDom.HTMLVisualElement(options)
+```
+
+`HTMLVisualElement` **is** bundled and exported in `main.web.bundle`
+(`exports.HTMLVisualElement = HTMLVisualElement`). Importing it directly proves
+the class is live in the shared runtime:
+
+```
+MT_RUN start; ctors: function function function   // HTML/SVG/Object VisualElement
+```
+
+…yet the engine's own `motionDom.HTMLVisualElement` reference is `undefined`
+**at call time**. So `motion` and the `motion-dom` it depends on receive a
+**separate, uninitialised copy** under the web `runtime: "shared"` graph (a
+circular-ESM init-order problem) — distinct from the `motion-dom` a consumer
+imports. Force-importing the classes doesn't fix the engine's internal binding.
+
+---
+
+## Where the fixes belong (all web target)
+
+1. **Register cross-module `'main thread'` worklets for the web target** — emit
+   the resolved callable at the call site (hydrate `desc._wkltId` through
+   `lynxWorkletImpl._workletMap`, including nested worklets) exactly as native
+   does. Fixes blockers 1 and 2. *(react-rsbuild-plugin)*
+2. **Fix shared-runtime module initialisation** so a `runtime: "shared"`
+   package's internal namespace deps (`motion` → `motion-dom`) are initialised
+   before use — no undefined class bindings at call time. Fixes blocker 3.
+   *(react-rsbuild-plugin / web worklet runtime)*
+3. Optionally, `@lynx-js/motion` could make its element bridge web-safe today
+   (inline `elementOrSelector2Dom`/`isMainThreadElement` into the same module as
+   `animate`, or mark them `runtime: "shared"`), sidestepping blocker 2 without
+   waiting for (1).
 
 ## Impact / interim
 
-`@lynx-js/motion` can't be driven on Lynx-for-Web until this lands. As an
+Until (1) and (2) land, `@lynx-js/motion` can't drive Lynx-for-Web. As an
 interim, `motion-lynx` inlines a small `'main thread'` animator (`mtAnimate`) in
 the **same file** as its `runOnMainThread` call, using Motion's math (cubic-
-bezier easings + colour/number mixing) on `requestAnimationFrame`. Once the
-plugin fix ships, that inline animator can be replaced by a direct
-`@lynx-js/motion` `animate()` call.
+bezier easings + colour/number mixing) on `requestAnimationFrame`. It runs on
+web **and** native. Once the plugin fixes ship, `mtAnimate` can be replaced by a
+direct `@lynx-js/motion` `animate()` call with no change to the authoring API.

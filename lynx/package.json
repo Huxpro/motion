@@ -8,10 +8,11 @@
     "preview": "rspeedy preview"
   },
   "dependencies": {
-    "@lynx-js/motion": "^0.0.3",
+    "@lynx-js/css-serializer": "^0.1.7",
+    "@lynx-js/motion": "^0.0.4",
     "@lynx-js/react": "^0.123.1",
-    "@lynx-js/web-core": "^0.22.2",
-    "@lynx-js/web-elements": "^0.12.6"
+    "@lynx-js/web-core": "^0.23.0",
+    "@lynx-js/web-elements": "^0.12.7"
   },
   "devDependencies": {
     "@lynx-js/preact-devtools": "5.0.1-20260525112551-dfe2d03",
