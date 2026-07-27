@@ -22,6 +22,20 @@ import {
 } from "@lynx-js/react"
 import type { MainThread } from "@lynx-js/types"
 import { targetToStyle, type Target, type Transition } from "./convert.js"
+// The real Motion engine, imported via the Lynx "cross-thread shared modules"
+// pattern. Only invoked when the USE_LYNX_MOTION build flag is on; otherwise the
+// whole branch (and this capture) is dead-code-eliminated. See
+// `docs/web-mts-crossmodule-bug.md` for why it can't drive Lynx-for-Web yet.
+import { animate as lynxMotionAnimate } from "@lynx-js/motion" with {
+    runtime: "shared",
+}
+
+/**
+ * Build-time backend switch, injected by `lynx.config.ts` (`source.define`).
+ * `false` (default) → inline `mtAnimate`; `true` (`USE_LYNX_MOTION=1`) →
+ * `@lynx-js/motion`'s `animate()`.
+ */
+declare const __USE_LYNX_MOTION__: boolean
 
 export interface MotionProps {
     initial?: Target | false
@@ -256,11 +270,23 @@ function useMotion(props: MotionProps) {
 
     const play = (to?: Target, from?: Frame, t?: Transition) => {
         if (!to) return
-        runOnMainThread(() => {
-            "main thread"
-            const el = elRef.current
-            if (el) mtAnimate(el, to as never, (t ?? {}) as never, (from ?? {}) as never)
-        })()
+        if (__USE_LYNX_MOTION__) {
+            // @lynx-js/motion's real engine. Our `Target`/`Transition` map 1:1
+            // onto Motion's keyframes/options (repeat/repeatType/ease/delay), so
+            // no translation is needed. Native-ready; blocked on Lynx-for-Web
+            // (see docs/web-mts-crossmodule-bug.md).
+            runOnMainThread(() => {
+                "main thread"
+                const el = elRef.current
+                if (el) lynxMotionAnimate(el as never, to as never, (t ?? {}) as never)
+            })()
+        } else {
+            runOnMainThread(() => {
+                "main thread"
+                const el = elRef.current
+                if (el) mtAnimate(el, to as never, (t ?? {}) as never, (from ?? {}) as never)
+            })()
+        }
     }
 
     // Enter + `animate` prop changes: from `initial` (or nothing) → `animate`.
