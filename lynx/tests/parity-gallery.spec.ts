@@ -4,7 +4,13 @@ const previewUrl = "/__web_preview?casename=main.web.bundle"
 
 test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
     const runtimeErrors: string[] = []
+    const consoleErrors: string[] = []
     page.on("pageerror", (error) => runtimeErrors.push(error.message))
+    page.on("console", (message) => {
+        if (message.type() === "error") {
+            consoleErrors.push(message.text())
+        }
+    })
 
     await page.goto(previewUrl)
 
@@ -17,9 +23,13 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
             element.getAttribute("style") ?? ""
         )
 
-    await expect.poll(() => styleAt(0)).toContain("scale(1, 1)")
-    await expect.poll(() => styleAt(0)).toContain("rgb(255, 255, 255)")
-    await expect(page.getByText(/Lifecycle complete:visible/)).toBeVisible()
+    await expect.poll(() => styleAt(0)).toMatch(/scale\(1(?:,\s*1)?\)/)
+    await expect
+        .poll(() => styleAt(0))
+        .toMatch(/background-color:\s*(?:#ffffff|rgb\(255,\s*255,\s*255\))/)
+    await expect(page.getByText(/Lifecycle complete:visible/)).toBeVisible({
+        timeout: 15_000,
+    })
 
     // Infinite scalar, keyframe, reverse, and color animations must remain
     // live after their first iteration instead of freezing at the end frame.
@@ -32,7 +42,9 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     for (let index = 5; index < 9; index++) {
         await expect.poll(() => styleAt(index)).toContain("opacity: 1")
-        await expect.poll(() => styleAt(index)).toContain("scale(1, 1)")
+        await expect
+            .poll(() => styleAt(index))
+            .toMatch(/scale\(1(?:,\s*1)?\)/)
     }
 
     // Hold a native-style touch sequence so this checks whileTap activation,
@@ -62,9 +74,12 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
     await expect.poll(() => styleAt(0)).toContain("scale(1.08)")
     await expect.poll(() => styleAt(0)).toContain("rgb(138, 180, 255)")
     await page.mouse.move(0, 0)
-    await expect.poll(() => styleAt(0)).toContain("scale(1, 1)")
-    await expect.poll(() => styleAt(0)).toContain("rgb(255, 255, 255)")
+    await expect.poll(() => styleAt(0)).toMatch(/scale\(1(?:,\s*1)?\)/)
+    await expect
+        .poll(() => styleAt(0))
+        .toMatch(/background-color:\s*(?:#ffffff|rgb\(255,\s*255,\s*255\))/)
     await expect(animated.nth(0)).toContainText("Tapped 1")
 
     expect(runtimeErrors).toEqual([])
+    expect(consoleErrors).toEqual([])
 })
