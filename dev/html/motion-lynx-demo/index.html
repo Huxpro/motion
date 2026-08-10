@@ -59,8 +59,9 @@
     Lynx already ships the <em>imperative</em> Motion.dev engine
     (<code>element.animate()</code>). This port adds the missing
     <em>declarative</em> layer — <code>&lt;motion.view animate={…}&gt;</code> —
-    so the ReactLynx authoring API is identical to the original React
-    <code>motion/react</code>. Everything below runs live; open both and compare.
+    with the same core authoring shape as React <code>motion/react</code>.
+    This gallery tracks the currently supported subset and runs it live on
+    Lynx for Web; open both editions and compare.
   </p>
 
   <div class="cards">
@@ -84,12 +85,12 @@
   </div>
 
   <section>
-    <h2>The point: the API looks identical</h2>
-    <p class="sub">The reference scene is authored twice. A diff shows the only differences are the import source and the element names.</p>
+    <h2>The core declarative API is intentionally familiar</h2>
+    <p class="sub">The reference scene is authored twice. For the covered features, the differences are the import source and Lynx host element names.</p>
     <div class="diff">
       <table>
         <tr><th></th><th>Original React (web)</th><th>ReactLynx port</th></tr>
-        <tr><td>import</td><td class="web"><code>import { motion } from "framer-motion"</code></td><td class="lynx"><code>import { motion } from "./motion"</code></td></tr>
+        <tr><td>import</td><td class="web"><code>import { motion } from "framer-motion"</code></td><td class="lynx"><code>import { motion } from "@lynx-js/motion"</code></td></tr>
         <tr><td>elements</td><td class="web"><code>&lt;motion.div&gt;</code> / <code>&lt;span&gt;</code></td><td class="lynx"><code>&lt;motion.view&gt;</code> / <code>&lt;text&gt;</code></td></tr>
       </table>
     </div>
@@ -106,14 +107,29 @@
     <h2>Verified side by side</h2>
     <p class="sub">Both editions built, served, and screenshotted in headless Chromium, with the same component props. Left = original React · right = ReactLynx port. (The looping cards run on independent clocks, so their phase differs frame to frame — but the layout, easing, and behaviour match.)</p>
     <figure><img src="./evidence/compare-gallery.png" alt="Declarative API gallery comparison" />
-      <figcaption>Six live examples — whileTap · loop · keyframes · reverse · color keyframes · staggered entrance</figcaption></figure>
+      <figcaption>Six live examples — variants + hover/tap · loop · keyframes · reverse · color keyframes · function-variant entrance</figcaption></figure>
     <figure><img src="./evidence/compare-tap.png" alt="whileTap held comparison" />
       <figcaption>whileTap held under a desktop mouse press — scale 1.15 + backgroundColor #ffcc00</figcaption></figure>
+    <figure><img src="./evidence/native-sandbox-pressed.jpeg" alt="whileTap held on a Lynx Sandbox Android device" />
+      <figcaption>Native Android validation — PR #3436 preview package, whileTap held in Lynx Explorer; release also produced <code>Tapped 1</code> with no console warnings or errors</figcaption></figure>
+  </section>
+
+  <section>
+    <h2>Compatibility is measured, not assumed</h2>
+    <p class="sub">
+      The gallery is the pass gate for the supported subset. It does not claim
+      complete <code>motion/react</code> compatibility: layout/presence,
+      in-view, focus, drag, controls, propagated orchestration, and several
+      dual-thread composition cases still need Lynx runtime integration. The
+      <a href="https://github.com/Huxpro/motion/issues/3">roadmap</a> links each
+      reproduced blocker and its acceptance criteria.
+    </p>
   </section>
 
   <footer>
     Source: <a href="https://github.com/Huxpro/motion/pull/2">PR #2</a> ·
-    abstraction in <code>lynx/src/motion</code> · web reference in <code>lynx/web-reference</code>.
+    implementation in <a href="https://github.com/lynx-family/lynx-stack/pull/3436">lynx-stack PR #3436</a> ·
+    parity tests in <code>lynx/tests</code>.
   </footer>
 </div>
 </body>

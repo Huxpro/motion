@@ -1,4 +1,5 @@
 import type { CSSProperties } from "@lynx-js/types"
+import { useState } from "@lynx-js/react"
 import { motion } from "./motion/index.js"
 import "./App.css"
 
@@ -54,8 +55,17 @@ const card: CSSProperties = {
     marginBottom: "14px",
     height: "104px",
 }
-const info: CSSProperties = { display: "flex", flexDirection: "column", flex: 1 }
+const info: CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: "0px",
+    minWidth: "0px",
+    marginRight: "12px",
+}
 const cardTitle: CSSProperties = {
+    width: "100%",
     color: "#ffffff",
     fontSize: "17px",
     fontWeight: "bold",
@@ -63,6 +73,7 @@ const cardTitle: CSSProperties = {
     marginBottom: "4px",
 }
 const code: CSSProperties = {
+    width: "100%",
     color: "#8ab4ff",
     fontSize: "12px",
     fontFamily: "monospace",
@@ -98,6 +109,10 @@ const small: CSSProperties = {
 const COLORS = ["#ff0088", "#ff8800", "#22cc88", "#3366ff"]
 
 export function App() {
+    const [tapCount, setTapCount] = useState(0)
+    const [hoverCount, setHoverCount] = useState(0)
+    const [lifecycleStatus, setLifecycleStatus] = useState("idle")
+
     return (
         <view style={page}>
             <scroll-view scroll-orientation="vertical" style={scroll}>
@@ -110,9 +125,9 @@ export function App() {
                     {/* whileTap — interactive */}
                     <view style={card}>
                         <view style={info}>
-                            <text style={cardTitle}>whileTap — press me</text>
+                            <text style={cardTitle}>Variants + whileTap</text>
                             <text style={code}>
-                                whileTap={"{{"} scale: 1.15, backgroundColor {"}}"}
+                                whileTap="pressed" · target transition
                             </text>
                         </view>
                         <view style={demo}>
@@ -122,14 +137,38 @@ export function App() {
                                     width: "112px",
                                     backgroundColor: "#ffffff",
                                 }}
-                                whileTap={{
-                                    scale: 1.15,
-                                    backgroundColor: "#ffcc00",
+                                initial="rest"
+                                animate="rest"
+                                whileHover="hover"
+                                whileTap="pressed"
+                                variants={{
+                                    rest: {
+                                        scale: 1,
+                                        backgroundColor: "#ffffff",
+                                    },
+                                    pressed: {
+                                        scale: 1.15,
+                                        backgroundColor: "#ffcc00",
+                                        transition: {
+                                            duration: 0.2,
+                                            ease: "easeOut",
+                                        },
+                                    },
+                                    hover: {
+                                        scale: 1.08,
+                                        backgroundColor: "#8ab4ff",
+                                        transition: { duration: 0.15 },
+                                    },
                                 }}
-                                transition={{ duration: 0.2, ease: "easeOut" }}
+                                onHoverStart={() => setHoverCount((count) => count + 1)}
+                                onTap={() => setTapCount((count) => count + 1)}
                             >
                                 <text style={{ ...glyph, color: "#0b0b14", fontSize: "18px", fontWeight: "bold" }}>
-                                    Press
+                                    {tapCount
+                                        ? `Tapped ${tapCount}`
+                                        : hoverCount
+                                          ? `Hovered ${hoverCount}`
+                                          : "Press"}
                                 </text>
                             </motion.view>
                         </view>
@@ -233,7 +272,7 @@ export function App() {
                         <view style={info}>
                             <text style={cardTitle}>Entrance — stagger</text>
                             <text style={code}>
-                                initial → animate · delay: i * 0.12
+                                {`function variant · Lifecycle ${lifecycleStatus}`}
                             </text>
                         </view>
                         <view style={demo}>
@@ -241,13 +280,34 @@ export function App() {
                                 <motion.view
                                     key={i}
                                     style={{ ...small, backgroundColor: c }}
-                                    initial={{ opacity: 0, y: 20, scale: 0.3 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    transition={{
-                                        duration: 0.6,
-                                        delay: i * 0.12,
-                                        ease: "backOut",
+                                    initial="hidden"
+                                    animate="visible"
+                                    custom={i}
+                                    variants={{
+                                        hidden: { opacity: 0, y: 20, scale: 0.3 },
+                                        visible: (index) => ({
+                                            opacity: 1,
+                                            y: 0,
+                                            scale: 1,
+                                            transition: {
+                                                duration: 0.6,
+                                                delay: Number(index) * 0.12,
+                                                ease: "backOut",
+                                            },
+                                        }),
                                     }}
+                                    onAnimationStart={
+                                        i === 0
+                                            ? (definition) =>
+                                                  setLifecycleStatus(`start:${String(definition)}`)
+                                            : undefined
+                                    }
+                                    onAnimationComplete={
+                                        i === 0
+                                            ? (definition) =>
+                                                  setLifecycleStatus(`complete:${String(definition)}`)
+                                            : undefined
+                                    }
                                 />
                             ))}
                         </view>

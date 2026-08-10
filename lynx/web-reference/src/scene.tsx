@@ -1,5 +1,5 @@
 import { motion } from "framer-motion"
-import { CSSProperties } from "react"
+import { CSSProperties, useState } from "react"
 
 /**
  * DECLARATIVE API GALLERY — Framer Motion web reference.
@@ -101,6 +101,10 @@ const small: CSSProperties = {
 const COLORS = ["#ff0088", "#ff8800", "#22cc88", "#3366ff"]
 
 export function App() {
+    const [tapCount, setTapCount] = useState(0)
+    const [hoverCount, setHoverCount] = useState(0)
+    const [lifecycleStatus, setLifecycleStatus] = useState("idle")
+
     return (
         <div style={page}>
             <div style={scroll}>
@@ -113,9 +117,9 @@ export function App() {
                     {/* whileTap — interactive */}
                     <div style={card}>
                         <div style={info}>
-                            <span style={cardTitle}>whileTap — press me</span>
+                            <span style={cardTitle}>Variants + whileTap</span>
                             <span style={code}>
-                                whileTap={"{{"} scale: 1.15, backgroundColor {"}}"}
+                                whileTap="pressed" · target transition
                             </span>
                         </div>
                         <div style={demo}>
@@ -125,14 +129,38 @@ export function App() {
                                     width: "112px",
                                     backgroundColor: "#ffffff",
                                 }}
-                                whileTap={{
-                                    scale: 1.15,
-                                    backgroundColor: "#ffcc00",
+                                initial="rest"
+                                animate="rest"
+                                whileHover="hover"
+                                whileTap="pressed"
+                                variants={{
+                                    rest: {
+                                        scale: 1,
+                                        backgroundColor: "#ffffff",
+                                    },
+                                    pressed: {
+                                        scale: 1.15,
+                                        backgroundColor: "#ffcc00",
+                                        transition: {
+                                            duration: 0.2,
+                                            ease: "easeOut",
+                                        },
+                                    },
+                                    hover: {
+                                        scale: 1.08,
+                                        backgroundColor: "#8ab4ff",
+                                        transition: { duration: 0.15 },
+                                    },
                                 }}
-                                transition={{ duration: 0.2, ease: "easeOut" }}
+                                onHoverStart={() => setHoverCount((count) => count + 1)}
+                                onTap={() => setTapCount((count) => count + 1)}
                             >
                                 <span style={{ ...glyph, color: "#0b0b14", fontSize: "18px", fontWeight: "bold" }}>
-                                    Press
+                                    {tapCount
+                                        ? `Tapped ${tapCount}`
+                                        : hoverCount
+                                          ? `Hovered ${hoverCount}`
+                                          : "Press"}
                                 </span>
                             </motion.div>
                         </div>
@@ -236,7 +264,7 @@ export function App() {
                         <div style={info}>
                             <span style={cardTitle}>Entrance — stagger</span>
                             <span style={code}>
-                                initial → animate · delay: i * 0.12
+                                {`function variant · Lifecycle ${lifecycleStatus}`}
                             </span>
                         </div>
                         <div style={demo}>
@@ -244,13 +272,34 @@ export function App() {
                                 <motion.div
                                     key={i}
                                     style={{ ...small, backgroundColor: c }}
-                                    initial={{ opacity: 0, y: 20, scale: 0.3 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    transition={{
-                                        duration: 0.6,
-                                        delay: i * 0.12,
-                                        ease: "backOut",
+                                    initial="hidden"
+                                    animate="visible"
+                                    custom={i}
+                                    variants={{
+                                        hidden: { opacity: 0, y: 20, scale: 0.3 },
+                                        visible: (index) => ({
+                                            opacity: 1,
+                                            y: 0,
+                                            scale: 1,
+                                            transition: {
+                                                duration: 0.6,
+                                                delay: Number(index) * 0.12,
+                                                ease: "backOut",
+                                            },
+                                        }),
                                     }}
+                                    onAnimationStart={
+                                        i === 0
+                                            ? (definition) =>
+                                                  setLifecycleStatus(`start:${String(definition)}`)
+                                            : undefined
+                                    }
+                                    onAnimationComplete={
+                                        i === 0
+                                            ? (definition) =>
+                                                  setLifecycleStatus(`complete:${String(definition)}`)
+                                            : undefined
+                                    }
                                 />
                             ))}
                         </div>

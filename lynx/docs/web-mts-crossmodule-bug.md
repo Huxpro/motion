@@ -1,107 +1,56 @@
-# Lynx-for-Web: `@lynx-js/motion` can't be driven on the web target
+# Historical: cross-module and shared-runtime Motion blockers
 
-> **Status (upstream):** filed as
-> [lynx-family/lynx-stack#3263](https://github.com/lynx-family/lynx-stack/issues/3263);
-> the core bug is fixed by
-> [#3265](https://github.com/lynx-family/lynx-stack/pull/3265) (a
-> `@lynx-js/react` patch, open at time of writing). A second issue (blocker 3
-> below) remains separate and unresolved.
->
-> **Root-cause correction:** earlier revisions of this note blamed a
-> `@lynx-js/web-core` **runtime** gap (background→main `_workletMap`
-> propagation). That was wrong. #3265 shows the real cause is **build-time**:
-> the react worklet **transform** (`swc_plugin_worklet`) lets dead-code
-> elimination drop the *defining* module from the **main-thread bundle**, so its
-> `registerWorkletInternal()` never runs and `_workletMap[id]` is undefined at
-> hydration. It is **not** web-core-specific and **not** web-specific — it
-> affects the main-thread (LEPUS) transform pass for both `lynx` and `web`; it
-> merely surfaced on web because that is the target we exercised.
+This note records why the original Hux implementation contained a same-file
+`mtAnimate` fallback. The fallback and its build flag have now been removed;
+the gallery consumes the lynx-stack implementation from
+[lynx-stack#3436](https://github.com/lynx-family/lynx-stack/pull/3436).
 
-## Blocker 1 & 2 — cross-module `'main thread'` functions fail to hydrate (FIXED by #3265)
+## 1. Cross-module main-thread worklets
 
-Symptom, using `@lynx-js/motion` per its README (or any cross-module
-`'main thread'` function):
+The original reproduction imported a `'main thread'` function from another
+module. Dead-code elimination removed the defining module from the main-thread
+bundle, so its worklet registration never ran and hydration produced a
+non-callable descriptor.
 
-```
-TypeError: Cannot read properties of undefined (reading 'bind')
-```
+This was tracked in
+[lynx-stack#3263](https://github.com/lynx-family/lynx-stack/issues/3263) and
+addressed by [lynx-stack#3265](https://github.com/lynx-family/lynx-stack/pull/3265),
+which retains captured worklet modules as side-effect imports in the
+main-thread transform.
 
-### Root cause (per #3265)
+## 2. Shared Motion runtime initialization
 
-A `'main thread'` function defined in a different module from its caller is
-captured into the caller's closure (`this._c`) and resolved at hydration via
-`lynxWorkletImpl._workletMap[id].bind(this)`. Its `registerWorkletInternal()`
-lives in the **defining** module, which reaches the **main-thread** bundle only
-through the caller's named import. In the main-thread (LEPUS) pass the
-surrounding background-only code (`useEffect`, `runOnMainThread`, …) is shaken
-away, that named import becomes unreferenced, and **DCE drops the defining
-module** — so its worklet is never registered and `_workletMap[id]` is
-`undefined`.
+After the first problem was bypassed, importing the Motion runtime through the
+shared-module path exposed additional initialization and nested-worklet
+failures on Lynx for Web:
 
-The background (JS) pass is unaffected: the captured identifier is still
-referenced there by the `_c` object literal, so its import survives.
+- Motion read `queueMicrotask` during module initialization before QuickJS had
+  a compatible global;
+- nested/cross-module worklet references could hydrate as descriptors rather
+  than callable functions;
+- the generic element bridge crossed another worklet/module boundary.
 
-**The fix (#3265):** in the main-thread pass, re-add the modules a worklet
-closure captures identifiers from as **side-effect-only imports**
-(`import './spin.js'`), so they survive DCE and register their worklets. Tested
-for both `lynx` and `web` environments.
+The stacked declarative implementation handles these at the Lynx adapter
+boundary:
 
-This covers **blocker 2** too — `@lynx-js/motion`'s internal element bridge
-(`elementOrSelector2Dom` → `isMainThreadElement`) is exactly this cross-module
-shape (`tx is not a function`).
+- a side-effect dependency module installs main-thread prerequisites before
+  Motion initializes;
+- shared Motion primitives are imported directly;
+- the Lynx `Element` wrapper is constructed inside the owning worklet instead
+  of calling a nested cross-module bridge.
 
-### Why my earlier "web-core runtime / identical bytecode" reading was wrong
+## Current verification
 
-I compared the compiled `spin` module in `main.web.bundle` vs the native bundle
-and found them byte-identical, and concluded the difference must be runtime.
-Identical module **text** does not mean the module is **reached/executed** —
-DCE decides whether the defining module runs in the main-thread bundle. I also
-never ran native (no device), so "native works" was unverified; pre-fix, the
-native main-thread bundle also lacked the registration.
+The local animator is no longer used. The package-backed path has been verified
+with:
 
-### Minimal reproduction
+- a headless Lynx-for-Web parity test, including infinite animations and a held
+  touch sequence;
+- native Lynx Sandbox press/release validation;
+- package build, declaration generation, publint, formatting, and lint checks.
 
-```tsx
-// spin.ts  — a 'main thread' function in its OWN module
-export function spin(el: any, deg: number) {
-  "main thread"
-  el.setStyleProperty("transform", "rotate(" + deg + "deg)")
-}
-```
-```tsx
-// App.tsx
-import { spin } from "./spin.js"      // cross-module → BROKEN pre-#3265
-runOnMainThread(() => { "main thread"; if (el.current) spin(el.current, 45) })()
-```
-
-## Blocker 3 — `runtime:"shared"` / `motion-dom` circular init (SEPARATE, still open)
-
-Wiring the raw engine by hand (`import { animate } from "motion" with { runtime:
-"shared" }` + a same-file `ElementCompt` bridge) gets past blockers 1–2 and
-reaches DOM visual-element construction, then throws inside the engine:
-
-```
-TypeError: t is not a constructor
-//  → new motionDom.HTMLVisualElement(options)   (motionDom binding undefined at call time)
-```
-
-`HTMLVisualElement` is bundled and a direct import proves it's live, yet the
-engine's own `motionDom.HTMLVisualElement` is `undefined` at call time — a
-circular-ESM init-order problem for `runtime:"shared"` packages on the web
-target. #3265's author confirms this is a **separate subsystem, not addressed**
-there. Whether `@lynx-js/motion`'s own `animate()` hits this on web after #3265
-is **untested** and needs re-checking once the fix ships.
-
-## Interim / how to consume the fix
-
-`motion-lynx` ships a same-file `'main thread'` animator (`mtAnimate`) that runs
-on web **and** native today, and a build flag to switch backends:
-
-- `USE_LYNX_MOTION` unset (default) → `mtAnimate` (small bundle, web + native).
-- `USE_LYNX_MOTION=1` → `@lynx-js/motion`'s real `animate()`.
-
-Once `@lynx-js/react` with #3265 is released: upgrade, build with
-`USE_LYNX_MOTION=1`, and re-test the adapter on Lynx-for-Web. If blocker 3
-appears, track it as the separate `runtime:"shared"` issue; otherwise the flag
-becomes the default and `mtAnimate` can be retired. The authoring API is
-identical either way.
+These fixes unblock the supported declarative subset. They do not create the
+DOM visual-element tree, layout/presence system, intersection observer,
+cross-platform focus model, or full gesture/orchestration registry required for
+complete `motion/react` compatibility; those gaps are tracked from the roadmap
+issue linked in `../README.md`.
