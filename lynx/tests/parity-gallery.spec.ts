@@ -4,6 +4,7 @@ import {
     CONVERGENCE_HISTORY,
     CONFORMANCE_METRICS,
     GALLERY_EXAMPLES,
+    KEYFRAMES_CASE,
     MOTION_CREATE_CASE,
     NAMED_VARIANTS_CASE,
     PRIORITIZED_GAPS,
@@ -49,7 +50,6 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
     // live after their first iteration instead of freezing at the end frame.
     const liveSelectors = [
         "#target-repeat-infinity",
-        "#target-keyframes",
         "#target-repeat-reverse",
         "#target-color-keyframes",
     ]
@@ -295,6 +295,56 @@ test("manifest case: a changed string label resolves its named variant", async (
             translateX: NAMED_VARIANTS_CASE.expected.activeX,
             scale: NAMED_VARIANTS_CASE.expected.activeScale,
         })
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: ordered keyframes pass through their peak and settle", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const page of [lynxPage, webPage]) {
+        const target = page.locator("#target-keyframes")
+        const translateY = () =>
+            target.evaluate((element) => {
+                const transform = getComputedStyle(element).transform
+                return new DOMMatrixReadOnly(transform).m42
+            })
+
+        await expect
+            .poll(async () => Math.round(await translateY()))
+            .toBe(KEYFRAMES_CASE.expected.startY)
+        await page.locator("#example-keyframes").click()
+
+        const samples: number[] = []
+        for (let index = 0; index < 12; index++) {
+            samples.push(await translateY())
+            await page.waitForTimeout(45)
+        }
+        expect(
+            Math.min(...samples),
+            `${KEYFRAMES_CASE.upstream.testName}: ${samples.join(", ")}`
+        ).toBeLessThan(KEYFRAMES_CASE.expected.peakY + 8)
+        await expect
+            .poll(async () => Math.round(await translateY()))
+            .toBe(KEYFRAMES_CASE.expected.endY)
     }
 
     expect(errors).toEqual([])

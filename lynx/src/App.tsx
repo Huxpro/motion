@@ -2,6 +2,7 @@ import type { CSSProperties } from "@lynx-js/types"
 import type { IntrinsicElements } from "@lynx-js/types"
 import { useState } from "@lynx-js/react"
 import {
+    KEYFRAMES_CASE,
     MOTION_CREATE_CASE,
     NAMED_VARIANTS_CASE,
     REACTIVE_ANIMATE_CASE,
@@ -147,6 +148,7 @@ export function App() {
     const [reactiveActive, setReactiveActive] = useState(false)
     const [namedActive, setNamedActive] = useState(false)
     const [arrayActive, setArrayActive] = useState(false)
+    const [keyframesActive, setKeyframesActive] = useState(false)
     const [lifecycleStatus, setLifecycleStatus] = useState("idle")
 
     return (
@@ -441,24 +443,35 @@ export function App() {
                         </view>
                     </view>
 
-                    {/* keyframes — bounce */}
-                    <view id="example-keyframes" style={card}>
+                    {/* finite ordered keyframes */}
+                    <view
+                        id="example-keyframes"
+                        style={card}
+                        bindtap={() => setKeyframesActive(true)}
+                    >
                         <view style={info}>
                             <text style={cardTitle}>Keyframes — bounce</text>
                             <text style={code}>
-                                animate={"{{"} y: [0, -34, 0] {"}}"}
+                                {keyframesActive
+                                    ? "y: [0, -34, 12]"
+                                    : "tap to run keyframes"}
                             </text>
                         </view>
                         <view style={demo}>
                             <motion.view
                                 id="target-keyframes"
                                 style={{ ...dot, backgroundColor: "#22cc88" }}
-                                animate={{ y: [0, -34, 0] }}
-                                transition={{
-                                    repeat: Infinity,
-                                    ease: "easeInOut",
-                                    duration: 1,
+                                initial={{ y: KEYFRAMES_CASE.expected.startY }}
+                                animate={{
+                                    y: keyframesActive
+                                        ? [
+                                              KEYFRAMES_CASE.expected.startY,
+                                              KEYFRAMES_CASE.expected.peakY,
+                                              KEYFRAMES_CASE.expected.endY,
+                                          ]
+                                        : KEYFRAMES_CASE.expected.startY,
                                 }}
+                                transition={{ duration: 0.6, ease: "linear" }}
                             />
                         </view>
                     </view>

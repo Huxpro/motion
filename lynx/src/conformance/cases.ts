@@ -156,8 +156,8 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         category: "Targets",
         title: "Value keyframes",
         summary:
-            "Array keyframes resolve and continue through repeated iterations.",
-        status: "partial",
+            "Array keyframes resolve in order and settle at their final value.",
+        status: "conformant",
         api: ["animate", "keyframes", "transition"],
         upstream: source(
             "packages/framer-motion/src/motion/__tests__/transition-keyframes.test.tsx",
@@ -165,15 +165,16 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         ),
         baseline: "framer-motion@13.0.0",
         assertions: [
-            "keyframe animation remains live after its first iteration",
+            "animation passes through a nonterminal keyframe",
+            "animation settles at the final keyframe",
         ],
-        gap: "Lynx live-loop assertion exists; Web semantic sampling is not yet paired case-by-case.",
         evidence: {
             gallery: true,
             packageTest: true,
-            dualRenderer: false,
+            dualRenderer: true,
             native: false,
         },
+        expected: { startY: 0, peakY: -34, endY: 12 },
     },
     {
         id: "transitions/repeat-infinity",
@@ -410,6 +411,12 @@ export const REACTIVE_ANIMATE_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/reactive-animate"
 ) as ConformanceCase & {
     expected: { startX: number; endX: number }
+}
+
+export const KEYFRAMES_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/keyframes"
+) as ConformanceCase & {
+    expected: { startY: number; peakY: number; endY: number }
 }
 
 export const NAMED_VARIANTS_CASE = CONFORMANCE_CASES.find(
@@ -844,7 +851,7 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         reactLynx: 0,
         css: 1,
         rationale:
-            "Popular upstream primitive with a small style-sampling gap.",
+            "Popular upstream primitive with exact ordered-keyframe sampling.",
     },
     {
         caseId: "transitions/repeat-infinity",
@@ -1078,12 +1085,23 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         date: "2026-08-11",
         title: "Named variants parity",
         kind: "evidence",
-        status: "verified",
+        status: "merged",
         motionPr: 15,
         caseIds: ["variants/named"],
         lossBefore: 56,
-        lossAfter: WEIGHTED_LOSS,
+        lossAfter: 51,
         note: "I5/F5/M1/R0/C0 · immutable bd151a1 package · focused Gallery case · dual-renderer label transition · native not required.",
+    },
+    {
+        id: "motion-keyframes",
+        date: "2026-08-11",
+        title: "Ordered keyframes parity",
+        kind: "evidence",
+        status: "verified",
+        caseIds: ["targets/keyframes"],
+        lossBefore: 51,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I5/F5/M1/R0/C1 · immutable bd151a1 package · focused Gallery case · dual-renderer peak/final sampling · native not required.",
     },
     {
         id: "lynx-3457",
