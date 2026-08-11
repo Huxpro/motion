@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test"
 import {
+    ANIMATION_LIFECYCLE_CASE,
     API_METRICS,
     CONVERGENCE_HISTORY,
     CONFORMANCE_METRICS,
@@ -415,6 +416,37 @@ test("manifest case: function variants receive custom and resolve distinct delay
                     scale: FUNCTION_VARIANTS_CASE.expected.visibleScale,
                 })
         }
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: animation lifecycle reports start before complete", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    const expectedEvents = `events:start:${ANIMATION_LIFECYCLE_CASE.expectedDefinition}|complete:${ANIMATION_LIFECYCLE_CASE.expectedDefinition}`
+    for (const page of [lynxPage, webPage]) {
+        const events = page.locator("#events-animation-lifecycle")
+        await expect(events).toHaveText("events")
+        await page.locator("#example-function-variant").click()
+        await expect(events).toHaveText(expectedEvents)
     }
 
     expect(errors).toEqual([])
