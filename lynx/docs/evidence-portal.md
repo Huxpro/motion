@@ -3,6 +3,23 @@
 The Vercel preview is a review artifact, not a marketing compatibility claim.
 It must make three different questions independently observable.
 
+## Visual reference and source boundary
+
+The Motion package repository does not contain the `motion.dev` application
+source. Its root README states that the website is built with Framer. The
+portal therefore follows the public site's rendered product language without
+claiming to reuse private site code:
+
+-   TASA Orbiter for interface and content typography;
+-   near-black surfaces, hard grid lines, and no ornamental card chrome;
+-   one high-contrast accent per evidence view;
+-   compact monospaced labels for indexes, filters, versions, and statuses; and
+-   progressive disclosure for detailed upstream assertions.
+
+The visual system exists to support the review path: run examples, inspect the
+API surface, then audit source-linked conformance. Decorative themes must not
+compete with this sequence.
+
 ## 1. Can a human execute the capability?
 
 `/?view=examples` presents the locked Web Motion baseline and the ReactLynx
@@ -44,7 +61,7 @@ slice as coverage of Motion's complete upstream suite.
    needed for that capability.
 3. Add or promote one upstream contract per commit, including its dual-renderer
    assertion when possible.
-4. Link the Vercel URLs for Overview, Live comparison, API matrix, and
+4. Link the Vercel URLs for Overview, Examples, API, and
    Conformance in the PR description.
 5. Do not promote `partial` to `conformant` until the evidence tier shown in the
    dashboard agrees with the claim.

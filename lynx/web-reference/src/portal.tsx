@@ -13,8 +13,8 @@ type View = "overview" | "examples" | "api" | "conformance"
 
 const VIEW_LABELS: Record<View, string> = {
     overview: "Overview",
-    examples: "Live comparison",
-    api: "API matrix",
+    examples: "Examples",
+    api: "API",
     conformance: "Conformance",
 }
 
@@ -48,9 +48,14 @@ function Masthead({ view }: { view: View }) {
                 href="?view=overview"
                 aria-label="Motion on Lynx evidence overview"
             >
-                <span className="wordmark-motion">MOTION</span>
-                <span className="wordmark-cross">×</span>
-                <span className="wordmark-lynx">LYNX</span>
+                <span className="motion-glyph" aria-hidden="true">
+                    <i />
+                    <i />
+                    <i />
+                </span>
+                <span className="wordmark-motion">Motion</span>
+                <span className="wordmark-cross">/</span>
+                <span className="wordmark-lynx">Lynx</span>
             </a>
             <nav className="nav" aria-label="Evidence views">
                 {(Object.keys(VIEW_LABELS) as View[]).map((item) => (
@@ -67,10 +72,7 @@ function Masthead({ view }: { view: View }) {
                     </a>
                 ))}
             </nav>
-            <div className="build-stamp">
-                <span className="stamp-pulse" aria-hidden="true" />
-                #3436 preview
-            </div>
+            <div className="build-stamp">Evidence / #3436</div>
         </header>
     )
 }
@@ -109,28 +111,22 @@ function Overview() {
         <main className="page overview-page" id="main-content">
             <section className="hero">
                 <div className="hero-copy">
-                    <p className="eyebrow">
-                        Declarative adapter · evidence report 01
-                    </p>
-                    <h1>
-                        What works is visible.
-                        <br />
-                        What differs is named.
-                    </h1>
+                    <p className="eyebrow">Lynx adapter / review artifact</p>
+                    <h1>Motion for Lynx.</h1>
                     <p className="hero-deck">
-                        A living review artifact for Motion’s declarative API on
-                        ReactLynx— executable examples, atomic support
-                        contracts, and upstream-linked tests.
+                        Executable examples, atomic API status, and
+                        source-linked conformance for the declarative component
+                        adapter.
                     </p>
                     <div className="hero-actions">
                         <a className="action-primary" href="?view=examples">
-                            Compare both runtimes
+                            Run examples
                         </a>
                         <a
                             className="action-secondary"
                             href="?view=conformance"
                         >
-                            Inspect test coverage →
+                            Audit conformance →
                         </a>
                     </div>
                 </div>
@@ -138,16 +134,13 @@ function Overview() {
                     className="release-note"
                     aria-label="Current release assessment"
                 >
-                    <span className="release-kicker">Current verdict</span>
-                    <strong>
-                        Useful subset,
-                        <br />
-                        not drop-in parity.
-                    </strong>
+                    <span className="release-kicker">Current answer</span>
+                    <strong>Useful subset.</strong>
+                    <b>Not drop-in compatible.</b>
                     <p>
-                        Animation primitives are reused upstream. Lynx owns the
-                        host, worklet, gesture, layout, and component-tree
-                        boundaries.
+                        Upstream animation primitives are reused. Lynx still
+                        owns host rendering, worklets, gestures, layout, and
+                        component-tree integration.
                     </p>
                     <span className="release-signature">
                         #3405 core → #3436 extension
@@ -157,19 +150,20 @@ function Overview() {
 
             <section className="scoreline" aria-label="Capability summary">
                 <div className="score-main">
-                    <span className="score-value">
-                        {implementationPercent}%
-                    </span>
                     <div>
+                        <span className="score-label">Tracked API surface</span>
                         <strong>
-                            of tracked atomic APIs are implemented or partial
+                            {API_METRICS.supported + API_METRICS.partial} of{" "}
+                            {API_METRICS.total} APIs implemented or partial
                         </strong>
                         <span>
+                            {implementationPercent}% of this adapter scope ·{" "}
                             {API_METRICS.supported} supported ·{" "}
-                            {API_METRICS.partial} scoped · {API_METRICS.blocked}{" "}
-                            blocked
+                            {API_METRICS.partial} partial ·{" "}
+                            {API_METRICS.blocked} blocked
                         </span>
                     </div>
+                    <a href="?view=api">Inspect all APIs →</a>
                 </div>
                 <CoverageStrip />
                 <p className="scope-note">
@@ -180,11 +174,11 @@ function Overview() {
 
             <section className="evidence-ladder">
                 <div className="section-heading">
-                    <p className="eyebrow">Evidence ladder</p>
-                    <h2>Implementation is ahead of exact conformance.</h2>
+                    <p className="eyebrow">Evidence levels</p>
+                    <h2>Implementation is not conformance.</h2>
                     <p>
-                        Each rung is stricter. A Gallery demo cannot silently
-                        count as upstream parity.
+                        Each level is stricter. A working Gallery example does
+                        not count as exact upstream parity.
                     </p>
                 </div>
                 <div className="ladder" role="list">
@@ -237,14 +231,14 @@ function Overview() {
 
             <section className="editorial-columns">
                 <div className="now-column">
-                    <p className="eyebrow">Runnable now</p>
-                    <h2>{GALLERY_EXAMPLES.length} live scenarios</h2>
+                    <p className="eyebrow">Available now</p>
+                    <h2>{GALLERY_EXAMPLES.length} runnable scenarios</h2>
                     <p>
                         Object targets, reactive updates, local variants,
                         keyframes, repeat/reverse, color mixing, tap/hover
                         priority, callbacks, lifecycle, and custom hosts.
                     </p>
-                    <a href="?view=examples">Open the comparison studio →</a>
+                    <a href="?view=examples">Compare Web and Lynx →</a>
                 </div>
                 <div className="boundary-column">
                     <p className="eyebrow">Architecture queue</p>
@@ -277,17 +271,12 @@ function Examples() {
         <main className="page examples-page" id="main-content">
             <header className="page-intro split-intro">
                 <div>
-                    <p className="eyebrow">Live comparison studio</p>
-                    <h1>
-                        Same Motion props.
-                        <br />
-                        Two renderers.
-                    </h1>
+                    <p className="eyebrow">Executable comparison</p>
+                    <h1>Compare Web and Lynx.</h1>
                 </div>
                 <p>
-                    Interact with both panes. The left runs the locked upstream
-                    Web baseline; the right runs the #3436 ReactLynx preview
-                    through Lynx for Web.
+                    Use both panes. Web runs the locked upstream baseline; Lynx
+                    runs the #3436 adapter through Lynx for Web.
                 </p>
             </header>
 
@@ -370,11 +359,7 @@ function ApiMatrix() {
             <header className="page-intro matrix-intro">
                 <div>
                     <p className="eyebrow">Atomic API inventory</p>
-                    <h1>
-                        Support is a contract,
-                        <br />
-                        not a checkbox.
-                    </h1>
+                    <h1>Supported API surface.</h1>
                 </div>
                 <div className="matrix-summary">
                     <CoverageStrip />
@@ -454,7 +439,7 @@ function Conformance() {
             <header className="page-intro conformance-intro">
                 <div>
                     <p className="eyebrow">Curated upstream test slice</p>
-                    <h1>Coverage you can audit.</h1>
+                    <h1>Upstream conformance.</h1>
                 </div>
                 <div className="conformance-number">
                     <strong>{exact}%</strong>
@@ -579,7 +564,7 @@ function Conformance() {
 export function EvidencePortal() {
     const view = currentView()
     return (
-        <div className="site-shell">
+        <div className={`site-shell view-${view}`}>
             <a className="skip-link" href="#main-content">
                 Skip to evidence
             </a>
@@ -589,10 +574,10 @@ export function EvidencePortal() {
             {view === "api" && <ApiMatrix />}
             {view === "conformance" && <Conformance />}
             <footer className="footer">
-                <span>Motion × Lynx / declarative evidence</span>
+                <span>Motion / Lynx</span>
                 <span>
-                    Manifest-derived · PR-previewable · no compatibility claim
-                    by implication
+                    Manifest-derived · PR preview · compatibility claims require
+                    evidence
                 </span>
             </footer>
         </div>

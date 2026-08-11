@@ -184,7 +184,7 @@ test("evidence portal exposes examples, API inventory, and conformance metrics",
     await page.goto("http://localhost:4173/?view=overview")
 
     await expect(
-        page.getByRole("heading", { name: /What works is visible/i })
+        page.getByRole("heading", { name: "Motion for Lynx." })
     ).toBeVisible()
     await expect(
         page.getByText(`${API_METRICS.supported} supported`, { exact: false })
@@ -195,9 +195,9 @@ test("evidence portal exposes examples, API inventory, and conformance metrics",
             .first()
     ).toBeVisible()
 
-    await page.getByRole("link", { name: "API matrix" }).click()
+    await page.getByRole("link", { name: "API", exact: true }).click()
     await expect(
-        page.getByRole("heading", { name: /Support is a contract/i })
+        page.getByRole("heading", { name: "Supported API surface." })
     ).toBeVisible()
     await expect(page.locator(".matrix-row")).toHaveCount(API_METRICS.total)
 
@@ -206,7 +206,7 @@ test("evidence portal exposes examples, API inventory, and conformance metrics",
         CONFORMANCE_METRICS.tracked
     )
 
-    await page.getByRole("link", { name: "Live comparison" }).click()
+    await page.getByRole("link", { name: "Examples" }).click()
     await expect(page.locator(".scenario-row")).toHaveCount(
         GALLERY_EXAMPLES.length
     )
@@ -221,12 +221,35 @@ test("evidence portal keeps every view usable at mobile width", async ({
     for (const view of ["overview", "examples", "api", "conformance"]) {
         await page.goto(`http://localhost:4173/?view=${view}`)
         await expect(page.locator("main")).toBeVisible()
-        const sizes = await page.evaluate(() => ({
-            viewport: document.documentElement.clientWidth,
-            content: document.documentElement.scrollWidth,
-        }))
-        expect(sizes.content, `${view} must not overflow horizontally`).toBeLessThanOrEqual(
-            sizes.viewport,
-        )
+        const sizes = await page.evaluate(() => {
+            const viewport = document.documentElement.clientWidth
+            const offenders = Array.from(document.querySelectorAll("*"))
+                .map((element) => {
+                    const rect = element.getBoundingClientRect()
+                    return {
+                        tag: element.tagName.toLowerCase(),
+                        className:
+                            typeof element.className === "string"
+                                ? element.className
+                                : "",
+                        left: Math.round(rect.left),
+                        right: Math.round(rect.right),
+                    }
+                })
+                .filter((item) => item.left < -1 || item.right > viewport + 1)
+                .slice(0, 8)
+
+            return {
+                viewport,
+                content: document.documentElement.scrollWidth,
+                offenders,
+            }
+        })
+        expect(
+            sizes.content,
+            `${view} must not overflow horizontally: ${JSON.stringify(
+                sizes.offenders
+            )}`
+        ).toBeLessThanOrEqual(sizes.viewport)
     }
 })
