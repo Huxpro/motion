@@ -1124,11 +1124,12 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "I5/F5/M1/R0/C1 · immutable bd151a1 package · focused Gallery case · dual-renderer peak/final sampling · native not required.",
     },
     {
-        id: "motion-function-variants",
+        id: "motion-17",
         date: "2026-08-11",
         title: "Function variants + custom parity",
         kind: "evidence",
         status: "verified",
+        motionPr: 17,
         caseIds: ["variants/function-custom"],
         lossBefore: 46,
         lossAfter: WEIGHTED_LOSS,
