@@ -184,15 +184,22 @@ test("evidence portal exposes examples, API inventory, and conformance metrics",
     await page.goto("http://localhost:4173/?view=overview")
 
     await expect(
-        page.getByRole("heading", { name: "Motion for Lynx." })
+        page.getByRole("heading", { name: "Motion / Lynx status" })
     ).toBeVisible()
+    await expect(page.locator(".monitor-metric")).toHaveCount(5)
     await expect(
-        page.getByText(`${API_METRICS.supported} supported`, { exact: false })
-    ).toBeVisible()
+        page.locator(".capability-row:not(.capability-row-head)")
+    ).toHaveCount(7)
+    await expect(page.locator(".blocker-list li")).toHaveCount(
+        API_METRICS.blocked
+    )
+    await expect(page.locator(".test-row:not(.test-row-head)")).toHaveCount(
+        CONFORMANCE_METRICS.tracked
+    )
     await expect(
-        page
-            .getByText(`${CONFORMANCE_METRICS.tracked}`, { exact: true })
-            .first()
+        page.getByRole("heading", {
+            name: `${CONFORMANCE_METRICS.tracked} tracked contracts`,
+        })
     ).toBeVisible()
 
     await page.getByRole("link", { name: "API", exact: true }).click()

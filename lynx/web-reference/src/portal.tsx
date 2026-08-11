@@ -98,6 +98,28 @@ function CoverageStrip() {
     )
 }
 
+function EvidenceMark({
+    available,
+    label,
+}: {
+    available: boolean
+    label: string
+}) {
+    return (
+        <span
+            className={
+                available
+                    ? "monitor-evidence evidence-available"
+                    : "monitor-evidence evidence-missing"
+            }
+            aria-label={`${label}: ${available ? "available" : "missing"}`}
+        >
+            <i aria-hidden="true" />
+            {available ? "Yes" : "—"}
+        </span>
+    )
+}
+
 function Overview() {
     const implementationPercent = Math.round(
         ((API_METRICS.supported + API_METRICS.partial) / API_METRICS.total) *
@@ -106,157 +128,312 @@ function Overview() {
     const exactPercent = Math.round(
         (CONFORMANCE_METRICS.conformant / CONFORMANCE_METRICS.tracked) * 100
     )
+    const galleryPercent = Math.round(
+        (CONFORMANCE_METRICS.gallery / CONFORMANCE_METRICS.tracked) * 100
+    )
+    const packageTestCount = CONFORMANCE_CASES.filter(
+        (item) => item.evidence.packageTest
+    ).length
+    const packageTestPercent = Math.round(
+        (packageTestCount / CONFORMANCE_METRICS.tracked) * 100
+    )
+    const nativePercent = Math.round(
+        (CONFORMANCE_METRICS.native / CONFORMANCE_METRICS.tracked) * 100
+    )
+    const groups = Array.from(
+        new Set(ATOMIC_CAPABILITIES.map((item) => item.group))
+    ).map((group) => {
+        const items = ATOMIC_CAPABILITIES.filter((item) => item.group === group)
+        return {
+            group,
+            total: items.length,
+            supported: items.filter((item) => item.status === "supported")
+                .length,
+            partial: items.filter((item) => item.status === "partial").length,
+            blocked: items.filter((item) => item.status === "blocked").length,
+        }
+    })
+    const blockers = ATOMIC_CAPABILITIES.filter(
+        (item) => item.status === "blocked"
+    )
 
     return (
         <main className="page overview-page" id="main-content">
-            <section className="hero">
-                <div className="hero-copy">
-                    <p className="eyebrow">Lynx adapter / review artifact</p>
-                    <h1>Motion for Lynx.</h1>
-                    <p className="hero-deck">
-                        Executable examples, atomic API status, and
-                        source-linked conformance for the declarative component
-                        adapter.
-                    </p>
-                    <div className="hero-actions">
-                        <a className="action-primary" href="?view=examples">
-                            Run examples
-                        </a>
-                        <a
-                            className="action-secondary"
-                            href="?view=conformance"
-                        >
-                            Audit conformance →
-                        </a>
-                    </div>
-                </div>
-                <aside
-                    className="release-note"
-                    aria-label="Current release assessment"
-                >
-                    <span className="release-kicker">Current answer</span>
-                    <strong>Useful subset.</strong>
-                    <b>Not drop-in compatible.</b>
+            <header className="monitor-header">
+                <div className="monitor-title">
+                    <p className="eyebrow">Declarative adapter / PR monitor</p>
+                    <h1>Motion / Lynx status</h1>
                     <p>
-                        Upstream animation primitives are reused. Lynx still
-                        owns host rendering, worklets, gestures, layout, and
-                        component-tree integration.
+                        Manifest-derived snapshot for{" "}
+                        <a
+                            href="https://github.com/lynx-family/lynx-stack/pull/3436"
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            lynx-stack#3436
+                        </a>
+                        , stacked on{" "}
+                        <a
+                            href="https://github.com/lynx-family/lynx-stack/pull/3405"
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            #3405
+                        </a>
+                        . CI health remains authoritative in the PR checks.
                     </p>
-                    <span className="release-signature">
-                        #3405 core → #3436 extension
+                </div>
+                <div className="monitor-verdict">
+                    <span className="monitor-verdict-label">
+                        <i aria-hidden="true" /> Current verdict
                     </span>
+                    <strong>Useful subset, not drop-in compatible</strong>
+                    <span>Upstream source 12.40.0 · Web baseline 13.0.0</span>
+                </div>
+            </header>
+
+            <section
+                className="monitor-metrics"
+                aria-label="Current progress metrics"
+            >
+                <a className="monitor-metric" href="?view=api">
+                    <span>API readiness</span>
+                    <strong>
+                        {API_METRICS.supported + API_METRICS.partial} /{" "}
+                        {API_METRICS.total}
+                    </strong>
+                    <small>
+                        {implementationPercent}% implemented or partial
+                    </small>
+                    <i style={{ width: `${implementationPercent}%` }} />
+                </a>
+                <a className="monitor-metric" href="?view=conformance">
+                    <span>Exact parity</span>
+                    <strong>
+                        {CONFORMANCE_METRICS.conformant} /{" "}
+                        {CONFORMANCE_METRICS.tracked}
+                    </strong>
+                    <small>{exactPercent}% dual-renderer conformance</small>
+                    <i style={{ width: `${Math.max(3, exactPercent)}%` }} />
+                </a>
+                <a className="monitor-metric" href="?view=conformance">
+                    <span>Package evidence</span>
+                    <strong>
+                        {packageTestCount} / {CONFORMANCE_METRICS.tracked}
+                    </strong>
+                    <small>
+                        {packageTestPercent}% have focused package tests
+                    </small>
+                    <i style={{ width: `${packageTestPercent}%` }} />
+                </a>
+                <a className="monitor-metric" href="?view=examples">
+                    <span>Gallery runnable</span>
+                    <strong>
+                        {CONFORMANCE_METRICS.gallery} /{" "}
+                        {CONFORMANCE_METRICS.tracked}
+                    </strong>
+                    <small>{galleryPercent}% executable in both panes</small>
+                    <i style={{ width: `${galleryPercent}%` }} />
+                </a>
+                <a className="monitor-metric" href="?view=conformance">
+                    <span>Native evidence</span>
+                    <strong>
+                        {CONFORMANCE_METRICS.native} /{" "}
+                        {CONFORMANCE_METRICS.tracked}
+                    </strong>
+                    <small>{nativePercent}% recorded on a native client</small>
+                    <i style={{ width: `${Math.max(3, nativePercent)}%` }} />
+                </a>
+            </section>
+
+            <section className="monitor-split">
+                <article className="capability-monitor">
+                    <header className="monitor-section-header">
+                        <div>
+                            <p className="eyebrow">Capability progress</p>
+                            <h2>Atomic API by area</h2>
+                        </div>
+                        <a href="?view=api">Open API inventory →</a>
+                    </header>
+                    <div
+                        className="capability-table"
+                        role="table"
+                        aria-label="Atomic API status by area"
+                    >
+                        <div
+                            className="capability-row capability-row-head"
+                            role="row"
+                        >
+                            <span role="columnheader">Area</span>
+                            <span role="columnheader">Supported</span>
+                            <span role="columnheader">Partial</span>
+                            <span role="columnheader">Blocked</span>
+                            <span role="columnheader">Distribution</span>
+                        </div>
+                        {groups.map((group) => (
+                            <div
+                                className="capability-row"
+                                role="row"
+                                key={group.group}
+                            >
+                                <strong role="cell">{group.group}</strong>
+                                <span role="cell">{group.supported}</span>
+                                <span role="cell">{group.partial}</span>
+                                <span role="cell">{group.blocked}</span>
+                                <div
+                                    className="group-distribution"
+                                    role="cell"
+                                    aria-label={`${group.group}: ${group.supported} supported, ${group.partial} partial, ${group.blocked} blocked`}
+                                >
+                                    <i
+                                        className="group-supported"
+                                        style={{
+                                            width: `${
+                                                (group.supported /
+                                                    group.total) *
+                                                100
+                                            }%`,
+                                        }}
+                                    />
+                                    <i
+                                        className="group-partial"
+                                        style={{
+                                            width: `${
+                                                (group.partial / group.total) *
+                                                100
+                                            }%`,
+                                        }}
+                                    />
+                                    <i
+                                        className="group-blocked"
+                                        style={{
+                                            width: `${
+                                                (group.blocked / group.total) *
+                                                100
+                                            }%`,
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </article>
+
+                <aside className="blocker-monitor">
+                    <header className="monitor-section-header">
+                        <div>
+                            <p className="eyebrow">Open blockers</p>
+                            <h2>{blockers.length} atomic gaps</h2>
+                        </div>
+                    </header>
+                    <ol className="blocker-list">
+                        {blockers.map((item, index) => (
+                            <li key={item.id}>
+                                <span>
+                                    {String(index + 1).padStart(2, "0")}
+                                </span>
+                                <div>
+                                    <code>{item.api}</code>
+                                    <small>{item.group}</small>
+                                </div>
+                            </li>
+                        ))}
+                    </ol>
                 </aside>
             </section>
 
-            <section className="scoreline" aria-label="Capability summary">
-                <div className="score-main">
+            <section className="test-monitor">
+                <header className="monitor-section-header test-monitor-header">
                     <div>
-                        <span className="score-label">Tracked API surface</span>
-                        <strong>
-                            {API_METRICS.supported + API_METRICS.partial} of{" "}
-                            {API_METRICS.total} APIs implemented or partial
-                        </strong>
+                        <p className="eyebrow">Upstream test monitor</p>
+                        <h2>{CONFORMANCE_METRICS.tracked} tracked contracts</h2>
+                    </div>
+                    <div className="test-summary">
                         <span>
-                            {implementationPercent}% of this adapter scope ·{" "}
-                            {API_METRICS.supported} supported ·{" "}
-                            {API_METRICS.partial} partial ·{" "}
-                            {API_METRICS.blocked} blocked
+                            <i className="summary-supported" />
+                            {CONFORMANCE_METRICS.conformant} conformant
+                        </span>
+                        <span>
+                            <i className="summary-partial" />
+                            {CONFORMANCE_METRICS.partial} partial
+                        </span>
+                        <span>
+                            <i className="summary-blocked" />
+                            {CONFORMANCE_METRICS.blocked} blocked
                         </span>
                     </div>
-                    <a href="?view=api">Inspect all APIs →</a>
-                </div>
-                <CoverageStrip />
-                <p className="scope-note">
-                    Denominator: {API_METRICS.total} APIs in the curated
-                    declarative adapter scope—not the complete Motion package.
-                </p>
-            </section>
-
-            <section className="evidence-ladder">
-                <div className="section-heading">
-                    <p className="eyebrow">Evidence levels</p>
-                    <h2>Implementation is not conformance.</h2>
-                    <p>
-                        Each level is stricter. A working Gallery example does
-                        not count as exact upstream parity.
-                    </p>
-                </div>
-                <div className="ladder" role="list">
-                    <div className="ladder-row" role="listitem">
-                        <span className="ladder-index">01</span>
-                        <strong>{CONFORMANCE_METRICS.tracked}</strong>
-                        <span>upstream contracts tracked</span>
-                        <i style={{ width: "100%" }} />
-                    </div>
-                    <div className="ladder-row" role="listitem">
-                        <span className="ladder-index">02</span>
-                        <strong>{CONFORMANCE_METRICS.gallery}</strong>
-                        <span>executable in Gallery</span>
-                        <i
-                            style={{
-                                width: `${
-                                    (CONFORMANCE_METRICS.gallery /
-                                        CONFORMANCE_METRICS.tracked) *
-                                    100
-                                }%`,
-                            }}
-                        />
-                    </div>
+                </header>
+                <div className="test-table-scroll">
                     <div
-                        className="ladder-row ladder-row-emphasis"
-                        role="listitem"
+                        className="test-table"
+                        role="table"
+                        aria-label="Upstream conformance evidence matrix"
                     >
-                        <span className="ladder-index">03</span>
-                        <strong>{CONFORMANCE_METRICS.dualRenderer}</strong>
-                        <span>exact Web ↔ Lynx semantic case</span>
-                        <i style={{ width: `${Math.max(8, exactPercent)}%` }} />
-                    </div>
-                    <div className="ladder-row" role="listitem">
-                        <span className="ladder-index">04</span>
-                        <strong>{CONFORMANCE_METRICS.native}</strong>
-                        <span>native evidence recorded</span>
-                        <i
-                            style={{
-                                width: `${Math.max(
-                                    8,
-                                    (CONFORMANCE_METRICS.native /
-                                        CONFORMANCE_METRICS.tracked) *
-                                        100
-                                )}%`,
-                            }}
-                        />
+                        <div className="test-row test-row-head" role="row">
+                            <span role="columnheader">
+                                Contract / upstream test
+                            </span>
+                            <span role="columnheader">Package</span>
+                            <span role="columnheader">Gallery</span>
+                            <span role="columnheader">Dual</span>
+                            <span role="columnheader">Native</span>
+                            <span role="columnheader">Result</span>
+                        </div>
+                        {CONFORMANCE_CASES.map((item, index) => (
+                            <div className="test-row" role="row" key={item.id}>
+                                <div className="test-contract" role="cell">
+                                    <span>
+                                        {String(index + 1).padStart(2, "0")} /{" "}
+                                        {item.category}
+                                    </span>
+                                    <strong>{item.title}</strong>
+                                    <small>{item.upstream.testName}</small>
+                                </div>
+                                <EvidenceMark
+                                    available={item.evidence.packageTest}
+                                    label="Package test"
+                                />
+                                <EvidenceMark
+                                    available={item.evidence.gallery}
+                                    label="Gallery"
+                                />
+                                <EvidenceMark
+                                    available={item.evidence.dualRenderer}
+                                    label="Dual renderer"
+                                />
+                                <EvidenceMark
+                                    available={item.evidence.native}
+                                    label="Native evidence"
+                                />
+                                <StatusMark
+                                    status={
+                                        item.status === "conformant"
+                                            ? "supported"
+                                            : item.status
+                                    }
+                                />
+                            </div>
+                        ))}
                     </div>
                 </div>
+                <footer className="test-monitor-footer">
+                    Evidence availability is not a live CI result. Open the{" "}
+                    <a href="?view=conformance">conformance ledger</a> for
+                    source paths, assertions, and gaps.
+                </footer>
             </section>
 
-            <section className="editorial-columns">
-                <div className="now-column">
-                    <p className="eyebrow">Available now</p>
-                    <h2>{GALLERY_EXAMPLES.length} runnable scenarios</h2>
-                    <p>
-                        Object targets, reactive updates, local variants,
-                        keyframes, repeat/reverse, color mixing, tap/hover
-                        priority, callbacks, lifecycle, and custom hosts.
-                    </p>
-                    <a href="?view=examples">Compare Web and Lynx →</a>
+            <section className="gallery-showoff">
+                <div>
+                    <p className="eyebrow">Gallery / executable showcase</p>
+                    <h2>{GALLERY_EXAMPLES.length} live scenarios</h2>
                 </div>
-                <div className="boundary-column">
-                    <p className="eyebrow">Architecture queue</p>
-                    <ol>
-                        <li>
-                            <span>01</span> variant propagation & orchestration
-                        </li>
-                        <li>
-                            <span>02</span> focus, in-view & drag adapters
-                        </li>
-                        <li>
-                            <span>03</span> layout projection & presence tree
-                        </li>
-                        <li>
-                            <span>04</span> consumer ref / handler composition
-                        </li>
-                    </ol>
-                </div>
+                <p>
+                    The Gallery demonstrates the supported subset and makes
+                    renderer differences visible. It is evidence, but it does
+                    not raise a case to exact conformance by itself.
+                </p>
+                <a href="?view=examples">Open Web / Lynx Gallery →</a>
             </section>
         </main>
     )

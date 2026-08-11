@@ -20,6 +20,22 @@ The visual system exists to support the review path: run examples, inspect the
 API surface, then audit source-linked conformance. Decorative themes must not
 compete with this sequence.
 
+## Overview monitor contract
+
+`/?view=overview` is the operational front page for reviewers, not a product
+landing page. It derives every count from the shared conformance manifest and
+keeps four kinds of information visible together:
+
+-   atomic API progress grouped by capability area;
+-   the complete list of currently blocked atomic APIs;
+-   evidence availability for every tracked upstream contract; and
+-   the current conformance result for each contract.
+
+Evidence availability is a repository snapshot, not live CI health. GitHub PR
+checks remain authoritative for the current build and test result. The Gallery
+is an executable showcase and evidence surface, but it is intentionally
+secondary to the progress and test monitor.
+
 ## 1. Can a human execute the capability?
 
 `/?view=examples` presents the locked Web Motion baseline and the ReactLynx
