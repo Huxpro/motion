@@ -1035,11 +1035,12 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "Moves MotionValue hydration onto the reusable Core primitive; consumer preview pending.",
     },
     {
-        id: "motion-reactive-animate",
+        id: "motion-14",
         date: "2026-08-11",
         title: "Reactive animate timing parity",
         kind: "evidence",
         status: "verified",
+        motionPr: 14,
         caseIds: ["targets/reactive-animate"],
         lossBefore: 61,
         lossAfter: WEIGHTED_LOSS,
