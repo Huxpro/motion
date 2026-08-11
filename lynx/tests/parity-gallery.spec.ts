@@ -11,6 +11,7 @@ import {
     NAMED_VARIANTS_CASE,
     PRIORITIZED_GAPS,
     REACTIVE_ANIMATE_CASE,
+    REPEAT_INFINITY_CASE,
     WEIGHTED_LOSS,
 } from "../src/conformance/cases.js"
 
@@ -348,6 +349,55 @@ test("manifest case: ordered keyframes pass through their peak and settle", asyn
         await expect
             .poll(async () => Math.round(await translateY()))
             .toBe(KEYFRAMES_CASE.expected.endY)
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: infinite repeat remains live after its first duration", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const page of [lynxPage, webPage]) {
+        const target = page.locator("#target-repeat-infinity")
+        const rotation = () =>
+            target.evaluate((element) => {
+                const matrix = new DOMMatrixReadOnly(
+                    getComputedStyle(element).transform
+                )
+                const degrees = (Math.atan2(matrix.b, matrix.a) * 180) / Math.PI
+                return (degrees + 360) % 360
+            })
+
+        await page.waitForTimeout(
+            REPEAT_INFINITY_CASE.expected.duration * 1000 + 150
+        )
+        const afterFirstDuration = await rotation()
+        await page.waitForTimeout(173)
+        const later = await rotation()
+        const angularDistance = Math.abs(
+            ((later - afterFirstDuration + 540) % 360) - 180
+        )
+        expect(
+            angularDistance,
+            `${REPEAT_INFINITY_CASE.upstream.testName}: ${afterFirstDuration} → ${later}`
+        ).toBeGreaterThan(10)
     }
 
     expect(errors).toEqual([])

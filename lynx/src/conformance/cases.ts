@@ -182,24 +182,25 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         category: "Targets",
         title: "Infinite repeat",
         summary:
-            "Infinity survives worklet serialization and the animation stays live.",
-        status: "partial",
+            "Infinity survives serialization and remains live after the first duration.",
+        status: "conformant",
         api: ["transition.repeat", "repeatType"],
         upstream: source(
-            "packages/framer-motion/src/motion/__tests__/waapi.test.tsx",
-            "Animates with WAAPI if repeat is Infinity and we need to generate keyframes"
+            "packages/motion-dom/src/animation/__tests__/JSAnimation.test.ts",
+            "Correctly samples with infinite repeat"
         ),
         baseline: "framer-motion@13.0.0",
         assertions: [
-            "rotate/reverse/color loops do not freeze after one iteration",
+            "animation remains live after its first duration",
+            "later samples continue to change on both renderers",
         ],
-        gap: "Runtime hardening is covered on Lynx-for-Web; the upstream test uses a DOM-specific WAAPI path.",
         evidence: {
             gallery: true,
             packageTest: true,
-            dualRenderer: false,
-            native: false,
+            dualRenderer: true,
+            native: true,
         },
+        expected: { duration: 2 },
     },
     {
         id: "variants/named",
@@ -428,6 +429,10 @@ export const KEYFRAMES_CASE = CONFORMANCE_CASES.find(
 ) as ConformanceCase & {
     expected: { startY: number; peakY: number; endY: number }
 }
+
+export const REPEAT_INFINITY_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "transitions/repeat-infinity"
+) as ConformanceCase & { expected: { duration: number } }
 
 export const NAMED_VARIANTS_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "variants/named"
@@ -886,7 +891,8 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         reactLynx: 0,
         css: 0,
         rationale:
-            "Useful loop behavior; Web baseline follows a different WAAPI path.",
+            "Public infinite-sampling semantics are exact; DOM-only WAAPI routing is documented separately.",
+        issue: "https://github.com/Huxpro/motion/issues/19",
     },
     {
         caseId: "variants/named",
@@ -1146,12 +1152,23 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         date: "2026-08-11",
         title: "Base animation lifecycle parity",
         kind: "evidence",
-        status: "verified",
+        status: "merged",
         motionPr: 18,
         caseIds: ["lifecycle/base-animate"],
         lossBefore: 43,
-        lossAfter: WEIGHTED_LOSS,
+        lossAfter: 39,
         note: "I4/F4/M2/R1/C0 · immutable bd151a1 package · headless start→complete order · native Explorer event log · clean console.",
+    },
+    {
+        id: "motion-repeat-infinity",
+        date: "2026-08-11",
+        title: "Infinite repeat sampling parity",
+        kind: "evidence",
+        status: "verified",
+        caseIds: ["transitions/repeat-infinity"],
+        lossBefore: 39,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I3/F4/M2/R0/C0 · immutable bd151a1 package · dual-renderer post-duration sampling · native loop evidence · WAAPI boundary issue #19.",
     },
     {
         id: "lynx-3457",
