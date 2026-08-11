@@ -2,9 +2,12 @@ import { useMemo, useState } from "react"
 import {
     API_METRICS,
     ATOMIC_CAPABILITIES,
+    CONVERGENCE_HISTORY,
     CONFORMANCE_CASES,
     CONFORMANCE_METRICS,
     GALLERY_EXAMPLES,
+    PRIORITIZED_GAPS,
+    WEIGHTED_LOSS,
     type SupportStatus,
 } from "../../src/conformance/cases.js"
 import "./portal.css"
@@ -69,11 +72,11 @@ function Masthead({ view }: { view: View }) {
             </nav>
             <a
                 className="build-stamp"
-                href="https://github.com/lynx-family/lynx-stack/pull/3436"
+                href="https://github.com/lynx-family/lynx-stack/pull/3457"
                 target="_blank"
                 rel="noreferrer"
             >
-                PR #3436
+                Stack #3457
             </a>
         </header>
     )
@@ -122,6 +125,174 @@ function EvidenceMark({
     )
 }
 
+function recordLabel(record: (typeof CONVERGENCE_HISTORY)[number]) {
+    const labels = []
+    if (record.lynxStackPr) labels.push(`L#${record.lynxStackPr}`)
+    if (record.motionPr) labels.push(`M#${record.motionPr}`)
+    return labels.join(" / ")
+}
+
+function recordHref(record: (typeof CONVERGENCE_HISTORY)[number]) {
+    if (record.lynxStackPr) {
+        return `https://github.com/lynx-family/lynx-stack/pull/${record.lynxStackPr}`
+    }
+    return `https://github.com/Huxpro/motion/pull/${record.motionPr}`
+}
+
+function LossMonitor() {
+    const width = 960
+    const height = 268
+    const left = 52
+    const right = 28
+    const top = 24
+    const bottom = 62
+    const expectedSpace = 112
+    const plotHeight = height - top - bottom
+    const x = (index: number) =>
+        left +
+        (index / Math.max(1, CONVERGENCE_HISTORY.length - 1)) *
+            (width - left - right - expectedSpace)
+    const y = (loss: number) => top + ((100 - loss) / 100) * plotHeight
+    const points = CONVERGENCE_HISTORY.map(
+        (record, index) => `${x(index)},${y(record.lossAfter)}`
+    ).join(" ")
+    const pending = [...CONVERGENCE_HISTORY]
+        .reverse()
+        .find((record) => record.expectedLossAfter !== undefined)
+    const pendingIndex = pending ? CONVERGENCE_HISTORY.indexOf(pending) : -1
+    const expectedX = width - right
+
+    return (
+        <section className="loss-monitor" aria-labelledby="loss-heading">
+            <header className="monitor-section-header loss-monitor-header">
+                <div>
+                    <h2 id="loss-heading">Weighted conformance loss</h2>
+                    <p>
+                        Importance-weighted semantic gap; partial = ½ loss,
+                        blocked = full loss.
+                    </p>
+                </div>
+                <strong>{WEIGHTED_LOSS}</strong>
+            </header>
+            <div className="loss-chart-wrap">
+                <svg
+                    className="loss-chart"
+                    viewBox={`0 0 ${width} ${height}`}
+                    role="img"
+                    aria-label={`Weighted loss is ${WEIGHTED_LOSS} after ${CONVERGENCE_HISTORY.length} recorded PR steps`}
+                >
+                    {[100, 75, 50, 25, 0].map((tick) => (
+                        <g key={tick}>
+                            <line
+                                className="loss-grid-line"
+                                x1={left}
+                                x2={width - right}
+                                y1={y(tick)}
+                                y2={y(tick)}
+                            />
+                            <text
+                                className="loss-axis-label"
+                                x={left - 12}
+                                y={y(tick) + 4}
+                                textAnchor="end"
+                            >
+                                {tick}
+                            </text>
+                        </g>
+                    ))}
+                    <polyline className="loss-line" points={points} />
+                    {CONVERGENCE_HISTORY.map((record, index) => (
+                        <g key={record.id}>
+                            <circle
+                                className="loss-point"
+                                cx={x(index)}
+                                cy={y(record.lossAfter)}
+                                r="5"
+                            />
+                            <text
+                                className="loss-value"
+                                x={x(index)}
+                                y={y(record.lossAfter) - 12}
+                                textAnchor="middle"
+                            >
+                                {record.lossAfter}
+                            </text>
+                            <text
+                                className="loss-pr-label"
+                                x={x(index)}
+                                y={height - 28}
+                                textAnchor="middle"
+                            >
+                                {recordLabel(record)}
+                            </text>
+                        </g>
+                    ))}
+                    {pending?.expectedLossAfter !== undefined && (
+                        <g>
+                            <line
+                                className="loss-projection"
+                                x1={x(pendingIndex)}
+                                x2={expectedX}
+                                y1={y(pending.lossAfter)}
+                                y2={y(pending.expectedLossAfter)}
+                            />
+                            <circle
+                                className="loss-point-projected"
+                                cx={expectedX}
+                                cy={y(pending.expectedLossAfter)}
+                                r="6"
+                            />
+                            <text
+                                className="loss-value loss-value-projected"
+                                x={expectedX}
+                                y={y(pending.expectedLossAfter) - 13}
+                                textAnchor="middle"
+                            >
+                                {pending.expectedLossAfter} pending
+                            </text>
+                            <text
+                                className="loss-pr-label"
+                                x={expectedX}
+                                y={height - 28}
+                                textAnchor="middle"
+                            >
+                                verified
+                            </text>
+                        </g>
+                    )}
+                </svg>
+            </div>
+            <ol className="convergence-ledger">
+                {CONVERGENCE_HISTORY.map((record) => (
+                    <li key={record.id}>
+                        <a
+                            href={recordHref(record)}
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            {recordLabel(record)}
+                        </a>
+                        <div>
+                            <strong>{record.title}</strong>
+                            <p>{record.note}</p>
+                        </div>
+                        <span
+                            className={`record-status status-${record.status}`}
+                        >
+                            {record.status}
+                        </span>
+                        <b>
+                            {record.lossBefore} → {record.lossAfter}
+                            {record.expectedLossAfter !== undefined &&
+                                ` → ${record.expectedLossAfter}?`}
+                        </b>
+                    </li>
+                ))}
+            </ol>
+        </section>
+    )
+}
+
 function Overview() {
     const implementationPercent = Math.round(
         ((API_METRICS.supported + API_METRICS.partial) / API_METRICS.total) *
@@ -166,21 +337,22 @@ function Overview() {
                     <h1>Motion / Lynx status</h1>
                     <p>
                         <a
-                            href="https://github.com/lynx-family/lynx-stack/pull/3436"
+                            href="https://github.com/lynx-family/lynx-stack/pull/3457"
                             target="_blank"
                             rel="noreferrer"
                         >
-                            #3436
+                            #3457
                         </a>{" "}
                         stacked on{" "}
                         <a
-                            href="https://github.com/lynx-family/lynx-stack/pull/3405"
+                            href="https://github.com/lynx-family/lynx-stack/pull/3455"
                             target="_blank"
                             rel="noreferrer"
                         >
-                            #3405
+                            #3455
                         </a>{" "}
-                        · Manifest snapshot · Live status in PR checks
+                        · validated runtime remains #3436 · live status in PR
+                        checks
                     </p>
                 </div>
                 <div className="monitor-verdict">
@@ -232,6 +404,12 @@ function Overview() {
                     </strong>
                     <small>{galleryPercent}% executable in both panes</small>
                     <i style={{ width: `${galleryPercent}%` }} />
+                </a>
+                <a className="monitor-metric" href="?view=conformance">
+                    <span>Weighted loss</span>
+                    <strong>{WEIGHTED_LOSS}</strong>
+                    <small>importance-adjusted unresolved semantics</small>
+                    <i style={{ width: `${100 - WEIGHTED_LOSS}%` }} />
                 </a>
                 <a className="monitor-metric" href="?view=conformance">
                     <span>Native evidence</span>
@@ -316,23 +494,43 @@ function Overview() {
 
                 <aside className="blocker-monitor">
                     <header className="monitor-section-header">
-                        <h2>Open blockers ({blockers.length})</h2>
+                        <h2>Ranked next gaps</h2>
+                        <span>{blockers.length} API blockers</span>
                     </header>
-                    <ol className="blocker-list">
-                        {blockers.map((item, index) => (
-                            <li key={item.id}>
+                    <ol className="priority-list">
+                        {PRIORITIZED_GAPS.slice(0, 5).map((item, index) => (
+                            <li key={item.case.id}>
                                 <span>
                                     {String(index + 1).padStart(2, "0")}
                                 </span>
                                 <div>
-                                    <code>{item.api}</code>
-                                    <small>{item.group}</small>
+                                    {item.priority.issue ? (
+                                        <a
+                                            href={item.priority.issue}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                        >
+                                            {item.case.title}
+                                        </a>
+                                    ) : (
+                                        <strong>{item.case.title}</strong>
+                                    )}
+                                    <small>
+                                        I{item.priority.importance} · F
+                                        {item.priority.platformFit} · M
+                                        {item.priority.mts} · R
+                                        {item.priority.reactLynx} · C
+                                        {item.priority.css}
+                                    </small>
                                 </div>
+                                <b>{item.score.toFixed(1)}</b>
                             </li>
                         ))}
                     </ol>
                 </aside>
             </section>
+
+            <LossMonitor />
 
             <section className="test-monitor">
                 <header className="monitor-section-header test-monitor-header">

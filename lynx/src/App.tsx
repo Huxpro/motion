@@ -1,7 +1,10 @@
 import type { CSSProperties } from "@lynx-js/types"
 import type { IntrinsicElements } from "@lynx-js/types"
 import { useState } from "@lynx-js/react"
-import { MOTION_CREATE_CASE } from "./conformance/cases.js"
+import {
+    MOTION_CREATE_CASE,
+    REACTIVE_ANIMATE_CASE,
+} from "./conformance/cases.js"
 import { motion } from "./motion/index.js"
 import "./App.css"
 
@@ -204,8 +207,8 @@ export function App() {
                             <text style={cardTitle}>Reactive target</text>
                             <text style={code}>
                                 {reactiveActive
-                                    ? "animate={{ x: 38, rotate: 12 }}"
-                                    : "animate={{ x: -38, rotate: -12 }}"}
+                                    ? `animate={{ x: ${REACTIVE_ANIMATE_CASE.expected.endX}, rotate: 12 }}`
+                                    : `animate={{ x: ${REACTIVE_ANIMATE_CASE.expected.startX}, rotate: -12 }}`}
                             </text>
                         </view>
                         <view style={demo}>
@@ -217,17 +220,19 @@ export function App() {
                                     height: "42px",
                                     backgroundColor: "#d3df63",
                                 }}
-                                initial={{ opacity: 0.4, x: -38, rotate: -12 }}
+                                initial={{
+                                    opacity: 0.4,
+                                    x: REACTIVE_ANIMATE_CASE.expected.startX,
+                                    rotate: -12,
+                                }}
                                 animate={{
                                     opacity: 1,
-                                    x: reactiveActive ? 38 : -38,
+                                    x: reactiveActive
+                                        ? REACTIVE_ANIMATE_CASE.expected.endX
+                                        : REACTIVE_ANIMATE_CASE.expected.startX,
                                     rotate: reactiveActive ? 12 : -12,
                                 }}
-                                transition={{
-                                    type: "spring",
-                                    stiffness: 240,
-                                    damping: 22,
-                                }}
+                                transition={{ duration: 0.4, ease: "linear" }}
                             >
                                 <text
                                     style={{

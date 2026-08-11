@@ -1,9 +1,13 @@
 import { expect, test } from "@playwright/test"
 import {
     API_METRICS,
+    CONVERGENCE_HISTORY,
     CONFORMANCE_METRICS,
     GALLERY_EXAMPLES,
     MOTION_CREATE_CASE,
+    PRIORITIZED_GAPS,
+    REACTIVE_ANIMATE_CASE,
+    WEIGHTED_LOSS,
 } from "../src/conformance/cases.js"
 
 const previewUrl = "/__web_preview?casename=main.web.bundle"
@@ -178,6 +182,61 @@ test("manifest case: motion.create forwards and animates on Web and Lynx", async
     await Promise.all([lynxPage.close(), webPage.close()])
 })
 
+test("manifest case: reactive animate uses its transition on later renders", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const page of [lynxPage, webPage]) {
+        const target = page.locator("#target-reactive-target")
+        const translateX = () =>
+            target.evaluate((element) => {
+                const transform = getComputedStyle(element).transform
+                return new DOMMatrixReadOnly(transform).m41
+            })
+
+        await expect
+            .poll(async () => Math.round(await translateX()))
+            .toBe(REACTIVE_ANIMATE_CASE.expected.startX)
+
+        await page.locator("#example-reactive-target").click()
+        const samples: number[] = []
+        for (let index = 0; index < 6; index++) {
+            samples.push(await translateX())
+            await page.waitForTimeout(45)
+        }
+
+        expect(
+            samples.some(
+                (value) =>
+                    value > REACTIVE_ANIMATE_CASE.expected.startX + 1 &&
+                    value < REACTIVE_ANIMATE_CASE.expected.endX - 1
+            ),
+            `${REACTIVE_ANIMATE_CASE.upstream.testName}: ${samples.join(", ")}`
+        ).toBe(true)
+        await expect
+            .poll(async () => Math.round(await translateX()))
+            .toBe(REACTIVE_ANIMATE_CASE.expected.endX)
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
 test("evidence portal exposes examples, API inventory, and conformance metrics", async ({
     page,
 }) => {
@@ -186,12 +245,21 @@ test("evidence portal exposes examples, API inventory, and conformance metrics",
     await expect(
         page.getByRole("heading", { name: "Motion / Lynx status" })
     ).toBeVisible()
-    await expect(page.locator(".monitor-metric")).toHaveCount(5)
+    await expect(page.locator(".monitor-metric")).toHaveCount(6)
     await expect(
         page.locator(".capability-row:not(.capability-row-head)")
     ).toHaveCount(7)
-    await expect(page.locator(".blocker-list li")).toHaveCount(
-        API_METRICS.blocked
+    await expect(
+        page.locator(".blocker-monitor .monitor-section-header > span")
+    ).toHaveText(`${API_METRICS.blocked} API blockers`)
+    await expect(page.locator(".priority-list li")).toHaveCount(
+        Math.min(5, PRIORITIZED_GAPS.length)
+    )
+    await expect(page.locator(".loss-monitor-header > strong")).toHaveText(
+        String(WEIGHTED_LOSS)
+    )
+    await expect(page.locator(".convergence-ledger li")).toHaveCount(
+        CONVERGENCE_HISTORY.length
     )
     await expect(page.locator(".test-row:not(.test-row-head)")).toHaveCount(
         CONFORMANCE_METRICS.tracked

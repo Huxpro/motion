@@ -84,3 +84,22 @@ The evidence ladder currently distinguishes:
 
 These counts are computed from the manifest so a PR diff exposes any metric
 change together with the case that caused it.
+
+## Priority and weighted loss
+
+Every tracked contract has five reviewable scores: Motion usage importance,
+Web/Lynx platform fit, and remaining MTS, ReactLynx, and CSS effort. The ranked
+queue uses:
+
+`importance × platform fit × status loss / (1 + MTS + ReactLynx + CSS)`
+
+`conformant` contributes no status loss, `partial` contributes one half, and
+`blocked` contributes the full value. Weighted conformance loss is the sum of
+importance-weighted status loss divided by total tracked importance. The
+dashboard shows the individual inputs next to the ranking so the ordering can
+be challenged without reverse-engineering the score.
+
+`CONVERGENCE_HISTORY` records every capability, architecture, or evidence PR
+with loss before/after. A projected value is visually dashed and does not
+become the current metric until the exact immutable preview passes the required
+package, dual-renderer, and native gates.

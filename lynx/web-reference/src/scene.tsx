@@ -1,7 +1,10 @@
 import { motion } from "framer-motion"
 import { CSSProperties, forwardRef, useState } from "react"
 import type { ComponentPropsWithoutRef } from "react"
-import { MOTION_CREATE_CASE } from "../../src/conformance/cases"
+import {
+    MOTION_CREATE_CASE,
+    REACTIVE_ANIMATE_CASE,
+} from "../../src/conformance/cases"
 
 /**
  * DECLARATIVE API GALLERY — Framer Motion web reference.
@@ -200,8 +203,8 @@ export function App() {
                             <span style={cardTitle}>Reactive target</span>
                             <span style={code}>
                                 {reactiveActive
-                                    ? "animate={{ x: 38, rotate: 12 }}"
-                                    : "animate={{ x: -38, rotate: -12 }}"}
+                                    ? `animate={{ x: ${REACTIVE_ANIMATE_CASE.expected.endX}, rotate: 12 }}`
+                                    : `animate={{ x: ${REACTIVE_ANIMATE_CASE.expected.startX}, rotate: -12 }}`}
                             </span>
                         </div>
                         <div style={demo}>
@@ -213,17 +216,19 @@ export function App() {
                                     height: 42,
                                     backgroundColor: "#d3df63",
                                 }}
-                                initial={{ opacity: 0.4, x: -38, rotate: -12 }}
+                                initial={{
+                                    opacity: 0.4,
+                                    x: REACTIVE_ANIMATE_CASE.expected.startX,
+                                    rotate: -12,
+                                }}
                                 animate={{
                                     opacity: 1,
-                                    x: reactiveActive ? 38 : -38,
+                                    x: reactiveActive
+                                        ? REACTIVE_ANIMATE_CASE.expected.endX
+                                        : REACTIVE_ANIMATE_CASE.expected.startX,
                                     rotate: reactiveActive ? 12 : -12,
                                 }}
-                                transition={{
-                                    type: "spring",
-                                    stiffness: 240,
-                                    damping: 22,
-                                }}
+                                transition={{ duration: 0.4, ease: "linear" }}
                             >
                                 <span
                                     style={{
