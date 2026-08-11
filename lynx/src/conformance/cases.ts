@@ -1181,11 +1181,12 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "I3/F4/M2/R0/C0 · immutable bd151a1 package · dual-renderer post-duration sampling · native loop evidence · WAAPI boundary issue #19.",
     },
     {
-        id: "motion-tap-gesture",
+        id: "motion-22",
         date: "2026-08-11",
         title: "Tap gesture parity",
         kind: "evidence",
         status: "verified",
+        motionPr: 22,
         caseIds: ["gestures/tap"],
         lossBefore: 37,
         lossAfter: WEIGHTED_LOSS,
