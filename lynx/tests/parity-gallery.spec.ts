@@ -12,6 +12,7 @@ import {
     PRIORITIZED_GAPS,
     REACTIVE_ANIMATE_CASE,
     REPEAT_INFINITY_CASE,
+    TAP_GESTURE_CASE,
     WEIGHTED_LOSS,
 } from "../src/conformance/cases.js"
 
@@ -398,6 +399,88 @@ test("manifest case: infinite repeat remains live after its first duration", asy
             angularDistance,
             `${REPEAT_INFINITY_CASE.upstream.testName}: ${afterFirstDuration} → ${later}`
         ).toBeGreaterThan(10)
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: tap applies, fires, and restores rest", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const page of [lynxPage, webPage]) {
+        const target = page.locator("#target-gesture-priority")
+        const semanticStyle = () =>
+            target.evaluate((element) => {
+                const style = getComputedStyle(element)
+                const transform = new DOMMatrixReadOnly(style.transform)
+                return {
+                    scale: Number(transform.a.toFixed(2)),
+                    backgroundColor: style.backgroundColor,
+                }
+            })
+
+        await expect.poll(semanticStyle).toEqual({
+            scale: TAP_GESTURE_CASE.expected.restScale,
+            backgroundColor: "rgb(255, 255, 255)",
+        })
+        await target.scrollIntoViewIfNeeded()
+        const box = await target.boundingBox()
+        expect(box).not.toBeNull()
+        const x = box!.x + box!.width / 2
+        const y = box!.y + box!.height / 2
+        const lynxTouch = page === lynxPage
+        const cdp = lynxTouch
+            ? await page.context().newCDPSession(page)
+            : undefined
+        await target.hover()
+        if (cdp) {
+            await cdp.send("Input.dispatchTouchEvent", {
+                type: "touchStart",
+                touchPoints: [{ x, y }],
+            })
+        } else {
+            await page.mouse.down()
+        }
+        await expect
+            .poll(semanticStyle, {
+                message:
+                    page === lynxPage ? "Lynx tap target" : "Web tap target",
+            })
+            .toEqual({
+                scale: TAP_GESTURE_CASE.expected.tapScale,
+                backgroundColor: "rgb(255, 204, 0)",
+            })
+        if (cdp) {
+            await cdp.send("Input.dispatchTouchEvent", {
+                type: "touchEnd",
+                touchPoints: [],
+            })
+        } else {
+            await page.mouse.up()
+        }
+        await page.mouse.move(0, 0)
+        await expect.poll(semanticStyle).toEqual({
+            scale: TAP_GESTURE_CASE.expected.restScale,
+            backgroundColor: "rgb(255, 255, 255)",
+        })
+        await expect(target).toContainText("Tapped 1")
     }
 
     expect(errors).toEqual([])
