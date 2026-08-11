@@ -1142,11 +1142,12 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "I3/F5/M1/R0/C0 · immutable bd151a1 package · existing Gallery pattern · dual-renderer custom-delay ordering · native not required.",
     },
     {
-        id: "motion-animation-lifecycle",
+        id: "motion-18",
         date: "2026-08-11",
         title: "Base animation lifecycle parity",
         kind: "evidence",
         status: "verified",
+        motionPr: 18,
         caseIds: ["lifecycle/base-animate"],
         lossBefore: 43,
         lossAfter: WEIGHTED_LOSS,
