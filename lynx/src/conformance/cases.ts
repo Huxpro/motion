@@ -237,20 +237,28 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         title: "Function variant + custom",
         summary:
             "Function variants receive custom and return target-local transitions.",
-        status: "partial",
+        status: "conformant",
         api: ["variants", "custom", "transition"],
         upstream: source(
             "packages/framer-motion/src/render/utils/__tests__/variants.test.ts",
             "Resolves function that returns object"
         ),
         baseline: "framer-motion@13.0.0",
-        assertions: ["each custom index resolves a distinct delay"],
-        gap: "Gallery verifies settled results and lifecycle; upstream resolver parity is not isolated yet.",
+        assertions: [
+            "each custom index resolves a distinct delay",
+            "all resolved targets settle at the same visible state",
+        ],
         evidence: {
             gallery: true,
             packageTest: true,
-            dualRenderer: false,
+            dualRenderer: true,
             native: false,
+        },
+        expected: {
+            count: 4,
+            delayStep: 0.12,
+            visibleOpacity: 1,
+            visibleScale: 1,
         },
     },
     {
@@ -428,6 +436,17 @@ export const NAMED_VARIANTS_CASE = CONFORMANCE_CASES.find(
         restOpacity: number
         activeOpacity: number
         activeScale: number
+    }
+}
+
+export const FUNCTION_VARIANTS_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "variants/function-custom"
+) as ConformanceCase & {
+    expected: {
+        count: number
+        delayStep: number
+        visibleOpacity: number
+        visibleScale: number
     }
 }
 
@@ -881,7 +900,7 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         reactLynx: 0,
         css: 0,
         rationale:
-            "Useful advanced variant form; isolated resolver evidence remains.",
+            "Custom resolver arguments and target-owned delays have exact evidence.",
     },
     {
         caseId: "gestures/tap",
@@ -1097,12 +1116,23 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         date: "2026-08-11",
         title: "Ordered keyframes parity",
         kind: "evidence",
-        status: "verified",
+        status: "merged",
         motionPr: 16,
         caseIds: ["targets/keyframes"],
         lossBefore: 51,
-        lossAfter: WEIGHTED_LOSS,
+        lossAfter: 46,
         note: "I5/F5/M1/R0/C1 · immutable bd151a1 package · focused Gallery case · dual-renderer peak/final sampling · native not required.",
+    },
+    {
+        id: "motion-function-variants",
+        date: "2026-08-11",
+        title: "Function variants + custom parity",
+        kind: "evidence",
+        status: "verified",
+        caseIds: ["variants/function-custom"],
+        lossBefore: 46,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I3/F5/M1/R0/C0 · immutable bd151a1 package · existing Gallery pattern · dual-renderer custom-delay ordering · native not required.",
     },
     {
         id: "lynx-3457",

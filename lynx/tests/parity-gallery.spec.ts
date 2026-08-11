@@ -3,6 +3,7 @@ import {
     API_METRICS,
     CONVERGENCE_HISTORY,
     CONFORMANCE_METRICS,
+    FUNCTION_VARIANTS_CASE,
     GALLERY_EXAMPLES,
     KEYFRAMES_CASE,
     MOTION_CREATE_CASE,
@@ -42,6 +43,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
     await expect
         .poll(() => styleOf("#target-gesture-priority"))
         .toMatch(/background-color:\s*(?:#ffffff|rgb\(255,\s*255,\s*255\))/)
+    await page.locator("#example-function-variant").click()
     await expect(page.getByText(/Lifecycle complete:visible/)).toBeVisible({
         timeout: 15_000,
     })
@@ -345,6 +347,74 @@ test("manifest case: ordered keyframes pass through their peak and settle", asyn
         await expect
             .poll(async () => Math.round(await translateY()))
             .toBe(KEYFRAMES_CASE.expected.endY)
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: function variants receive custom and resolve distinct delays", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const page of [lynxPage, webPage]) {
+        const targets = Array.from(
+            { length: FUNCTION_VARIANTS_CASE.expected.count },
+            (_, index) => page.locator(`#target-function-variant-${index}`)
+        )
+        const opacity = (index: number) =>
+            targets[index].evaluate((element) =>
+                Number(getComputedStyle(element).opacity)
+            )
+        const settledStyle = (index: number) =>
+            targets[index].evaluate((element) => {
+                const style = getComputedStyle(element)
+                const transform = new DOMMatrixReadOnly(style.transform)
+                return {
+                    opacity: Number(Number(style.opacity).toFixed(2)),
+                    scale: Number(transform.a.toFixed(2)),
+                }
+            })
+
+        for (let index = 0; index < targets.length; index++) {
+            await expect.poll(() => opacity(index)).toBe(0)
+        }
+
+        await page.locator("#example-function-variant").click()
+        await expect.poll(() => opacity(0)).toBeGreaterThan(0.15)
+        const delayedOpacities = await Promise.all(
+            targets.map((_, index) => opacity(index))
+        )
+        expect(
+            delayedOpacities[0] - delayedOpacities[delayedOpacities.length - 1],
+            `${
+                FUNCTION_VARIANTS_CASE.upstream.testName
+            }: ${delayedOpacities.join(", ")}`
+        ).toBeGreaterThan(0.1)
+
+        for (let index = 0; index < targets.length; index++) {
+            await expect
+                .poll(() => settledStyle(index))
+                .toEqual({
+                    opacity: FUNCTION_VARIANTS_CASE.expected.visibleOpacity,
+                    scale: FUNCTION_VARIANTS_CASE.expected.visibleScale,
+                })
+        }
     }
 
     expect(errors).toEqual([])

@@ -2,6 +2,7 @@ import { motion } from "framer-motion"
 import { CSSProperties, forwardRef, useState } from "react"
 import type { ComponentPropsWithoutRef } from "react"
 import {
+    FUNCTION_VARIANTS_CASE,
     KEYFRAMES_CASE,
     MOTION_CREATE_CASE,
     NAMED_VARIANTS_CASE,
@@ -150,6 +151,7 @@ export function App() {
     const [namedActive, setNamedActive] = useState(false)
     const [arrayActive, setArrayActive] = useState(false)
     const [keyframesActive, setKeyframesActive] = useState(false)
+    const [functionActive, setFunctionActive] = useState(false)
     const [lifecycleStatus, setLifecycleStatus] = useState("idle")
 
     return (
@@ -529,13 +531,19 @@ export function App() {
                     </div>
 
                     {/* function variants with custom-owned delay */}
-                    <div id="example-function-variant" style={card}>
+                    <div
+                        id="example-function-variant"
+                        style={card}
+                        onClick={() => setFunctionActive(true)}
+                    >
                         <div style={info}>
                             <span style={cardTitle}>
                                 Function variants — custom delay
                             </span>
                             <span style={code}>
-                                {`function variant · Lifecycle ${lifecycleStatus}`}
+                                {functionActive
+                                    ? `custom delay · Lifecycle ${lifecycleStatus}`
+                                    : "tap to resolve custom variants"}
                             </span>
                         </div>
                         <div style={demo}>
@@ -545,7 +553,9 @@ export function App() {
                                     id={`target-function-variant-${i}`}
                                     style={{ ...small, backgroundColor: c }}
                                     initial="hidden"
-                                    animate="visible"
+                                    animate={
+                                        functionActive ? "visible" : "hidden"
+                                    }
                                     custom={i}
                                     variants={{
                                         hidden: {
@@ -559,7 +569,10 @@ export function App() {
                                             scale: 1,
                                             transition: {
                                                 duration: 0.6,
-                                                delay: Number(index) * 0.12,
+                                                delay:
+                                                    Number(index) *
+                                                    FUNCTION_VARIANTS_CASE
+                                                        .expected.delayStep,
                                                 ease: "backOut",
                                             },
                                         }),
