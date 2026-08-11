@@ -1,4 +1,10 @@
 import { expect, test } from "@playwright/test"
+import {
+    API_METRICS,
+    CONFORMANCE_METRICS,
+    GALLERY_EXAMPLES,
+    MOTION_CREATE_CASE,
+} from "../src/conformance/cases.js"
 
 const previewUrl = "/__web_preview?casename=main.web.bundle"
 
@@ -16,16 +22,19 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(9, { timeout: 15_000 })
+    await expect(animated).toHaveCount(12, { timeout: 15_000 })
 
-    const styleAt = (index: number) =>
-        animated.nth(index).evaluate((element) =>
-            element.getAttribute("style") ?? ""
-        )
+    const gesture = page.locator("#target-gesture-priority")
+    const styleOf = (selector: string) =>
+        page
+            .locator(selector)
+            .evaluate((element) => element.getAttribute("style") ?? "")
 
-    await expect.poll(() => styleAt(0)).toMatch(/scale\(1(?:,\s*1)?\)/)
     await expect
-        .poll(() => styleAt(0))
+        .poll(() => styleOf("#target-gesture-priority"))
+        .toMatch(/scale\(1(?:,\s*1)?\)/)
+    await expect
+        .poll(() => styleOf("#target-gesture-priority"))
         .toMatch(/background-color:\s*(?:#ffffff|rgb\(255,\s*255,\s*255\))/)
     await expect(page.getByText(/Lifecycle complete:visible/)).toBeVisible({
         timeout: 15_000,
@@ -33,53 +42,243 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Infinite scalar, keyframe, reverse, and color animations must remain
     // live after their first iteration instead of freezing at the end frame.
-    const before = await Promise.all([1, 2, 3, 4].map(styleAt))
+    const liveSelectors = [
+        "#target-repeat-infinity",
+        "#target-keyframes",
+        "#target-repeat-reverse",
+        "#target-color-keyframes",
+    ]
+    const before = await Promise.all(liveSelectors.map(styleOf))
     await page.waitForTimeout(173)
-    const after = await Promise.all([1, 2, 3, 4].map(styleAt))
+    const after = await Promise.all(liveSelectors.map(styleOf))
     for (let index = 0; index < before.length; index++) {
         expect(after[index]).not.toBe(before[index])
     }
 
-    for (let index = 5; index < 9; index++) {
-        await expect.poll(() => styleAt(index)).toContain("opacity: 1")
+    for (let index = 0; index < 4; index++) {
+        const selector = `#target-function-variant-${index}`
+        await expect.poll(() => styleOf(selector)).toContain("opacity: 1")
         await expect
-            .poll(() => styleAt(index))
+            .poll(() => styleOf(selector))
             .toMatch(/scale\(1(?:,\s*1)?\)/)
     }
 
+    const reactiveBefore = await styleOf("#target-reactive-target")
+    await page.locator("#example-reactive-target").click()
+    await expect
+        .poll(() => styleOf("#target-reactive-target"))
+        .not.toBe(reactiveBefore)
+
+    await page.locator("#example-array-variants").click()
+    await expect
+        .poll(() => styleOf("#target-array-variants"))
+        .toContain("scale(1.12)")
+
     // Hold a native-style touch sequence so this checks whileTap activation,
     // not a click/tap pulse synthesized by the web demo.
-    const buttonBox = await animated.nth(0).boundingBox()
+    const buttonBox = await gesture.boundingBox()
     expect(buttonBox).not.toBeNull()
     const x = buttonBox!.x + buttonBox!.width / 2
     const y = buttonBox!.y + buttonBox!.height / 2
 
-    await animated.nth(0).hover()
-    await expect.poll(() => styleAt(0)).toContain("scale(1.08)")
-    await expect.poll(() => styleAt(0)).toContain("rgb(138, 180, 255)")
-    await expect(animated.nth(0)).toContainText("Hovered 1")
+    await gesture.hover()
+    await expect
+        .poll(() => styleOf("#target-gesture-priority"))
+        .toContain("scale(1.08)")
+    await expect
+        .poll(() => styleOf("#target-gesture-priority"))
+        .toContain("rgb(138, 180, 255)")
+    await expect(gesture).toContainText("Hovered 1")
 
     const cdp = await page.context().newCDPSession(page)
     await cdp.send("Input.dispatchTouchEvent", {
         type: "touchStart",
         touchPoints: [{ x, y }],
     })
-    await expect.poll(() => styleAt(0)).toContain("scale(1.15)")
-    await expect.poll(() => styleAt(0)).toContain("rgb(255, 204, 0)")
+    await expect
+        .poll(() => styleOf("#target-gesture-priority"))
+        .toContain("scale(1.15)")
+    await expect
+        .poll(() => styleOf("#target-gesture-priority"))
+        .toContain("rgb(255, 204, 0)")
 
     await cdp.send("Input.dispatchTouchEvent", {
         type: "touchEnd",
         touchPoints: [],
     })
-    await expect.poll(() => styleAt(0)).toContain("scale(1.08)")
-    await expect.poll(() => styleAt(0)).toContain("rgb(138, 180, 255)")
-    await page.mouse.move(0, 0)
-    await expect.poll(() => styleAt(0)).toMatch(/scale\(1(?:,\s*1)?\)/)
     await expect
-        .poll(() => styleAt(0))
+        .poll(() => styleOf("#target-gesture-priority"))
+        .toContain("scale(1.08)")
+    await expect
+        .poll(() => styleOf("#target-gesture-priority"))
+        .toContain("rgb(138, 180, 255)")
+    await page.mouse.move(0, 0)
+    await expect
+        .poll(() => styleOf("#target-gesture-priority"))
+        .toMatch(/scale\(1(?:,\s*1)?\)/)
+    await expect
+        .poll(() => styleOf("#target-gesture-priority"))
         .toMatch(/background-color:\s*(?:#ffffff|rgb\(255,\s*255,\s*255\))/)
-    await expect(animated.nth(0)).toContainText("Tapped 1")
+    await expect(gesture).toContainText("Tapped 1")
 
     expect(runtimeErrors).toEqual([])
     expect(consoleErrors).toEqual([])
+})
+
+test("manifest case: motion.create forwards and animates on Web and Lynx", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    const targetSelector = `[id="target-${MOTION_CREATE_CASE.id}"]`
+    const caseSelector = `[id="case-${MOTION_CREATE_CASE.id}"]`
+    const lynxTarget = lynxPage.locator(targetSelector)
+    const webTarget = webPage.locator(targetSelector)
+
+    await expect(lynxTarget).toHaveCount(1)
+    await expect(webTarget).toHaveCount(1)
+    await expect(lynxPage.locator(caseSelector)).toContainText(
+        MOTION_CREATE_CASE.upstream.testName
+    )
+    await expect(webPage.locator(caseSelector)).toContainText(
+        MOTION_CREATE_CASE.upstream.testName
+    )
+
+    const semanticStyle = async (locator: typeof lynxTarget) =>
+        locator.evaluate((element) => {
+            const style = getComputedStyle(element)
+            const transform = new DOMMatrixReadOnly(style.transform)
+            return {
+                opacity: Number(style.opacity),
+                translateX: transform.m41,
+            }
+        })
+
+    for (const target of [lynxTarget, webTarget]) {
+        await expect
+            .poll(() => semanticStyle(target))
+            .toEqual(MOTION_CREATE_CASE.expected)
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("evidence portal exposes examples, API inventory, and conformance metrics", async ({
+    page,
+}) => {
+    await page.goto("http://localhost:4173/?view=overview")
+
+    await expect(
+        page.getByRole("heading", { name: "Motion / Lynx status" })
+    ).toBeVisible()
+    await expect(page.locator(".monitor-metric")).toHaveCount(5)
+    await expect(
+        page.locator(".capability-row:not(.capability-row-head)")
+    ).toHaveCount(7)
+    await expect(page.locator(".blocker-list li")).toHaveCount(
+        API_METRICS.blocked
+    )
+    await expect(page.locator(".test-row:not(.test-row-head)")).toHaveCount(
+        CONFORMANCE_METRICS.tracked
+    )
+    await expect(
+        page.getByRole("heading", {
+            name: `Upstream contract evidence (${CONFORMANCE_METRICS.tracked})`,
+        })
+    ).toBeVisible()
+
+    await page.getByRole("link", { name: "API", exact: true }).click()
+    await expect(
+        page.getByRole("heading", { name: "Supported API surface." })
+    ).toBeVisible()
+    await expect(page.locator(".matrix-row")).toHaveCount(API_METRICS.total)
+
+    await page.getByRole("link", { name: "Conformance" }).click()
+    await expect(page.locator(".case-row")).toHaveCount(
+        CONFORMANCE_METRICS.tracked
+    )
+
+    await page.getByRole("link", { name: "Examples" }).click()
+    await expect(page.locator(".scenario-row")).toHaveCount(
+        GALLERY_EXAMPLES.length
+    )
+    await expect(page.locator("iframe")).toHaveCount(2)
+})
+
+test("evidence portal keeps every view usable at mobile width", async ({
+    page,
+}) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+
+    for (const view of ["overview", "examples", "api", "conformance"]) {
+        await page.goto(`http://localhost:4173/?view=${view}`)
+        await expect(page.locator("main")).toBeVisible()
+        const undersizedText = await page.evaluate(() =>
+            Array.from(document.querySelectorAll("body *"))
+                .filter((element) => {
+                    const rect = element.getBoundingClientRect()
+                    const style = getComputedStyle(element)
+                    return (
+                        rect.width > 0 &&
+                        rect.height > 0 &&
+                        style.visibility !== "hidden" &&
+                        (element.textContent ?? "").trim().length > 0 &&
+                        element.children.length === 0 &&
+                        Number.parseFloat(style.fontSize) < 12
+                    )
+                })
+                .map((element) => ({
+                    tag: element.tagName.toLowerCase(),
+                    className: element.className,
+                    text: (element.textContent ?? "").trim().slice(0, 80),
+                    fontSize: getComputedStyle(element).fontSize,
+                }))
+        )
+        expect(undersizedText, `${view} contains unreadable text`).toEqual([])
+        const sizes = await page.evaluate(() => {
+            const viewport = document.documentElement.clientWidth
+            const offenders = Array.from(document.querySelectorAll("*"))
+                .map((element) => {
+                    const rect = element.getBoundingClientRect()
+                    return {
+                        tag: element.tagName.toLowerCase(),
+                        className:
+                            typeof element.className === "string"
+                                ? element.className
+                                : "",
+                        left: Math.round(rect.left),
+                        right: Math.round(rect.right),
+                    }
+                })
+                .filter((item) => item.left < -1 || item.right > viewport + 1)
+                .slice(0, 8)
+
+            return {
+                viewport,
+                content: document.documentElement.scrollWidth,
+                offenders,
+            }
+        })
+        expect(
+            sizes.content,
+            `${view} must not overflow horizontally: ${JSON.stringify(
+                sizes.offenders
+            )}`
+        ).toBeLessThanOrEqual(sizes.viewport)
+    }
 })

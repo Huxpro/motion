@@ -11,6 +11,7 @@ dist/
 web-host/static/
 web-host/main.web.bundle
 web-reference/dist/
+evidence-dist/
 
 # IDE
 .vscode/*

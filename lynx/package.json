@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "rspeedy build",
+    "build:evidence": "npm run build && npm --prefix web-reference run build && node scripts/assemble-evidence.cjs",
     "dev": "rspeedy dev",
     "preview": "rspeedy preview",
     "test:parity": "playwright test"

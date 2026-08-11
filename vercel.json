@@ -1,0 +1,24 @@
+{
+    "$schema": "https://openapi.vercel.sh/vercel.json",
+    "installCommand": "npm --prefix lynx install && npm --prefix lynx/web-reference install",
+    "buildCommand": "npm --prefix lynx run build:evidence",
+    "outputDirectory": "lynx/evidence-dist",
+    "cleanUrls": true,
+    "headers": [
+        {
+            "source": "/(.*)",
+            "headers": [
+                { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
+                {
+                    "key": "Cross-Origin-Embedder-Policy",
+                    "value": "require-corp"
+                },
+                {
+                    "key": "Cross-Origin-Resource-Policy",
+                    "value": "cross-origin"
+                }
+            ]
+        }
+    ],
+    "rewrites": [{ "source": "/lynx", "destination": "/lynx/index.html" }]
+}
