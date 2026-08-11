@@ -3,6 +3,7 @@ import type { IntrinsicElements } from "@lynx-js/types"
 import { useState } from "@lynx-js/react"
 import {
     MOTION_CREATE_CASE,
+    NAMED_VARIANTS_CASE,
     REACTIVE_ANIMATE_CASE,
 } from "./conformance/cases.js"
 import { motion } from "./motion/index.js"
@@ -144,6 +145,7 @@ export function App() {
     const [hoverCount, setHoverCount] = useState(0)
     const [gestureStatus, setGestureStatus] = useState("resting")
     const [reactiveActive, setReactiveActive] = useState(false)
+    const [namedActive, setNamedActive] = useState(false)
     const [arrayActive, setArrayActive] = useState(false)
     const [lifecycleStatus, setLifecycleStatus] = useState("idle")
 
@@ -245,6 +247,56 @@ export function App() {
                                     TAP
                                 </text>
                             </motion.view>
+                        </view>
+                    </view>
+
+                    {/* exact named variant target */}
+                    <view
+                        id="example-named-variants"
+                        style={card}
+                        bindtap={() => setNamedActive((active) => !active)}
+                    >
+                        <view style={info}>
+                            <text style={cardTitle}>Named variants</text>
+                            <text style={code}>
+                                {namedActive
+                                    ? 'animate="active"'
+                                    : 'animate="rest"'}
+                            </text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                id="target-named-variants"
+                                style={{
+                                    ...dot,
+                                    width: "76px",
+                                    height: "42px",
+                                    backgroundColor: "#7c5cff",
+                                }}
+                                initial="rest"
+                                animate={namedActive ? "active" : "rest"}
+                                variants={{
+                                    rest: {
+                                        opacity:
+                                            NAMED_VARIANTS_CASE.expected
+                                                .restOpacity,
+                                        x: NAMED_VARIANTS_CASE.expected.restX,
+                                        scale: 0.9,
+                                    },
+                                    active: {
+                                        opacity:
+                                            NAMED_VARIANTS_CASE.expected
+                                                .activeOpacity,
+                                        x: NAMED_VARIANTS_CASE.expected.activeX,
+                                        scale: NAMED_VARIANTS_CASE.expected
+                                            .activeScale,
+                                        transition: {
+                                            duration: 0.4,
+                                            ease: "linear",
+                                        },
+                                    },
+                                }}
+                            />
                         </view>
                     </view>
 

@@ -5,6 +5,7 @@ import {
     CONFORMANCE_METRICS,
     GALLERY_EXAMPLES,
     MOTION_CREATE_CASE,
+    NAMED_VARIANTS_CASE,
     PRIORITIZED_GAPS,
     REACTIVE_ANIMATE_CASE,
     WEIGHTED_LOSS,
@@ -26,7 +27,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(12, { timeout: 15_000 })
+    await expect(animated).toHaveCount(13, { timeout: 15_000 })
 
     const gesture = page.locator("#target-gesture-priority")
     const styleOf = (selector: string) =>
@@ -231,6 +232,69 @@ test("manifest case: reactive animate uses its transition on later renders", asy
         await expect
             .poll(async () => Math.round(await translateX()))
             .toBe(REACTIVE_ANIMATE_CASE.expected.endX)
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: a changed string label resolves its named variant", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const page of [lynxPage, webPage]) {
+        const target = page.locator("#target-named-variants")
+        const semanticStyle = () =>
+            target.evaluate((element) => {
+                const style = getComputedStyle(element)
+                const transform = new DOMMatrixReadOnly(style.transform)
+                return {
+                    opacity: Number(Number(style.opacity).toFixed(2)),
+                    translateX: Math.round(transform.m41),
+                    scale: Number(transform.a.toFixed(2)),
+                }
+            })
+
+        await expect.poll(semanticStyle).toEqual({
+            opacity: NAMED_VARIANTS_CASE.expected.restOpacity,
+            translateX: NAMED_VARIANTS_CASE.expected.restX,
+            scale: 0.9,
+        })
+
+        await page.locator("#example-named-variants").click()
+        const samples: number[] = []
+        for (let index = 0; index < 6; index++) {
+            samples.push((await semanticStyle()).translateX)
+            await page.waitForTimeout(45)
+        }
+        expect(
+            samples.some(
+                (value) =>
+                    value > NAMED_VARIANTS_CASE.expected.restX + 1 &&
+                    value < NAMED_VARIANTS_CASE.expected.activeX - 1
+            ),
+            `${NAMED_VARIANTS_CASE.upstream.testName}: ${samples.join(", ")}`
+        ).toBe(true)
+        await expect.poll(semanticStyle).toEqual({
+            opacity: NAMED_VARIANTS_CASE.expected.activeOpacity,
+            translateX: NAMED_VARIANTS_CASE.expected.activeX,
+            scale: NAMED_VARIANTS_CASE.expected.activeScale,
+        })
     }
 
     expect(errors).toEqual([])
