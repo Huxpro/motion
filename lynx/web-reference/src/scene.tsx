@@ -153,6 +153,7 @@ export function App() {
     const [keyframesActive, setKeyframesActive] = useState(false)
     const [functionActive, setFunctionActive] = useState(false)
     const [lifecycleStatus, setLifecycleStatus] = useState("idle")
+    const [lifecycleEvents, setLifecycleEvents] = useState("events")
 
     return (
         <div style={page}>
@@ -533,7 +534,7 @@ export function App() {
                     {/* function variants with custom-owned delay */}
                     <div
                         id="example-function-variant"
-                        style={card}
+                        style={conformanceCard}
                         onClick={() => setFunctionActive(true)}
                     >
                         <div style={info}>
@@ -544,6 +545,12 @@ export function App() {
                                 {functionActive
                                     ? `custom delay · Lifecycle ${lifecycleStatus}`
                                     : "tap to resolve custom variants"}
+                            </span>
+                            <span
+                                id="events-animation-lifecycle"
+                                style={{ ...code, color: "#a4a4b8" }}
+                            >
+                                {lifecycleEvents}
                             </span>
                         </div>
                         <div style={demo}>
@@ -578,23 +585,32 @@ export function App() {
                                         }),
                                     }}
                                     onAnimationStart={
-                                        i === 0
-                                            ? (definition) =>
+                                        functionActive && i === 0
+                                            ? (definition) => {
+                                                  const label =
+                                                      String(definition)
                                                   setLifecycleStatus(
-                                                      `start:${String(
-                                                          definition
-                                                      )}`
+                                                      `start:${label}`
                                                   )
+                                                  setLifecycleEvents(
+                                                      `events:start:${label}`
+                                                  )
+                                              }
                                             : undefined
                                     }
                                     onAnimationComplete={
-                                        i === 0
-                                            ? (definition) =>
+                                        functionActive && i === 0
+                                            ? (definition) => {
+                                                  const label =
+                                                      String(definition)
                                                   setLifecycleStatus(
-                                                      `complete:${String(
-                                                          definition
-                                                      )}`
+                                                      `complete:${label}`
                                                   )
+                                                  setLifecycleEvents(
+                                                      (events) =>
+                                                          `${events}|complete:${label}`
+                                                  )
+                                              }
                                             : undefined
                                     }
                                 />

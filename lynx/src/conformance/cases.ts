@@ -31,6 +31,7 @@ export interface ConformanceCase {
         native: boolean
     }
     expected?: Record<string, number>
+    expectedDefinition?: string
 }
 
 export interface AtomicCapability {
@@ -317,7 +318,7 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         title: "Base animation lifecycle",
         summary:
             "The base animate target reports start and completion definitions.",
-        status: "partial",
+        status: "conformant",
         api: ["onAnimationStart", "onAnimationComplete"],
         upstream: source(
             "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
@@ -327,14 +328,15 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         assertions: [
             "start reports definition",
             "complete reports the same definition",
+            "start is observed before completion",
         ],
-        gap: "Base animate is covered; gesture-triggered animation lifecycle delivery is not.",
         evidence: {
             gallery: true,
             packageTest: true,
-            dualRenderer: false,
-            native: false,
+            dualRenderer: true,
+            native: true,
         },
+        expectedDefinition: "visible",
     },
     {
         id: "initial/false",
@@ -449,6 +451,10 @@ export const FUNCTION_VARIANTS_CASE = CONFORMANCE_CASES.find(
         visibleScale: number
     }
 }
+
+export const ANIMATION_LIFECYCLE_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "lifecycle/base-animate"
+) as ConformanceCase & { expectedDefinition: string }
 
 export const INITIAL_FALSE_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "initial/false"
@@ -930,7 +936,7 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         reactLynx: 1,
         css: 0,
         rationale:
-            "Important callback contract crossing main/background execution.",
+            "Callback order and definitions are verified across Web, Lynx, and native Explorer.",
     },
     {
         caseId: "initial/false",
@@ -1128,12 +1134,23 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         date: "2026-08-11",
         title: "Function variants + custom parity",
         kind: "evidence",
-        status: "verified",
+        status: "merged",
         motionPr: 17,
         caseIds: ["variants/function-custom"],
         lossBefore: 46,
-        lossAfter: WEIGHTED_LOSS,
+        lossAfter: 43,
         note: "I3/F5/M1/R0/C0 · immutable bd151a1 package · existing Gallery pattern · dual-renderer custom-delay ordering · native not required.",
+    },
+    {
+        id: "motion-animation-lifecycle",
+        date: "2026-08-11",
+        title: "Base animation lifecycle parity",
+        kind: "evidence",
+        status: "verified",
+        caseIds: ["lifecycle/base-animate"],
+        lossBefore: 43,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F4/M2/R1/C0 · immutable bd151a1 package · headless start→complete order · native Explorer event log · clean console.",
     },
     {
         id: "lynx-3457",
