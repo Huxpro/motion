@@ -1074,11 +1074,12 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "I5/F5/M1/R0/C0 · immutable bd151a1 package · Gallery covered · dual-renderer timing 5/5 · native not required.",
     },
     {
-        id: "motion-named-variants",
+        id: "motion-15",
         date: "2026-08-11",
         title: "Named variants parity",
         kind: "evidence",
         status: "verified",
+        motionPr: 15,
         caseIds: ["variants/named"],
         lossBefore: 56,
         lossAfter: WEIGHTED_LOSS,
