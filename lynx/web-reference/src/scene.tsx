@@ -2,6 +2,7 @@ import { motion } from "framer-motion"
 import { CSSProperties, forwardRef, useState } from "react"
 import type { ComponentPropsWithoutRef } from "react"
 import {
+    KEYFRAMES_CASE,
     MOTION_CREATE_CASE,
     NAMED_VARIANTS_CASE,
     REACTIVE_ANIMATE_CASE,
@@ -148,6 +149,7 @@ export function App() {
     const [reactiveActive, setReactiveActive] = useState(false)
     const [namedActive, setNamedActive] = useState(false)
     const [arrayActive, setArrayActive] = useState(false)
+    const [keyframesActive, setKeyframesActive] = useState(false)
     const [lifecycleStatus, setLifecycleStatus] = useState("idle")
 
     return (
@@ -436,24 +438,35 @@ export function App() {
                         </div>
                     </div>
 
-                    {/* keyframes — bounce */}
-                    <div id="example-keyframes" style={card}>
+                    {/* finite ordered keyframes */}
+                    <div
+                        id="example-keyframes"
+                        style={card}
+                        onClick={() => setKeyframesActive(true)}
+                    >
                         <div style={info}>
                             <span style={cardTitle}>Keyframes — bounce</span>
                             <span style={code}>
-                                animate={"{{"} y: [0, -34, 0] {"}}"}
+                                {keyframesActive
+                                    ? "y: [0, -34, 12]"
+                                    : "tap to run keyframes"}
                             </span>
                         </div>
                         <div style={demo}>
                             <motion.div
                                 id="target-keyframes"
                                 style={{ ...dot, backgroundColor: "#22cc88" }}
-                                animate={{ y: [0, -34, 0] }}
-                                transition={{
-                                    repeat: Infinity,
-                                    ease: "easeInOut",
-                                    duration: 1,
+                                initial={{ y: KEYFRAMES_CASE.expected.startY }}
+                                animate={{
+                                    y: keyframesActive
+                                        ? [
+                                              KEYFRAMES_CASE.expected.startY,
+                                              KEYFRAMES_CASE.expected.peakY,
+                                              KEYFRAMES_CASE.expected.endY,
+                                          ]
+                                        : KEYFRAMES_CASE.expected.startY,
                                 }}
+                                transition={{ duration: 0.6, ease: "linear" }}
                             />
                         </div>
                     </div>
