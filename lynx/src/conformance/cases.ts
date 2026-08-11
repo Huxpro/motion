@@ -178,6 +178,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { startY: 0, peakY: -34, endY: 12 },
     },
     {
+        id: "transitions/spring",
+        category: "Targets",
+        title: "Underdamped spring",
+        summary:
+            "An explicit spring transition overshoots and settles at its target.",
+        status: "conformant",
+        api: ['transition.type="spring"', "stiffness", "damping"],
+        upstream: source(
+            "packages/motion-dom/src/animation/__tests__/JSAnimation.test.ts",
+            "Correctly animates spring"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the spring passes beyond its target",
+            "the spring returns and settles at the target",
+            "Web, Lynx-for-Web, and native Lynx reuse the same explicit spring transition",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: true,
+        },
+        expected: { startX: -46, endX: 46, minimumOvershootX: 50 },
+    },
+    {
         id: "transitions/repeat-infinity",
         category: "Targets",
         title: "Infinite repeat",
@@ -432,6 +458,12 @@ export const KEYFRAMES_CASE = CONFORMANCE_CASES.find(
     expected: { startY: number; peakY: number; endY: number }
 }
 
+export const SPRING_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "transitions/spring"
+) as ConformanceCase & {
+    expected: { startX: number; endX: number; minimumOvershootX: number }
+}
+
 export const REPEAT_INFINITY_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "transitions/repeat-infinity"
 ) as ConformanceCase & { expected: { duration: number } }
@@ -529,6 +561,13 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         summary: "Transform keyframes remain live across iterations.",
         api: ["keyframes", "repeat"],
         evidence: "lynx-e2e",
+    },
+    {
+        id: "spring",
+        title: "Spring",
+        summary: "An underdamped upstream spring overshoots, then settles.",
+        api: ["type: spring", "stiffness", "damping"],
+        evidence: "dual-renderer",
     },
     {
         id: "repeat-reverse",
@@ -898,6 +937,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "Popular upstream primitive with exact ordered-keyframe sampling.",
     },
     {
+        caseId: "transitions/spring",
+        importance: 5,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Core Motion transition reuses the upstream spring generator without host-specific adaptation.",
+    },
+    {
         caseId: "transitions/repeat-infinity",
         importance: 3,
         platformFit: 4,
@@ -1210,6 +1259,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 32,
         lossAfter: 29,
         note: "I3/F3/M3/R1/C0 · immutable bd151a1 package · dual-renderer enter/apply/leave evidence · touch-only platform scope issue #23.",
+    },
+    {
+        id: "motion-25",
+        date: "2026-08-11",
+        title: "Spring transition parity",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 25,
+        caseIds: ["transitions/spring"],
+        lossBefore: 29,
+        lossAfter: 26,
+        note: "I5/F5/M1/R0/C0 · immutable bd151a1 package · dual-renderer overshoot/settle · native centers 785→1112→1069 · clean console.",
     },
     {
         id: "lynx-3457",

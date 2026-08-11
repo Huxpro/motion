@@ -7,6 +7,7 @@ import {
     MOTION_CREATE_CASE,
     NAMED_VARIANTS_CASE,
     REACTIVE_ANIMATE_CASE,
+    SPRING_CASE,
 } from "./conformance/cases.js"
 import { motion } from "./motion/index.js"
 import "./App.css"
@@ -147,6 +148,7 @@ export function App() {
     const [hoverCount, setHoverCount] = useState(0)
     const [gestureStatus, setGestureStatus] = useState("resting")
     const [reactiveActive, setReactiveActive] = useState(false)
+    const [springActive, setSpringActive] = useState(false)
     const [namedActive, setNamedActive] = useState(false)
     const [arrayActive, setArrayActive] = useState(false)
     const [keyframesActive, setKeyframesActive] = useState(false)
@@ -252,6 +254,40 @@ export function App() {
                                     TAP
                                 </text>
                             </motion.view>
+                        </view>
+                    </view>
+
+                    {/* explicit underdamped spring */}
+                    <view
+                        id="example-spring"
+                        style={card}
+                        bindtap={() => setSpringActive(true)}
+                    >
+                        <view style={info}>
+                            <text style={cardTitle}>Spring — overshoot</text>
+                            <text style={code}>
+                                {springActive
+                                    ? 'type: "spring" · settling'
+                                    : "tap to run upstream spring"}
+                            </text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                id="target-spring"
+                                style={{ ...dot, backgroundColor: "#f06f44" }}
+                                initial={{ x: SPRING_CASE.expected.startX }}
+                                animate={{
+                                    x: springActive
+                                        ? SPRING_CASE.expected.endX
+                                        : SPRING_CASE.expected.startX,
+                                }}
+                                transition={{
+                                    type: "spring",
+                                    stiffness: 140,
+                                    damping: 10,
+                                    mass: 1,
+                                }}
+                            />
                         </view>
                     </view>
 
