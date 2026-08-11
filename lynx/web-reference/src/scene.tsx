@@ -3,6 +3,7 @@ import { CSSProperties, forwardRef, useState } from "react"
 import type { ComponentPropsWithoutRef } from "react"
 import {
     MOTION_CREATE_CASE,
+    NAMED_VARIANTS_CASE,
     REACTIVE_ANIMATE_CASE,
 } from "../../src/conformance/cases"
 
@@ -145,6 +146,7 @@ export function App() {
     const [hoverCount, setHoverCount] = useState(0)
     const [gestureStatus, setGestureStatus] = useState("resting")
     const [reactiveActive, setReactiveActive] = useState(false)
+    const [namedActive, setNamedActive] = useState(false)
     const [arrayActive, setArrayActive] = useState(false)
     const [lifecycleStatus, setLifecycleStatus] = useState("idle")
 
@@ -241,6 +243,56 @@ export function App() {
                                     TAP
                                 </span>
                             </motion.div>
+                        </div>
+                    </div>
+
+                    {/* exact named variant target */}
+                    <div
+                        id="example-named-variants"
+                        style={card}
+                        onClick={() => setNamedActive((active) => !active)}
+                    >
+                        <div style={info}>
+                            <span style={cardTitle}>Named variants</span>
+                            <span style={code}>
+                                {namedActive
+                                    ? 'animate="active"'
+                                    : 'animate="rest"'}
+                            </span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                id="target-named-variants"
+                                style={{
+                                    ...dot,
+                                    width: 76,
+                                    height: 42,
+                                    backgroundColor: "#7c5cff",
+                                }}
+                                initial="rest"
+                                animate={namedActive ? "active" : "rest"}
+                                variants={{
+                                    rest: {
+                                        opacity:
+                                            NAMED_VARIANTS_CASE.expected
+                                                .restOpacity,
+                                        x: NAMED_VARIANTS_CASE.expected.restX,
+                                        scale: 0.9,
+                                    },
+                                    active: {
+                                        opacity:
+                                            NAMED_VARIANTS_CASE.expected
+                                                .activeOpacity,
+                                        x: NAMED_VARIANTS_CASE.expected.activeX,
+                                        scale: NAMED_VARIANTS_CASE.expected
+                                            .activeScale,
+                                        transition: {
+                                            duration: 0.4,
+                                            ease: "linear",
+                                        },
+                                    },
+                                }}
+                            />
                         </div>
                     </div>
 

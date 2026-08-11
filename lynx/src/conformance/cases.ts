@@ -205,7 +205,7 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         title: "Named variants",
         summary:
             "String labels resolve to local variant targets and transitions.",
-        status: "partial",
+        status: "conformant",
         api: ["variants", "initial", "animate"],
         upstream: source(
             "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
@@ -214,13 +214,20 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         baseline: "framer-motion@13.0.0",
         assertions: [
             "rest and active labels resolve to the expected local targets",
+            "a changed string label uses the target-owned transition",
         ],
-        gap: "Named variants run in Gallery; isolated semantic comparison remains to be added.",
         evidence: {
             gallery: true,
             packageTest: true,
-            dualRenderer: false,
+            dualRenderer: true,
             native: false,
+        },
+        expected: {
+            restX: -30,
+            activeX: 30,
+            restOpacity: 0.5,
+            activeOpacity: 1,
+            activeScale: 1.1,
         },
     },
     {
@@ -405,6 +412,18 @@ export const REACTIVE_ANIMATE_CASE = CONFORMANCE_CASES.find(
     expected: { startX: number; endX: number }
 }
 
+export const NAMED_VARIANTS_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "variants/named"
+) as ConformanceCase & {
+    expected: {
+        restX: number
+        activeX: number
+        restOpacity: number
+        activeOpacity: number
+        activeScale: number
+    }
+}
+
 export const INITIAL_FALSE_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "initial/false"
 ) as ConformanceCase
@@ -423,6 +442,14 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         summary: "Tap to drive a later animate target update.",
         api: ["animate", "transition"],
         evidence: "lynx-e2e",
+    },
+    {
+        id: "named-variants",
+        title: "Named variants",
+        summary:
+            "Switch string labels and use the transition declared by the resolved target.",
+        api: ["variants", "initial", "animate"],
+        evidence: "dual-renderer",
     },
     {
         id: "gesture-priority",
@@ -837,7 +864,7 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         reactLynx: 0,
         css: 0,
         rationale:
-            "Common declarative authoring form with local resolution in place.",
+            "Common declarative authoring form with exact label and transition evidence.",
     },
     {
         caseId: "variants/function-custom",
@@ -1039,12 +1066,23 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         date: "2026-08-11",
         title: "Reactive animate timing parity",
         kind: "evidence",
-        status: "verified",
+        status: "merged",
         motionPr: 14,
         caseIds: ["targets/reactive-animate"],
         lossBefore: 61,
-        lossAfter: WEIGHTED_LOSS,
+        lossAfter: 56,
         note: "I5/F5/M1/R0/C0 · immutable bd151a1 package · Gallery covered · dual-renderer timing 5/5 · native not required.",
+    },
+    {
+        id: "motion-named-variants",
+        date: "2026-08-11",
+        title: "Named variants parity",
+        kind: "evidence",
+        status: "verified",
+        caseIds: ["variants/named"],
+        lossBefore: 56,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I5/F5/M1/R0/C0 · immutable bd151a1 package · focused Gallery case · dual-renderer label transition · native not required.",
     },
     {
         id: "lynx-3457",
