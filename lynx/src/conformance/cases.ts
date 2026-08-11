@@ -1093,11 +1093,12 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "I5/F5/M1/R0/C0 · immutable bd151a1 package · focused Gallery case · dual-renderer label transition · native not required.",
     },
     {
-        id: "motion-keyframes",
+        id: "motion-16",
         date: "2026-08-11",
         title: "Ordered keyframes parity",
         kind: "evidence",
         status: "verified",
+        motionPr: 16,
         caseIds: ["targets/keyframes"],
         lossBefore: 51,
         lossAfter: WEIGHTED_LOSS,
