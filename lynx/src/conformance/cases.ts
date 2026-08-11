@@ -59,6 +59,35 @@ export interface GalleryExample {
     evidence: "dual-renderer" | "lynx-e2e"
 }
 
+export interface GapPriority {
+    caseId: string
+    /** User impact: 1 = niche, 5 = core Motion usage. */
+    importance: number
+    /** Platform fit: 1 = fundamental Web/Lynx conflict, 5 = direct fit. */
+    platformFit: number
+    /** Remaining compatibility effort by layer: 0 = none, 5 = architecture. */
+    mts: number
+    reactLynx: number
+    css: number
+    rationale: string
+    issue?: string
+}
+
+export interface ConvergenceRecord {
+    id: string
+    date: string
+    title: string
+    kind: "capability" | "architecture" | "evidence"
+    status: "merged" | "verified" | "stacked" | "pending"
+    lynxStackPr?: number
+    motionPr?: number
+    caseIds: readonly string[]
+    lossBefore: number
+    lossAfter: number
+    expectedLossAfter?: number
+    note: string
+}
+
 const source = (path: string, testName: string): UpstreamSource => ({
     repository: "motiondivision/motion",
     sourceVersion: "12.40.0",
@@ -103,21 +132,24 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         title: "Reactive animate target",
         summary:
             "A subsequent render animates to the newly supplied object target.",
-        status: "partial",
+        status: "conformant",
         api: ["animate", "transition"],
         upstream: source(
             "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
             "uses transition on subsequent renders"
         ),
         baseline: "framer-motion@13.0.0",
-        assertions: ["later target changes animate instead of jumping"],
-        gap: "Executable in Gallery and package tests; isolated dual-renderer timing assertion is pending.",
+        assertions: [
+            "later target changes animate instead of jumping",
+            "both renderers expose an intermediate frame before settling",
+        ],
         evidence: {
             gallery: true,
             packageTest: true,
-            dualRenderer: false,
+            dualRenderer: true,
             native: false,
         },
+        expected: { startX: -38, endX: 38 },
     },
     {
         id: "targets/keyframes",
@@ -304,7 +336,7 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
             "first frame is final animate state",
             "later target updates still animate",
         ],
-        gap: "Implemented only in the local atomic follow-up worktree; not present in the #3436 preview package.",
+        gap: "Implemented in stacked lynx-stack PR #3457; immutable preview, dual-renderer, and native evidence are pending.",
         evidence: {
             gallery: false,
             packageTest: false,
@@ -366,6 +398,16 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
 export const MOTION_CREATE_CASE = CONFORMANCE_CASES[0] as ConformanceCase & {
     expected: { opacity: number; translateX: number }
 }
+
+export const REACTIVE_ANIMATE_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/reactive-animate"
+) as ConformanceCase & {
+    expected: { startX: number; endX: number }
+}
+
+export const INITIAL_FALSE_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "initial/false"
+) as ConformanceCase
 
 export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
     {
@@ -487,7 +529,7 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         evidence: "planned",
         contract: "Skip the mount animation and render the final keyframe.",
         boundary:
-            "Atomic follow-up exists locally but is not in the #3436 preview.",
+            "Stacked PR #3457 passes package tests; consumer preview evidence is pending.",
     },
     {
         id: "animate-object",
@@ -740,3 +782,281 @@ export const CONFORMANCE_METRICS = {
         .length,
     native: CONFORMANCE_CASES.filter((item) => item.evidence.native).length,
 }
+
+/**
+ * Selection score = remaining semantic loss × platform fit ÷ layer effort.
+ * It favors important, unresolved contracts that fit Lynx without hiding
+ * expensive architecture work. The five input dimensions remain visible so
+ * reviewers can challenge the ranking instead of trusting one opaque number.
+ */
+export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
+    {
+        caseId: "component/motion-create",
+        importance: 4,
+        platformFit: 4,
+        mts: 2,
+        reactLynx: 1,
+        css: 0,
+        rationale: "Core factory already has exact dual-renderer evidence.",
+    },
+    {
+        caseId: "targets/reactive-animate",
+        importance: 5,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Core target update with exact timing proof and no host-specific adaptation.",
+    },
+    {
+        caseId: "targets/keyframes",
+        importance: 5,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 1,
+        rationale:
+            "Popular upstream primitive with a small style-sampling gap.",
+    },
+    {
+        caseId: "transitions/repeat-infinity",
+        importance: 3,
+        platformFit: 4,
+        mts: 2,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Useful loop behavior; Web baseline follows a different WAAPI path.",
+    },
+    {
+        caseId: "variants/named",
+        importance: 5,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Common declarative authoring form with local resolution in place.",
+    },
+    {
+        caseId: "variants/function-custom",
+        importance: 3,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Useful advanced variant form; isolated resolver evidence remains.",
+    },
+    {
+        caseId: "gestures/tap",
+        importance: 5,
+        platformFit: 3,
+        mts: 3,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "High-use interaction with real event and accessibility differences.",
+    },
+    {
+        caseId: "gestures/hover",
+        importance: 3,
+        platformFit: 2,
+        mts: 3,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Input-platform scoped; touch-only clients cannot match Web hover.",
+    },
+    {
+        caseId: "lifecycle/base-animate",
+        importance: 4,
+        platformFit: 4,
+        mts: 2,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Important callback contract crossing main/background execution.",
+    },
+    {
+        caseId: "initial/false",
+        importance: 5,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Core mount semantic; isolated Motion-adapter change with no host gap.",
+    },
+    {
+        caseId: "variants/propagation",
+        importance: 5,
+        platformFit: 2,
+        mts: 2,
+        reactLynx: 4,
+        css: 0,
+        rationale:
+            "High-value pattern blocked on a cross-thread visual-element tree.",
+        issue: "https://github.com/Huxpro/motion/issues/10",
+    },
+    {
+        caseId: "presence/exit",
+        importance: 5,
+        platformFit: 2,
+        mts: 2,
+        reactLynx: 5,
+        css: 0,
+        rationale:
+            "High-value pattern needs projection and delayed-unmount ownership.",
+        issue: "https://github.com/Huxpro/motion/issues/5",
+    },
+]
+
+const priorityByCase = new Map(
+    CONFORMANCE_PRIORITIES.map((priority) => [priority.caseId, priority])
+)
+const lossWeight: Record<ConformanceStatus, number> = {
+    conformant: 0,
+    partial: 0.5,
+    blocked: 1,
+}
+
+export function calculateWeightedLoss(
+    cases: readonly ConformanceCase[] = CONFORMANCE_CASES
+): number {
+    const totalImportance = cases.reduce(
+        (total, item) => total + (priorityByCase.get(item.id)?.importance ?? 0),
+        0
+    )
+    const unresolved = cases.reduce((total, item) => {
+        const importance = priorityByCase.get(item.id)?.importance ?? 0
+        return total + importance * lossWeight[item.status]
+    }, 0)
+    return Math.round((unresolved / totalImportance) * 100)
+}
+
+export const PRIORITIZED_GAPS = CONFORMANCE_CASES.filter(
+    (item) => item.status !== "conformant"
+)
+    .map((item) => {
+        const priority = priorityByCase.get(item.id) as GapPriority
+        const effort = 1 + priority.mts + priority.reactLynx + priority.css
+        const score =
+            (priority.importance *
+                priority.platformFit *
+                lossWeight[item.status]) /
+            effort
+        return {
+            case: item,
+            priority,
+            score: Math.round(score * 10) / 10,
+        }
+    })
+    .sort((left, right) => right.score - left.score)
+
+export const WEIGHTED_LOSS = calculateWeightedLoss()
+export const INITIAL_FALSE_PROJECTED_LOSS = calculateWeightedLoss(
+    CONFORMANCE_CASES.map((item) =>
+        item.id === "initial/false" ? { ...item, status: "conformant" } : item
+    )
+)
+
+export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
+    {
+        id: "lynx-3405",
+        date: "2026-08-07",
+        title: "Declarative component foundation",
+        kind: "capability",
+        status: "stacked",
+        lynxStackPr: 3405,
+        caseIds: [],
+        lossBefore: 100,
+        lossAfter: 100,
+        note: "Public component surface opened; no consumer conformance claim yet.",
+    },
+    {
+        id: "lynx-3436-motion-2",
+        date: "2026-08-11",
+        title: "Hardened subset + parity harness",
+        kind: "capability",
+        status: "verified",
+        lynxStackPr: 3436,
+        motionPr: 2,
+        caseIds: [
+            "component/motion-create",
+            "targets/reactive-animate",
+            "targets/keyframes",
+            "transitions/repeat-infinity",
+            "variants/named",
+            "variants/function-custom",
+            "gestures/tap",
+            "gestures/hover",
+            "lifecycle/base-animate",
+        ],
+        lossBefore: 100,
+        lossAfter: 61,
+        note: "Package, dual-renderer, and native evidence established the first measured slice.",
+    },
+    {
+        id: "motion-13",
+        date: "2026-08-11",
+        title: "Evidence monitor",
+        kind: "evidence",
+        status: "merged",
+        motionPr: 13,
+        caseIds: [],
+        lossBefore: 61,
+        lossAfter: 61,
+        note: "Made the denominator and evidence ladder auditable; no semantic claim moved.",
+    },
+    {
+        id: "lynx-3453",
+        date: "2026-08-11",
+        title: "MainThreadObject core",
+        kind: "architecture",
+        status: "stacked",
+        lynxStackPr: 3453,
+        caseIds: [],
+        lossBefore: 61,
+        lossAfter: 61,
+        note: "Typed object identity removes a long-term adapter dependency without changing conformance status.",
+    },
+    {
+        id: "lynx-3455",
+        date: "2026-08-11",
+        title: "Motion on MainThreadObject",
+        kind: "architecture",
+        status: "stacked",
+        lynxStackPr: 3455,
+        caseIds: [],
+        lossBefore: 61,
+        lossAfter: 61,
+        note: "Moves MotionValue hydration onto the reusable Core primitive; consumer preview pending.",
+    },
+    {
+        id: "motion-14",
+        date: "2026-08-11",
+        title: "Reactive animate timing parity",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 14,
+        caseIds: ["targets/reactive-animate"],
+        lossBefore: 61,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I5/F5/M1/R0/C0 · immutable bd151a1 package · Gallery covered · dual-renderer timing 5/5 · native not required.",
+    },
+    {
+        id: "lynx-3457",
+        date: "2026-08-11",
+        title: "initial={false}",
+        kind: "capability",
+        status: "pending",
+        lynxStackPr: 3457,
+        caseIds: ["initial/false"],
+        lossBefore: WEIGHTED_LOSS,
+        lossAfter: WEIGHTED_LOSS,
+        expectedLossAfter: INITIAL_FALSE_PROJECTED_LOSS,
+        note: "I5/F5/M1/R0/C0 · package 119/119 · pre-preview dual/native pass · exact immutable preview evidence still required.",
+    },
+]

@@ -32,6 +32,9 @@ keeps four kinds of information visible together:
 
 -   atomic API progress grouped by capability area;
 -   the complete list of currently blocked atomic APIs;
+-   the ranked conformance backlog with importance, platform fit, and
+    MTS/ReactLynx/CSS effort;
+-   weighted loss over time, tied to the PR that changed or preserved it;
 -   evidence availability for every tracked upstream contract; and
 -   the current conformance result for each contract.
 
@@ -85,6 +88,8 @@ slice as coverage of Motion's complete upstream suite.
    Conformance in the PR description.
 5. Do not promote `partial` to `conformant` until the evidence tier shown in the
    dashboard agrees with the claim.
+6. Record every Lynx and consumer PR in the convergence ledger. Keep projected
+   loss separate from accepted loss while an immutable preview gate is pending.
 
 ## Build and gates
 
