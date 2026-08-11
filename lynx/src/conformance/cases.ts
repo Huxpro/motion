@@ -1200,6 +1200,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "I5/F3/M3/R1/C0 · immutable bd151a1 package · dual-renderer press apply/unapply · existing native evidence · keyboard boundary issue #21.",
     },
     {
+        id: "motion-24",
+        date: "2026-08-11",
+        title: "Hover gesture parity",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 24,
+        caseIds: ["gestures/hover"],
+        lossBefore: 32,
+        lossAfter: 29,
+        note: "I3/F3/M3/R1/C0 · immutable bd151a1 package · dual-renderer enter/apply/leave evidence · touch-only platform scope issue #23.",
+    },
+    {
         id: "lynx-3457",
         date: "2026-08-11",
         title: "initial={false}",
