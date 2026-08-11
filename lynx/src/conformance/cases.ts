@@ -266,27 +266,29 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
     {
         id: "gestures/tap",
         category: "Gestures",
-        title: "Tap gesture priority",
+        title: "Tap gesture",
         summary:
-            "whileTap overrides hover, fires callbacks, then restores the resting state.",
-        status: "partial",
+            "whileTap applies during a platform press, fires callbacks, then restores rest.",
+        status: "conformant",
         api: ["whileTap", "onTapStart", "onTap", "onTapCancel"],
         upstream: source(
             "packages/framer-motion/src/gestures/__tests__/press.test.tsx",
-            "press gesture variant applies and unapplies with whileHover"
+            "press gesture variant applies and unapplies"
         ),
         baseline: "framer-motion@13.0.0",
         assertions: [
-            "native-style touch hold applies tap target",
-            "release restores hover/rest target",
+            "Lynx touch and Web pointer holds apply the tap target",
+            "platform press release restores the rest target",
+            "native touch applies and releases the tap target",
+            "tap callbacks report one completed press",
         ],
-        gap: "Lynx-for-Web gesture sequence passes; full keyboard/accessibility semantics differ from the DOM gesture layer.",
         evidence: {
             gallery: true,
             packageTest: true,
-            dualRenderer: false,
+            dualRenderer: true,
             native: true,
         },
+        expected: { restScale: 1, tapScale: 1.15 },
     },
     {
         id: "gestures/hover",
@@ -433,6 +435,12 @@ export const KEYFRAMES_CASE = CONFORMANCE_CASES.find(
 export const REPEAT_INFINITY_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "transitions/repeat-infinity"
 ) as ConformanceCase & { expected: { duration: number } }
+
+export const TAP_GESTURE_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "gestures/tap"
+) as ConformanceCase & {
+    expected: { restScale: number; tapScale: number }
+}
 
 export const NAMED_VARIANTS_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "variants/named"
@@ -922,7 +930,8 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         reactLynx: 1,
         css: 0,
         rationale:
-            "High-use interaction with real event and accessibility differences.",
+            "Portable hold/release priority is exact; DOM keyboard accessibility is tracked separately.",
+        issue: "https://github.com/Huxpro/motion/issues/21",
     },
     {
         caseId: "gestures/hover",
@@ -1164,12 +1173,23 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         date: "2026-08-11",
         title: "Infinite repeat sampling parity",
         kind: "evidence",
-        status: "verified",
+        status: "merged",
         motionPr: 20,
         caseIds: ["transitions/repeat-infinity"],
         lossBefore: 39,
-        lossAfter: WEIGHTED_LOSS,
+        lossAfter: 37,
         note: "I3/F4/M2/R0/C0 · immutable bd151a1 package · dual-renderer post-duration sampling · native loop evidence · WAAPI boundary issue #19.",
+    },
+    {
+        id: "motion-tap-gesture",
+        date: "2026-08-11",
+        title: "Tap gesture parity",
+        kind: "evidence",
+        status: "verified",
+        caseIds: ["gestures/tap"],
+        lossBefore: 37,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I5/F3/M3/R1/C0 · immutable bd151a1 package · dual-renderer press apply/unapply · existing native evidence · keyboard boundary issue #21.",
     },
     {
         id: "lynx-3457",
