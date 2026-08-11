@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Motion × Lynx — declarative Motion API ported to ReactLynx</title>
+<style>
+  :root { color-scheme: dark; }
+  * { margin: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #0b0b14; color: #e8e8f0; line-height: 1.55;
+    padding: 56px 24px 96px;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+  .eyebrow { color: #ff5c00; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-size: 13px; }
+  h1 { font-size: 40px; line-height: 1.1; margin: 10px 0 14px; letter-spacing: -0.02em; }
+  h1 .g { background: linear-gradient(90deg,#ff0088,#ff8800 40%,#22cc88 70%,#3366ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lede { color: #9a9ab0; font-size: 18px; max-width: 720px; }
+  .lede code { color: #cfcfe6; background: #1a1a2a; padding: 1px 6px; border-radius: 5px; font-size: 15px; }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 36px 0 12px; }
+  @media (max-width: 760px){ .cards { grid-template-columns: 1fr; } }
+  a.card {
+    display: block; text-decoration: none; color: inherit;
+    background: #14141f; border: 1px solid #2a2a3a; border-radius: 14px; padding: 20px;
+    transition: border-color .15s, transform .15s;
+  }
+  a.card:hover { border-color: #4a4a6a; transform: translateY(-2px); }
+  a.card .k { font-size: 13px; color: #7a7a90; }
+  a.card .t { font-size: 19px; font-weight: 700; margin: 6px 0 4px; }
+  a.card .d { font-size: 14px; color: #9a9ab0; }
+  a.card .go { color: #61dafb; font-size: 14px; font-weight: 600; margin-top: 12px; display: inline-block; }
+  a.card.lynx .go { color: #ff7a3c; }
+  section { margin-top: 56px; }
+  h2 { font-size: 22px; margin-bottom: 6px; letter-spacing: -0.01em; }
+  .sub { color: #9a9ab0; font-size: 15px; margin-bottom: 22px; }
+  figure { margin: 0 0 22px; }
+  figure img { width: 100%; border-radius: 12px; border: 1px solid #2a2a3a; display: block; }
+  figcaption { color: #7a7a90; font-size: 13px; margin-top: 8px; text-align: center; }
+  .diff { background: #14141f; border: 1px solid #2a2a3a; border-radius: 12px; padding: 18px 20px; overflow-x: auto; }
+  .diff table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  .diff th, .diff td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #23232f; vertical-align: top; }
+  .diff th { color: #7a7a90; font-weight: 600; }
+  .diff code { color: #cfcfe6; background: #1e1e2e; padding: 2px 6px; border-radius: 5px; font-size: 13px; white-space: nowrap; }
+  .diff .web code { color: #9fe6ff; }
+  .diff .lynx code { color: #ffb98c; }
+  pre { background: #14141f; border: 1px solid #2a2a3a; border-radius: 12px; padding: 18px 20px; overflow-x: auto; font-size: 13.5px; line-height: 1.6; }
+  pre .c { color: #6a6a80; }
+  pre .p { color: #ff9ecb; }
+  footer { margin-top: 64px; color: #6a6a80; font-size: 13px; border-top: 1px solid #23232f; padding-top: 20px; }
+  footer a { color: #8a8aa0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Motion × Lynx</div>
+  <h1>Motion's declarative React API,<br /><span class="g">ported to ReactLynx</span></h1>
+  <p class="lede">
+    Lynx already ships the <em>imperative</em> Motion.dev engine
+    (<code>element.animate()</code>). This port adds the missing
+    <em>declarative</em> layer — <code>&lt;motion.view animate={…}&gt;</code> —
+    with the same core authoring shape as React <code>motion/react</code>.
+    This gallery tracks the currently supported subset and runs it live on
+    Lynx for Web; open both editions and compare.
+  </p>
+
+  <div class="cards">
+    <a class="card web" href="./web/">
+      <div class="k">● Original React</div>
+      <div class="t">framer-motion (web)</div>
+      <div class="d">The baseline: <code>&lt;motion.div&gt;</code> in a normal React app.</div>
+      <span class="go">Open live demo →</span>
+    </a>
+    <a class="card lynx" href="./lynx/">
+      <div class="k">● ReactLynx port</div>
+      <div class="t">motion-lynx via Lynx for Web</div>
+      <div class="d">The port: <code>&lt;motion.view&gt;</code> rendered by the Lynx web runtime.</div>
+      <span class="go">Open live demo →</span>
+    </a>
+    <a class="card" href="./compare.html">
+      <div class="t">↔ Side by side</div>
+      <div class="d">Both demos in one page, live, for direct visual comparison.</div>
+      <span class="go">Open comparison →</span>
+    </a>
+  </div>
+
+  <section>
+    <h2>The core declarative API is intentionally familiar</h2>
+    <p class="sub">The reference scene is authored twice. For the covered features, the differences are the import source and Lynx host element names.</p>
+    <div class="diff">
+      <table>
+        <tr><th></th><th>Original React (web)</th><th>ReactLynx port</th></tr>
+        <tr><td>import</td><td class="web"><code>import { motion } from "framer-motion"</code></td><td class="lynx"><code>import { motion } from "@lynx-js/motion"</code></td></tr>
+        <tr><td>elements</td><td class="web"><code>&lt;motion.div&gt;</code> / <code>&lt;span&gt;</code></td><td class="lynx"><code>&lt;motion.view&gt;</code> / <code>&lt;text&gt;</code></td></tr>
+      </table>
+    </div>
+    <pre><span class="c">// identical in both — only div→view / span→text changes around it</span>
+&lt;motion.<span class="p">view</span>
+    <span class="p">initial</span>={{ opacity: 0, y: 60, scale: 0.4 }}
+    <span class="p">animate</span>={{ opacity: 1, y: 0, scale: 1, rotate: i * 90 }}
+    <span class="p">transition</span>={{ duration: 0.8, delay: i * 0.15, ease: "easeOut" }}
+    <span class="p">whileTap</span>={{ scale: 1.15, backgroundColor: "#ffcc00" }}
+/&gt;</pre>
+  </section>
+
+  <section>
+    <h2>Verified side by side</h2>
+    <p class="sub">Both editions built, served, and screenshotted in headless Chromium, with the same component props. Left = original React · right = ReactLynx port. (The looping cards run on independent clocks, so their phase differs frame to frame — but the layout, easing, and behaviour match.)</p>
+    <figure><img src="./evidence/compare-gallery.png" alt="Declarative API gallery comparison" />
+      <figcaption>Six live examples — variants + hover/tap · loop · keyframes · reverse · color keyframes · function-variant entrance</figcaption></figure>
+    <figure><img src="./evidence/compare-tap.png" alt="whileTap held comparison" />
+      <figcaption>whileTap held under a desktop mouse press — scale 1.15 + backgroundColor #ffcc00</figcaption></figure>
+    <figure><img src="./evidence/native-sandbox-pressed.jpeg" alt="whileTap held on a Lynx Sandbox Android device" />
+      <figcaption>Native Android validation — PR #3436 preview package, whileTap held in Lynx Explorer; release also produced <code>Tapped 1</code> with no console warnings or errors</figcaption></figure>
+  </section>
+
+  <section>
+    <h2>Compatibility is measured, not assumed</h2>
+    <p class="sub">
+      The gallery is the pass gate for the supported subset. It does not claim
+      complete <code>motion/react</code> compatibility: layout/presence,
+      in-view, focus, drag, controls, propagated orchestration, and several
+      dual-thread composition cases still need Lynx runtime integration. The
+      <a href="https://github.com/Huxpro/motion/issues/3">roadmap</a> links each
+      reproduced blocker and its acceptance criteria.
+    </p>
+  </section>
+
+  <footer>
+    Source: <a href="https://github.com/Huxpro/motion/pull/2">PR #2</a> ·
+    implementation in <a href="https://github.com/lynx-family/lynx-stack/pull/3436">lynx-stack PR #3436</a> ·
+    parity tests in <code>lynx/tests</code>.
+  </footer>
+</div>
+</body>
+</html>

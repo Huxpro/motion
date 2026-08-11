@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Motion × Lynx — Lynx for Web</title>
+        <link rel="stylesheet" href="/static/css/client.css" />
+        <style>
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                background: #0b0b14;
+            }
+            lynx-view {
+                display: block;
+                width: 100vw;
+                height: 100vh;
+            }
+        </style>
+        <script type="module" src="/static/js/client.js"></script>
+    </head>
+    <body>
+        <lynx-view
+            url="/main.web.bundle"
+            style="height: 100vh; width: 100vw"
+        ></lynx-view>
+    </body>
+</html>
