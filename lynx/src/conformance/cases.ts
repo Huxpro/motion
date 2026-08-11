@@ -1261,6 +1261,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "I3/F3/M3/R1/C0 · immutable bd151a1 package · dual-renderer enter/apply/leave evidence · touch-only platform scope issue #23.",
     },
     {
+        id: "motion-25",
+        date: "2026-08-11",
+        title: "Spring transition parity",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 25,
+        caseIds: ["transitions/spring"],
+        lossBefore: 29,
+        lossAfter: 26,
+        note: "I5/F5/M1/R0/C0 · immutable bd151a1 package · dual-renderer overshoot/settle · native centers 785→1112→1069 · clean console.",
+    },
+    {
         id: "lynx-3457",
         date: "2026-08-11",
         title: "initial={false}",
