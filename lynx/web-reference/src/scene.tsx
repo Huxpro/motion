@@ -7,6 +7,7 @@ import {
     MOTION_CREATE_CASE,
     NAMED_VARIANTS_CASE,
     REACTIVE_ANIMATE_CASE,
+    SPRING_CASE,
 } from "../../src/conformance/cases"
 
 /**
@@ -148,6 +149,7 @@ export function App() {
     const [hoverCount, setHoverCount] = useState(0)
     const [gestureStatus, setGestureStatus] = useState("resting")
     const [reactiveActive, setReactiveActive] = useState(false)
+    const [springActive, setSpringActive] = useState(false)
     const [namedActive, setNamedActive] = useState(false)
     const [arrayActive, setArrayActive] = useState(false)
     const [keyframesActive, setKeyframesActive] = useState(false)
@@ -248,6 +250,40 @@ export function App() {
                                     TAP
                                 </span>
                             </motion.div>
+                        </div>
+                    </div>
+
+                    {/* explicit underdamped spring */}
+                    <div
+                        id="example-spring"
+                        style={card}
+                        onClick={() => setSpringActive(true)}
+                    >
+                        <div style={info}>
+                            <span style={cardTitle}>Spring — overshoot</span>
+                            <span style={code}>
+                                {springActive
+                                    ? 'type: "spring" · settling'
+                                    : "tap to run upstream spring"}
+                            </span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                id="target-spring"
+                                style={{ ...dot, backgroundColor: "#f06f44" }}
+                                initial={{ x: SPRING_CASE.expected.startX }}
+                                animate={{
+                                    x: springActive
+                                        ? SPRING_CASE.expected.endX
+                                        : SPRING_CASE.expected.startX,
+                                }}
+                                transition={{
+                                    type: "spring",
+                                    stiffness: 140,
+                                    damping: 10,
+                                    mass: 1,
+                                }}
+                            />
                         </div>
                     </div>
 

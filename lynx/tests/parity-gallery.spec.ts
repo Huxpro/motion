@@ -13,6 +13,7 @@ import {
     PRIORITIZED_GAPS,
     REACTIVE_ANIMATE_CASE,
     REPEAT_INFINITY_CASE,
+    SPRING_CASE,
     TAP_GESTURE_CASE,
     WEIGHTED_LOSS,
 } from "../src/conformance/cases.js"
@@ -33,7 +34,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(13, { timeout: 15_000 })
+    await expect(animated).toHaveCount(14, { timeout: 15_000 })
 
     const gesture = page.locator("#target-gesture-priority")
     const styleOf = (selector: string) =>
@@ -351,6 +352,70 @@ test("manifest case: ordered keyframes pass through their peak and settle", asyn
         await expect
             .poll(async () => Math.round(await translateY()))
             .toBe(KEYFRAMES_CASE.expected.endY)
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: explicit spring overshoots and settles", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const page of [lynxPage, webPage]) {
+        const target = page.locator("#target-spring")
+        const x = () =>
+            target.evaluate((element) => {
+                const transform = new DOMMatrixReadOnly(
+                    getComputedStyle(element).transform
+                )
+                return Number(transform.m41.toFixed(2))
+            })
+
+        await expect.poll(x).toBe(SPRING_CASE.expected.startX)
+        await target.scrollIntoViewIfNeeded()
+        await page.locator("#example-spring").click()
+        const peakX = await target.evaluate(
+            (element, sampleDuration) =>
+                new Promise<number>((resolve) => {
+                    const startedAt = performance.now()
+                    let peak = Number.NEGATIVE_INFINITY
+                    const sample = () => {
+                        const transform = new DOMMatrixReadOnly(
+                            getComputedStyle(element).transform
+                        )
+                        peak = Math.max(peak, transform.m41)
+                        if (performance.now() - startedAt >= sampleDuration) {
+                            resolve(peak)
+                        } else {
+                            setTimeout(sample, 16)
+                        }
+                    }
+                    sample()
+                }),
+            1_600
+        )
+
+        expect(
+            peakX,
+            `${SPRING_CASE.upstream.testName}: peak x=${peakX}`
+        ).toBeGreaterThanOrEqual(SPRING_CASE.expected.minimumOvershootX)
+        await expect.poll(x).toBeCloseTo(SPRING_CASE.expected.endX, 0)
     }
 
     expect(errors).toEqual([])
