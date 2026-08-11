@@ -1,0 +1,94 @@
+# Reviewable PR stack for declarative Motion
+
+## Current problem
+
+PR [lynx-stack#3436](https://github.com/lynx-family/lynx-stack/pull/3436)
+targets `main` while depending on
+[lynx-stack#3405](https://github.com/lynx-family/lynx-stack/pull/3405).
+GitHub therefore presents the base PR plus variants, tap, hover, lifecycle,
+runtime fixes, tests, examples, and docs as one 40+ file review.
+
+The first mechanical correction is to set #3436's base to
+`feat/declarative-motion`, the head of #3405. The follow-ups should then be
+split by behavior contract rather than by implementation file.
+
+## Proposed dependency graph
+
+```text
+#3405 declarative core
+└── A. cross-runtime animation hardening
+    ├── B. named/array/function variants
+    ├── C. whileTap + tap callback/event bridge
+    │   └── D. whileHover + tap/hover priority
+    ├── E. base animation lifecycle callbacks
+    └── F. initial={false} mount semantics
+```
+
+Each PR includes its production code, focused unit tests, compatibility-table
+row, and changeset when public behavior changes. Gallery changes stay in this
+harness and link back to the preview package for that PR.
+
+### A. Cross-runtime hardening
+
+- Preserve infinite repeat across worklet serialization.
+- Normalize generated style keys and transform identities.
+- Cover Web and native QuickJS behavior.
+- Exclude variants and gestures.
+
+### B. Variants
+
+- String and array labels, function variants, `custom`, target-local
+  transitions.
+- Explicitly exclude parent propagation/orchestration and stagger.
+
+### C. Tap
+
+- `whileTap`, `onTapStart`, `onTap`, `onTapCancel`.
+- Include the event-bridge/fallback fixes required by those callbacks.
+- No hover code.
+
+### D. Hover
+
+- `whileHover`, `onHoverStart`, `onHoverEnd`.
+- Depend on C only where tap-over-hover priority is tested.
+
+### E. Lifecycle
+
+- `onAnimationStart` and `onAnimationComplete` for base `animate` only.
+- Gesture lifecycle remains an explicit blocker.
+
+### F. `initial={false}`
+
+- Base: cross-runtime hardening commit `86de08b1e`, not the variants, gesture,
+  or lifecycle stack.
+- Diff: `declarative/style.ts`, `declarative/motion.tsx`, the focused
+  declarative test file, README contract, and one package changeset.
+- Contract: render the final animate/keyframe state on the first frame, skip
+  the mount animation, and animate later target changes.
+- Lifecycle callback suppression is not asserted here because E is an
+  independent sibling. Add that integration assertion only after both E and F
+  land; otherwise F silently depends on unrelated lifecycle code.
+
+The worktree `/home/xuan.huang/github/lynx-stack-initial-false-atomic` on local
+branch `agent/motion-initial-false-atomic` demonstrates this five-file review
+unit. It was derived from the upstream Motion tests `mount animation doesn't
+run if initial={false}` and `if initial={false}, take state of final keyframe`.
+The two focused assertions pass independently; the full package build also
+passes. The hardening base's existing `whilePressed` test currently exposes a
+separate asynchronous element-polyfill failure when the complete declarative
+test file runs, so that blocker belongs to A rather than being hidden in F.
+
+## Harness PR rule
+
+A lynx-stack capability PR and its Gallery proof should not share a repository
+or review unit:
+
+1. land or publish the lynx-stack preview package with focused package tests;
+2. update the harness preview pin in a dependency-only commit;
+3. add one manifest case, dual renderer, and Playwright assertion;
+4. promote the manifest status from `blocked`/`partial` to `conformant` only
+   after Web, Lynx-for-Web, and required native checks pass.
+
+This keeps the implementation review concerned with runtime correctness while
+the harness review is concerned with upstream provenance and observable
+conformance.

@@ -10,10 +10,19 @@ export default defineConfig({
         headless: true,
         viewport: { width: 1200, height: 900 },
     },
-    webServer: {
-        command: "npm run dev",
-        url: "http://localhost:3000/__web_preview?casename=main.web.bundle",
-        reuseExistingServer: false,
-        timeout: 120_000,
-    },
+    webServer: [
+        {
+            command: "npm run dev",
+            url: "http://localhost:3000/__web_preview?casename=main.web.bundle",
+            reuseExistingServer: false,
+            timeout: 120_000,
+        },
+        {
+            command: "npm run dev -- --host localhost --port 4173",
+            cwd: "./web-reference",
+            url: "http://localhost:4173",
+            reuseExistingServer: false,
+            timeout: 120_000,
+        },
+    ],
 })

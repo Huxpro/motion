@@ -1,5 +1,7 @@
 import { motion } from "framer-motion"
-import { CSSProperties, useState } from "react"
+import { CSSProperties, forwardRef, useState } from "react"
+import type { ComponentPropsWithoutRef } from "react"
+import { MOTION_CREATE_CASE } from "../../src/conformance/cases"
 
 /**
  * DECLARATIVE API GALLERY — Framer Motion web reference.
@@ -20,7 +22,11 @@ const page: CSSProperties = {
     margin: 0,
     boxSizing: "border-box",
 }
-const scroll: CSSProperties = { width: "100%", height: "100%", overflowY: "auto" }
+const scroll: CSSProperties = {
+    width: "100%",
+    height: "100%",
+    overflowY: "auto",
+}
 const inner: CSSProperties = {
     display: "flex",
     flexDirection: "column",
@@ -57,7 +63,11 @@ const card: CSSProperties = {
     height: "104px",
     flexShrink: 0,
 }
-const info: CSSProperties = { display: "flex", flexDirection: "column", flex: 1 }
+const info: CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    flex: 1,
+}
 const cardTitle: CSSProperties = {
     color: "#ffffff",
     fontSize: "17px",
@@ -100,9 +110,39 @@ const small: CSSProperties = {
 }
 const COLORS = ["#ff0088", "#ff8800", "#22cc88", "#3366ff"]
 
+const conformanceCard: CSSProperties = {
+    ...card,
+    height: 164,
+}
+const badge: CSSProperties = {
+    alignSelf: "flex-start",
+    color: "#22cc88",
+    fontSize: 11,
+    fontWeight: "bold",
+    fontFamily: "monospace",
+    marginBottom: 6,
+}
+const provenance: CSSProperties = {
+    width: "100%",
+    color: "#a4a4b8",
+    fontSize: 10,
+    fontFamily: "monospace",
+    marginTop: 5,
+}
+
+const ForwardingDiv = forwardRef<
+    HTMLDivElement,
+    ComponentPropsWithoutRef<"div">
+>((props, ref) => <div ref={ref} {...props} />)
+
+const MotionForwardingDiv = motion.create(ForwardingDiv)
+
 export function App() {
     const [tapCount, setTapCount] = useState(0)
     const [hoverCount, setHoverCount] = useState(0)
+    const [gestureStatus, setGestureStatus] = useState("resting")
+    const [reactiveActive, setReactiveActive] = useState(false)
+    const [arrayActive, setArrayActive] = useState(false)
     const [lifecycleStatus, setLifecycleStatus] = useState("idle")
 
     return (
@@ -114,16 +154,102 @@ export function App() {
                         the declarative motion/react API, running on Lynx
                     </span>
 
-                    {/* whileTap — interactive */}
-                    <div style={card}>
+                    <span style={{ ...cardTitle, marginBottom: 10 }}>
+                        Conformance cases
+                    </span>
+
+                    <div
+                        id={`case-${MOTION_CREATE_CASE.id}`}
+                        style={conformanceCard}
+                    >
                         <div style={info}>
-                            <span style={cardTitle}>Variants + whileTap</span>
+                            <span style={badge}>
+                                {MOTION_CREATE_CASE.status.toUpperCase()}
+                            </span>
+                            <span style={cardTitle}>
+                                {MOTION_CREATE_CASE.title}
+                            </span>
                             <span style={code}>
-                                whileTap="pressed" · target transition
+                                {MOTION_CREATE_CASE.api.join(" · ")}
+                            </span>
+                            <span style={provenance}>
+                                {`${MOTION_CREATE_CASE.upstream.sourceVersion} · ${MOTION_CREATE_CASE.upstream.testName}`}
+                            </span>
+                        </div>
+                        <div style={demo}>
+                            <MotionForwardingDiv
+                                id={`target-${MOTION_CREATE_CASE.id}`}
+                                style={{ ...dot, backgroundColor: "#7c5cff" }}
+                                initial={{ opacity: 0.2, x: -24 }}
+                                animate={{
+                                    opacity:
+                                        MOTION_CREATE_CASE.expected.opacity,
+                                    x: MOTION_CREATE_CASE.expected.translateX,
+                                }}
+                                transition={{ duration: 0.35, ease: "easeOut" }}
+                            />
+                        </div>
+                    </div>
+
+                    <div
+                        id="example-reactive-target"
+                        style={card}
+                        onClick={() => setReactiveActive((active) => !active)}
+                    >
+                        <div style={info}>
+                            <span style={cardTitle}>Reactive target</span>
+                            <span style={code}>
+                                {reactiveActive
+                                    ? "animate={{ x: 38, rotate: 12 }}"
+                                    : "animate={{ x: -38, rotate: -12 }}"}
                             </span>
                         </div>
                         <div style={demo}>
                             <motion.div
+                                id="target-reactive-target"
+                                style={{
+                                    ...dot,
+                                    width: 76,
+                                    height: 42,
+                                    backgroundColor: "#d3df63",
+                                }}
+                                initial={{ opacity: 0.4, x: -38, rotate: -12 }}
+                                animate={{
+                                    opacity: 1,
+                                    x: reactiveActive ? 38 : -38,
+                                    rotate: reactiveActive ? 12 : -12,
+                                }}
+                                transition={{
+                                    type: "spring",
+                                    stiffness: 240,
+                                    damping: 22,
+                                }}
+                            >
+                                <span
+                                    style={{
+                                        ...glyph,
+                                        color: "#202722",
+                                        fontSize: 11,
+                                        fontWeight: "bold",
+                                    }}
+                                >
+                                    TAP
+                                </span>
+                            </motion.div>
+                        </div>
+                    </div>
+
+                    {/* whileTap — interactive */}
+                    <div id="example-gesture-priority" style={card}>
+                        <div style={info}>
+                            <span style={cardTitle}>Variants + whileTap</span>
+                            <span style={code}>
+                                {`whileTap="pressed" · ${gestureStatus}`}
+                            </span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                id="target-gesture-priority"
                                 style={{
                                     ...dot,
                                     width: "112px",
@@ -152,30 +278,94 @@ export function App() {
                                         transition: { duration: 0.15 },
                                     },
                                 }}
-                                onHoverStart={() => setHoverCount((count) => count + 1)}
-                                onTap={() => setTapCount((count) => count + 1)}
+                                onHoverStart={() => {
+                                    setHoverCount((count) => count + 1)
+                                    setGestureStatus("hovering")
+                                }}
+                                onHoverEnd={() => setGestureStatus("resting")}
+                                onTapStart={() => setGestureStatus("pressed")}
+                                onTap={() => {
+                                    setTapCount((count) => count + 1)
+                                    setGestureStatus("tap complete")
+                                }}
+                                onTapCancel={() =>
+                                    setGestureStatus("tap cancelled")
+                                }
                             >
-                                <span style={{ ...glyph, color: "#0b0b14", fontSize: "18px", fontWeight: "bold" }}>
+                                <span
+                                    style={{
+                                        ...glyph,
+                                        color: "#0b0b14",
+                                        fontSize: "18px",
+                                        fontWeight: "bold",
+                                    }}
+                                >
                                     {tapCount
                                         ? `Tapped ${tapCount}`
                                         : hoverCount
-                                          ? `Hovered ${hoverCount}`
-                                          : "Press"}
+                                        ? `Hovered ${hoverCount}`
+                                        : "Press"}
                                 </span>
                             </motion.div>
                         </div>
                     </div>
 
-                    {/* loop — continuous rotate */}
-                    <div style={card}>
+                    <div
+                        id="example-array-variants"
+                        style={card}
+                        onClick={() => setArrayActive((active) => !active)}
+                    >
                         <div style={info}>
-                            <span style={cardTitle}>Loop — spin forever</span>
+                            <span style={cardTitle}>
+                                Array variants — merge
+                            </span>
                             <span style={code}>
-                                animate={"{{"} rotate: 360 {"}}"} · repeat: Infinity
+                                {arrayActive
+                                    ? 'animate={["base", "active"]}'
+                                    : 'animate={["base", "offset"]}'}
                             </span>
                         </div>
                         <div style={demo}>
                             <motion.div
+                                id="target-array-variants"
+                                style={{ ...dot, width: 88 }}
+                                initial="base"
+                                animate={
+                                    arrayActive
+                                        ? ["base", "active"]
+                                        : ["base", "offset"]
+                                }
+                                variants={{
+                                    base: {
+                                        opacity: 1,
+                                        scale: 1,
+                                        backgroundColor: "#dec991",
+                                    },
+                                    offset: { x: -28, rotate: -8 },
+                                    active: {
+                                        x: 28,
+                                        rotate: 8,
+                                        scale: 1.12,
+                                        backgroundColor: "#d94d35",
+                                    },
+                                }}
+                                transition={{ duration: 0.3, ease: "easeOut" }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* loop — continuous rotate */}
+                    <div id="example-repeat-infinity" style={card}>
+                        <div style={info}>
+                            <span style={cardTitle}>Loop — spin forever</span>
+                            <span style={code}>
+                                animate={"{{"} rotate: 360 {"}}"} · repeat:
+                                Infinity
+                            </span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                id="target-repeat-infinity"
                                 style={{ ...dot, backgroundColor: "#3366ff" }}
                                 animate={{ rotate: 360 }}
                                 transition={{
@@ -190,13 +380,16 @@ export function App() {
                     </div>
 
                     {/* keyframes — bounce */}
-                    <div style={card}>
+                    <div id="example-keyframes" style={card}>
                         <div style={info}>
                             <span style={cardTitle}>Keyframes — bounce</span>
-                            <span style={code}>animate={"{{"} y: [0, -34, 0] {"}}"}</span>
+                            <span style={code}>
+                                animate={"{{"} y: [0, -34, 0] {"}}"}
+                            </span>
                         </div>
                         <div style={demo}>
                             <motion.div
+                                id="target-keyframes"
                                 style={{ ...dot, backgroundColor: "#22cc88" }}
                                 animate={{ y: [0, -34, 0] }}
                                 transition={{
@@ -209,7 +402,7 @@ export function App() {
                     </div>
 
                     {/* reverse — breathing scale */}
-                    <div style={card}>
+                    <div id="example-repeat-reverse" style={card}>
                         <div style={info}>
                             <span style={cardTitle}>Reverse — breathe</span>
                             <span style={code}>
@@ -218,7 +411,12 @@ export function App() {
                         </div>
                         <div style={demo}>
                             <motion.div
-                                style={{ ...dot, backgroundColor: "#ff0088", borderRadius: "28px" }}
+                                id="target-repeat-reverse"
+                                style={{
+                                    ...dot,
+                                    backgroundColor: "#ff0088",
+                                    borderRadius: "28px",
+                                }}
                                 animate={{ scale: 1.35 }}
                                 transition={{
                                     repeat: Infinity,
@@ -231,7 +429,7 @@ export function App() {
                     </div>
 
                     {/* color keyframes */}
-                    <div style={card}>
+                    <div id="example-color-keyframes" style={card}>
                         <div style={info}>
                             <span style={cardTitle}>Color keyframes</span>
                             <span style={code}>
@@ -240,6 +438,7 @@ export function App() {
                         </div>
                         <div style={demo}>
                             <motion.div
+                                id="target-color-keyframes"
                                 style={{ ...dot, width: "112px" }}
                                 animate={{
                                     backgroundColor: [
@@ -259,10 +458,12 @@ export function App() {
                         </div>
                     </div>
 
-                    {/* entrance — staggered */}
-                    <div style={card}>
+                    {/* function variants with custom-owned delay */}
+                    <div id="example-function-variant" style={card}>
                         <div style={info}>
-                            <span style={cardTitle}>Entrance — stagger</span>
+                            <span style={cardTitle}>
+                                Function variants — custom delay
+                            </span>
                             <span style={code}>
                                 {`function variant · Lifecycle ${lifecycleStatus}`}
                             </span>
@@ -271,12 +472,17 @@ export function App() {
                             {COLORS.map((c, i) => (
                                 <motion.div
                                     key={i}
+                                    id={`target-function-variant-${i}`}
                                     style={{ ...small, backgroundColor: c }}
                                     initial="hidden"
                                     animate="visible"
                                     custom={i}
                                     variants={{
-                                        hidden: { opacity: 0, y: 20, scale: 0.3 },
+                                        hidden: {
+                                            opacity: 0,
+                                            y: 20,
+                                            scale: 0.3,
+                                        },
                                         visible: (index) => ({
                                             opacity: 1,
                                             y: 0,
@@ -291,13 +497,21 @@ export function App() {
                                     onAnimationStart={
                                         i === 0
                                             ? (definition) =>
-                                                  setLifecycleStatus(`start:${String(definition)}`)
+                                                  setLifecycleStatus(
+                                                      `start:${String(
+                                                          definition
+                                                      )}`
+                                                  )
                                             : undefined
                                     }
                                     onAnimationComplete={
                                         i === 0
                                             ? (definition) =>
-                                                  setLifecycleStatus(`complete:${String(definition)}`)
+                                                  setLifecycleStatus(
+                                                      `complete:${String(
+                                                          definition
+                                                      )}`
+                                                  )
                                             : undefined
                                     }
                                 />

@@ -2,7 +2,23 @@
   "version": 2,
   "builds": [{ "src": "motion-lynx-demo/**", "use": "@vercel/static" }],
   "routes": [
-    { "src": "/", "dest": "/motion-lynx-demo/index.html" },
-    { "src": "/(.*)", "dest": "/motion-lynx-demo/$1" }
+    {
+      "src": "/",
+      "headers": {
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Cross-Origin-Embedder-Policy": "require-corp",
+        "Cross-Origin-Resource-Policy": "cross-origin"
+      },
+      "dest": "/motion-lynx-demo/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "headers": {
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Cross-Origin-Embedder-Policy": "require-corp",
+        "Cross-Origin-Resource-Policy": "cross-origin"
+      },
+      "dest": "/motion-lynx-demo/$1"
+    }
   ]
 }
