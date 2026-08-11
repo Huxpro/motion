@@ -13,12 +13,16 @@ claiming to reuse private site code:
 -   TASA Orbiter for interface and content typography;
 -   near-black surfaces, hard grid lines, and no ornamental card chrome;
 -   one high-contrast accent per evidence view;
--   compact monospaced labels for indexes, filters, versions, and statuses; and
+-   readable interface type: 16px body copy, 14px secondary copy, and a 12px
+    minimum for metadata and table headers;
+-   monospaced type only for indexes, source identifiers, versions, and statuses;
+    and
 -   progressive disclosure for detailed upstream assertions.
 
 The visual system exists to support the review path: run examples, inspect the
 API surface, then audit source-linked conformance. Decorative themes must not
-compete with this sequence.
+compete with this sequence. Labels that merely restate a visible heading are
+omitted so the information hierarchy is carried by the content itself.
 
 ## Overview monitor contract
 

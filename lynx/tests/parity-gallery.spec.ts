@@ -198,7 +198,7 @@ test("evidence portal exposes examples, API inventory, and conformance metrics",
     )
     await expect(
         page.getByRole("heading", {
-            name: `${CONFORMANCE_METRICS.tracked} tracked contracts`,
+            name: `Upstream contract evidence (${CONFORMANCE_METRICS.tracked})`,
         })
     ).toBeVisible()
 
@@ -228,6 +228,28 @@ test("evidence portal keeps every view usable at mobile width", async ({
     for (const view of ["overview", "examples", "api", "conformance"]) {
         await page.goto(`http://localhost:4173/?view=${view}`)
         await expect(page.locator("main")).toBeVisible()
+        const undersizedText = await page.evaluate(() =>
+            Array.from(document.querySelectorAll("body *"))
+                .filter((element) => {
+                    const rect = element.getBoundingClientRect()
+                    const style = getComputedStyle(element)
+                    return (
+                        rect.width > 0 &&
+                        rect.height > 0 &&
+                        style.visibility !== "hidden" &&
+                        (element.textContent ?? "").trim().length > 0 &&
+                        element.children.length === 0 &&
+                        Number.parseFloat(style.fontSize) < 12
+                    )
+                })
+                .map((element) => ({
+                    tag: element.tagName.toLowerCase(),
+                    className: element.className,
+                    text: (element.textContent ?? "").trim().slice(0, 80),
+                    fontSize: getComputedStyle(element).fontSize,
+                }))
+        )
+        expect(undersizedText, `${view} contains unreadable text`).toEqual([])
         const sizes = await page.evaluate(() => {
             const viewport = document.documentElement.clientWidth
             const offenders = Array.from(document.querySelectorAll("*"))

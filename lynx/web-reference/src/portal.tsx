@@ -48,11 +48,6 @@ function Masthead({ view }: { view: View }) {
                 href="?view=overview"
                 aria-label="Motion on Lynx evidence overview"
             >
-                <span className="motion-glyph" aria-hidden="true">
-                    <i />
-                    <i />
-                    <i />
-                </span>
                 <span className="wordmark-motion">Motion</span>
                 <span className="wordmark-cross">/</span>
                 <span className="wordmark-lynx">Lynx</span>
@@ -72,7 +67,14 @@ function Masthead({ view }: { view: View }) {
                     </a>
                 ))}
             </nav>
-            <div className="build-stamp">Evidence / #3436</div>
+            <a
+                className="build-stamp"
+                href="https://github.com/lynx-family/lynx-stack/pull/3436"
+                target="_blank"
+                rel="noreferrer"
+            >
+                PR #3436
+            </a>
         </header>
     )
 }
@@ -161,32 +163,28 @@ function Overview() {
         <main className="page overview-page" id="main-content">
             <header className="monitor-header">
                 <div className="monitor-title">
-                    <p className="eyebrow">Declarative adapter / PR monitor</p>
                     <h1>Motion / Lynx status</h1>
                     <p>
-                        Manifest-derived snapshot for{" "}
                         <a
                             href="https://github.com/lynx-family/lynx-stack/pull/3436"
                             target="_blank"
                             rel="noreferrer"
                         >
-                            lynx-stack#3436
-                        </a>
-                        , stacked on{" "}
+                            #3436
+                        </a>{" "}
+                        stacked on{" "}
                         <a
                             href="https://github.com/lynx-family/lynx-stack/pull/3405"
                             target="_blank"
                             rel="noreferrer"
                         >
                             #3405
-                        </a>
-                        . CI health remains authoritative in the PR checks.
+                        </a>{" "}
+                        · Manifest snapshot · Live status in PR checks
                     </p>
                 </div>
                 <div className="monitor-verdict">
-                    <span className="monitor-verdict-label">
-                        <i aria-hidden="true" /> Current verdict
-                    </span>
+                    <span className="monitor-verdict-label">Compatibility</span>
                     <strong>Useful subset, not drop-in compatible</strong>
                     <span>Upstream source 12.40.0 · Web baseline 13.0.0</span>
                 </div>
@@ -249,10 +247,7 @@ function Overview() {
             <section className="monitor-split">
                 <article className="capability-monitor">
                     <header className="monitor-section-header">
-                        <div>
-                            <p className="eyebrow">Capability progress</p>
-                            <h2>Atomic API by area</h2>
-                        </div>
+                        <h2>API progress by area</h2>
                         <a href="?view=api">Open API inventory →</a>
                     </header>
                     <div
@@ -321,10 +316,7 @@ function Overview() {
 
                 <aside className="blocker-monitor">
                     <header className="monitor-section-header">
-                        <div>
-                            <p className="eyebrow">Open blockers</p>
-                            <h2>{blockers.length} atomic gaps</h2>
-                        </div>
+                        <h2>Open blockers ({blockers.length})</h2>
                     </header>
                     <ol className="blocker-list">
                         {blockers.map((item, index) => (
@@ -344,10 +336,10 @@ function Overview() {
 
             <section className="test-monitor">
                 <header className="monitor-section-header test-monitor-header">
-                    <div>
-                        <p className="eyebrow">Upstream test monitor</p>
-                        <h2>{CONFORMANCE_METRICS.tracked} tracked contracts</h2>
-                    </div>
+                    <h2>
+                        Upstream contract evidence (
+                        {CONFORMANCE_METRICS.tracked})
+                    </h2>
                     <div className="test-summary">
                         <span>
                             <i className="summary-supported" />
@@ -424,14 +416,10 @@ function Overview() {
             </section>
 
             <section className="gallery-showoff">
-                <div>
-                    <p className="eyebrow">Gallery / executable showcase</p>
-                    <h2>{GALLERY_EXAMPLES.length} live scenarios</h2>
-                </div>
+                <h2>Gallery ({GALLERY_EXAMPLES.length} live scenarios)</h2>
                 <p>
-                    The Gallery demonstrates the supported subset and makes
-                    renderer differences visible. It is evidence, but it does
-                    not raise a case to exact conformance by itself.
+                    Compare the supported subset in Web Motion and ReactLynx.
+                    Gallery evidence alone does not imply exact conformance.
                 </p>
                 <a href="?view=examples">Open Web / Lynx Gallery →</a>
             </section>
@@ -448,7 +436,6 @@ function Examples() {
         <main className="page examples-page" id="main-content">
             <header className="page-intro split-intro">
                 <div>
-                    <p className="eyebrow">Executable comparison</p>
                     <h1>Compare Web and Lynx.</h1>
                 </div>
                 <p>
@@ -489,7 +476,6 @@ function Examples() {
 
             <section className="scenario-index">
                 <div className="section-heading compact-heading">
-                    <p className="eyebrow">Scenario index</p>
                     <h2>{GALLERY_EXAMPLES.length} executable combinations</h2>
                     <p>
                         These are human-facing compositions. Exact upstream
@@ -535,7 +521,6 @@ function ApiMatrix() {
         <main className="page matrix-page" id="main-content">
             <header className="page-intro matrix-intro">
                 <div>
-                    <p className="eyebrow">Atomic API inventory</p>
                     <h1>Supported API surface.</h1>
                 </div>
                 <div className="matrix-summary">
@@ -615,7 +600,6 @@ function Conformance() {
         <main className="page conformance-page" id="main-content">
             <header className="page-intro conformance-intro">
                 <div>
-                    <p className="eyebrow">Curated upstream test slice</p>
                     <h1>Upstream conformance.</h1>
                 </div>
                 <div className="conformance-number">
@@ -751,11 +735,15 @@ export function EvidencePortal() {
             {view === "api" && <ApiMatrix />}
             {view === "conformance" && <Conformance />}
             <footer className="footer">
-                <span>Motion / Lynx</span>
-                <span>
-                    Manifest-derived · PR preview · compatibility claims require
-                    evidence
-                </span>
+                <span>Repository snapshot, not live CI</span>
+                <div>
+                    <a href="https://github.com/Huxpro/motion/blob/agent/lynx-motion-parity/lynx/src/conformance/cases.ts">
+                        Manifest source
+                    </a>
+                    <a href="https://github.com/Huxpro/motion/pull/13/checks">
+                        Live PR checks
+                    </a>
+                </div>
             </footer>
         </div>
     )
