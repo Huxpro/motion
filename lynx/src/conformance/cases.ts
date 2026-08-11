@@ -1160,11 +1160,12 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "I4/F4/M2/R1/C0 · immutable bd151a1 package · headless start→complete order · native Explorer event log · clean console.",
     },
     {
-        id: "motion-repeat-infinity",
+        id: "motion-20",
         date: "2026-08-11",
         title: "Infinite repeat sampling parity",
         kind: "evidence",
         status: "verified",
+        motionPr: 20,
         caseIds: ["transitions/repeat-infinity"],
         lossBefore: 39,
         lossAfter: WEIGHTED_LOSS,
