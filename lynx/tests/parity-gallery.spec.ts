@@ -6,6 +6,7 @@ import {
     CONFORMANCE_METRICS,
     FUNCTION_VARIANTS_CASE,
     GALLERY_EXAMPLES,
+    HOVER_GESTURE_CASE,
     KEYFRAMES_CASE,
     MOTION_CREATE_CASE,
     NAMED_VARIANTS_CASE,
@@ -481,6 +482,58 @@ test("manifest case: tap applies, fires, and restores rest", async ({
             backgroundColor: "rgb(255, 255, 255)",
         })
         await expect(target).toContainText("Tapped 1")
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: hover applies, fires, and restores rest", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const page of [lynxPage, webPage]) {
+        const target = page.locator("#target-gesture-priority")
+        const semanticStyle = () =>
+            target.evaluate((element) => {
+                const style = getComputedStyle(element)
+                const transform = new DOMMatrixReadOnly(style.transform)
+                return {
+                    scale: Number(transform.a.toFixed(2)),
+                    backgroundColor: style.backgroundColor,
+                }
+            })
+
+        await expect.poll(semanticStyle).toEqual({
+            scale: HOVER_GESTURE_CASE.expected.restScale,
+            backgroundColor: "rgb(255, 255, 255)",
+        })
+        await target.hover()
+        await expect.poll(semanticStyle).toEqual({
+            scale: HOVER_GESTURE_CASE.expected.hoverScale,
+            backgroundColor: "rgb(138, 180, 255)",
+        })
+        await expect(target).toContainText("Hovered 1")
+        await page.mouse.move(0, 0)
+        await expect.poll(semanticStyle).toEqual({
+            scale: HOVER_GESTURE_CASE.expected.restScale,
+            backgroundColor: "rgb(255, 255, 255)",
+        })
     }
 
     expect(errors).toEqual([])

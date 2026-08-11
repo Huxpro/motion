@@ -295,7 +295,7 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         category: "Gestures",
         title: "Hover gesture",
         summary: "Mouse-capable clients apply and remove a named hover target.",
-        status: "partial",
+        status: "conformant",
         api: ["whileHover", "onHoverStart", "onHoverEnd"],
         upstream: source(
             "packages/framer-motion/src/gestures/__tests__/hover.test.tsx",
@@ -303,17 +303,17 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         ),
         baseline: "framer-motion@13.0.0",
         assertions: [
-            "hover applies",
-            "tap has higher priority",
-            "pointer exit restores rest",
+            "pointer enter applies the named hover target",
+            "hover callbacks report one entry",
+            "pointer exit restores the rest target",
         ],
-        gap: "Only mouse-capable Lynx clients participate; DOM pointer filtering is not reused unchanged.",
         evidence: {
             gallery: true,
             packageTest: true,
-            dualRenderer: false,
+            dualRenderer: true,
             native: false,
         },
+        expected: { restScale: 1, hoverScale: 1.08 },
     },
     {
         id: "lifecycle/base-animate",
@@ -440,6 +440,12 @@ export const TAP_GESTURE_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "gestures/tap"
 ) as ConformanceCase & {
     expected: { restScale: number; tapScale: number }
+}
+
+export const HOVER_GESTURE_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "gestures/hover"
+) as ConformanceCase & {
+    expected: { restScale: number; hoverScale: number }
 }
 
 export const NAMED_VARIANTS_CASE = CONFORMANCE_CASES.find(
@@ -936,12 +942,13 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
     {
         caseId: "gestures/hover",
         importance: 3,
-        platformFit: 2,
+        platformFit: 3,
         mts: 3,
         reactLynx: 1,
         css: 0,
         rationale:
-            "Input-platform scoped; touch-only clients cannot match Web hover.",
+            "Exact on hover-capable clients; touch-only clients have no physical hover input.",
+        issue: "https://github.com/Huxpro/motion/issues/23",
     },
     {
         caseId: "lifecycle/base-animate",
@@ -1185,12 +1192,24 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         date: "2026-08-11",
         title: "Tap gesture parity",
         kind: "evidence",
-        status: "verified",
+        status: "merged",
         motionPr: 22,
         caseIds: ["gestures/tap"],
         lossBefore: 37,
-        lossAfter: WEIGHTED_LOSS,
+        lossAfter: 32,
         note: "I5/F3/M3/R1/C0 · immutable bd151a1 package · dual-renderer press apply/unapply · existing native evidence · keyboard boundary issue #21.",
+    },
+    {
+        id: "motion-24",
+        date: "2026-08-11",
+        title: "Hover gesture parity",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 24,
+        caseIds: ["gestures/hover"],
+        lossBefore: 32,
+        lossAfter: 29,
+        note: "I3/F3/M3/R1/C0 · immutable bd151a1 package · dual-renderer enter/apply/leave evidence · touch-only platform scope issue #23.",
     },
     {
         id: "lynx-3457",
