@@ -15,6 +15,7 @@ declare module '@lynx-js/types' {
       | "delay-children"
       | "variant-inherit-opt-out"
       | "initial-false-propagation"
+      | "inherited-variant-lifecycle"
       | "hover-rest-transition"
   }
 }

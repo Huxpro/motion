@@ -123,3 +123,7 @@ stack through #3495 and passes the Hux evidence build. The manifest records the
 capability PR that owns each contract, while #3491 records only the immutable
 validation gate. Numeric `delayChildren` is deliberately separate from the
 dynamic stagger/`when`/controls boundary tracked in issue #10.
+
+Hux evidence PR #72 adds the upstream inherited-child lifecycle contract against
+the same immutable package set. It requires no lynx-stack source diff: the child
+already reports the inherited variant label at animation start and completion.

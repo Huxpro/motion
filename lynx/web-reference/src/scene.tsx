@@ -186,6 +186,8 @@ export function App() {
         conformanceMode === "variant-inherit-opt-out"
     const initialFalsePropagationMode =
         conformanceMode === "initial-false-propagation"
+    const inheritedVariantLifecycleMode =
+        conformanceMode === "inherited-variant-lifecycle"
     const liveX = useMotionValue(STYLE_MOTION_VALUE_CASE.expected.startX)
     let styleMotionValueRenders = 0
     styleMotionValueRenders += 1
@@ -237,6 +239,9 @@ export function App() {
     const [lifecycleStatus, setLifecycleStatus] = useState("idle")
     const [lifecycleEvents, setLifecycleEvents] = useState("events")
     const [tapLifecycle, setTapLifecycle] = useState<string[]>([])
+    const [inheritedVariantLifecycle, setInheritedVariantLifecycle] = useState<
+        string[]
+    >([])
 
     return (
         <div style={page}>
@@ -439,6 +444,53 @@ export function App() {
                                             },
                                         }}
                                         transition={{ duration: 0.4 }}
+                                    />
+                                </motion.div>
+                            </div>
+                        </div>
+                    )}
+
+                    {inheritedVariantLifecycleMode && (
+                        <div
+                            id="example-inherited-variant-lifecycle"
+                            style={conformanceCard}
+                        >
+                            <div style={info}>
+                                <span style={cardTitle}>
+                                    Inherited variant lifecycle
+                                </span>
+                                <span
+                                    id="status-inherited-variant-lifecycle"
+                                    style={code}
+                                >
+                                    {inheritedVariantLifecycle.join("|")}
+                                </span>
+                            </div>
+                            <div style={demo}>
+                                <motion.div animate="visible">
+                                    <motion.div
+                                        id="target-inherited-variant-lifecycle"
+                                        variants={{
+                                            hidden: { opacity: 0 },
+                                            visible: { opacity: 1 },
+                                        }}
+                                        transition={{ duration: 0.05 }}
+                                        onAnimationStart={(definition) =>
+                                            setInheritedVariantLifecycle(
+                                                (events) => [
+                                                    ...events,
+                                                    `start:${String(definition)}`,
+                                                ]
+                                            )
+                                        }
+                                        onAnimationComplete={(definition) =>
+                                            setInheritedVariantLifecycle(
+                                                (events) => [
+                                                    ...events,
+                                                    `complete:${String(definition)}`,
+                                                ]
+                                            )
+                                        }
                                     />
                                 </motion.div>
                             </div>
