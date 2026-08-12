@@ -3061,6 +3061,7 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         kind: "architecture",
         status: "verified",
         lynxStackPr: 3466,
+        motionPr: 59,
         caseIds: ["targets/css-custom-property"],
         lossBefore: 18,
         lossAfter: WEIGHTED_LOSS,
