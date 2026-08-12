@@ -168,6 +168,7 @@ export function App() {
     const [instantActive, setInstantActive] = useState(false)
     const [noOpStatus, setNoOpStatus] = useState("idle")
     const [noOpKeyframesStatus, setNoOpKeyframesStatus] = useState("idle")
+    const [springVelocityStatus, setSpringVelocityStatus] = useState("idle")
     const [transitionFromActive, setTransitionFromActive] = useState(false)
     const [defaultTransitionActive, setDefaultTransitionActive] =
         useState(false)
@@ -567,6 +568,36 @@ export function App() {
                                 }
                                 onAnimationComplete={() =>
                                     setNoOpKeyframesStatus("idle")
+                                }
+                            />
+                        </div>
+                    </div>
+
+                    {/* spring velocity animates even when target equals origin */}
+                    <div id="example-spring-velocity" style={card}>
+                        <div style={info}>
+                            <span style={cardTitle}>Spring velocity</span>
+                            <span id="status-spring-velocity" style={code}>
+                                {springVelocityStatus}
+                            </span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                id="target-spring-velocity"
+                                style={{ ...dot, backgroundColor: "#cf6b61" }}
+                                initial={{ opacity: 1 }}
+                                animate={{
+                                    opacity: 1,
+                                    transition: {
+                                        type: "spring",
+                                        velocity: 100,
+                                    },
+                                }}
+                                onAnimationStart={() =>
+                                    setSpringVelocityStatus("animating")
+                                }
+                                onAnimationComplete={() =>
+                                    setSpringVelocityStatus("idle")
                                 }
                             />
                         </div>
