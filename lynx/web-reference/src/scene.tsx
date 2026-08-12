@@ -10,6 +10,7 @@ import {
     NEGATIVE_DELAY_CASE,
     REACTIVE_ANIMATE_CASE,
     REPEAT_REVERSE_CASE,
+    REPEAT_DELAY_CASE,
     SPRING_CASE,
 } from "../../src/conformance/cases"
 
@@ -156,6 +157,7 @@ export function App() {
     const [delayActive, setDelayActive] = useState(false)
     const [negativeDelayActive, setNegativeDelayActive] = useState(false)
     const [reverseActive, setReverseActive] = useState(false)
+    const [repeatDelayActive, setRepeatDelayActive] = useState(false)
     const [namedActive, setNamedActive] = useState(false)
     const [arrayActive, setArrayActive] = useState(false)
     const [keyframesActive, setKeyframesActive] = useState(false)
@@ -484,6 +486,47 @@ export function App() {
                                         NEGATIVE_DELAY_CASE.expected
                                             .durationMs / 1000,
                                     ease: "linear",
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* repeat endpoint hold */}
+                    <div
+                        id="example-repeat-delay"
+                        style={card}
+                        onClick={() => setRepeatDelayActive(true)}
+                    >
+                        <div style={info}>
+                            <span style={cardTitle}>Repeat delay</span>
+                            <span style={code}>
+                                {repeatDelayActive
+                                    ? "run · hold · run"
+                                    : "tap to verify endpoint hold"}
+                            </span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                id="target-repeat-delay"
+                                style={{ ...dot, backgroundColor: "#f2a93b" }}
+                                initial={{
+                                    scale: REPEAT_DELAY_CASE.expected
+                                        .startScale,
+                                }}
+                                animate={{
+                                    scale: repeatDelayActive
+                                        ? REPEAT_DELAY_CASE.expected.endScale
+                                        : REPEAT_DELAY_CASE.expected.startScale,
+                                }}
+                                transition={{
+                                    duration:
+                                        REPEAT_DELAY_CASE.expected.durationMs /
+                                        1000,
+                                    ease: "linear",
+                                    repeat: 1,
+                                    repeatDelay:
+                                        REPEAT_DELAY_CASE.expected.holdMs /
+                                        1000,
                                 }}
                             />
                         </div>

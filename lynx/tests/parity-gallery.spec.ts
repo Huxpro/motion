@@ -16,6 +16,7 @@ import {
     PRIORITIZED_GAPS,
     REACTIVE_ANIMATE_CASE,
     REPEAT_INFINITY_CASE,
+    REPEAT_DELAY_CASE,
     REPEAT_REVERSE_CASE,
     SPRING_CASE,
     TAP_GESTURE_CASE,
@@ -38,7 +39,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(16, { timeout: 15_000 })
+    await expect(animated).toHaveCount(17, { timeout: 15_000 })
 
     const styleOf = (selector: string) =>
         page
@@ -668,6 +669,81 @@ test("manifest case: reverse repeat reaches its target and returns", async ({
             .toBeCloseTo(REPEAT_REVERSE_CASE.expected.startScale, 1)
     }
 
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: repeatDelay holds the endpoint", async ({ browser }) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+    for (const page of [lynxPage, webPage]) {
+        const target = page.locator("#target-repeat-delay")
+        const scale = () =>
+            target.evaluate((element) =>
+                Number(
+                    new DOMMatrixReadOnly(
+                        getComputedStyle(element).transform
+                    ).a.toFixed(2)
+                )
+            )
+        await expect.poll(scale).toBe(REPEAT_DELAY_CASE.expected.startScale)
+        await target.scrollIntoViewIfNeeded()
+        await page.locator("#example-repeat-delay").click()
+        const timeline = await target.evaluate(
+            (element, duration) =>
+                new Promise<Array<{ time: number; value: number }>>(
+                    (resolve) => {
+                        const started = performance.now()
+                        const values: Array<{ time: number; value: number }> =
+                            []
+                        const sample = () => {
+                            values.push({
+                                time: performance.now() - started,
+                                value: new DOMMatrixReadOnly(
+                                    getComputedStyle(element).transform
+                                ).a,
+                            })
+                            performance.now() - started >= duration
+                                ? resolve(values)
+                                : requestAnimationFrame(sample)
+                        }
+                        sample()
+                    }
+                ),
+            REPEAT_DELAY_CASE.expected.durationMs * 2 +
+                REPEAT_DELAY_CASE.expected.holdMs +
+                200
+        )
+        const endpointSamples = timeline.filter(
+            ({ value }) => value >= REPEAT_DELAY_CASE.expected.endScale - 0.03
+        )
+        const firstEndpoint = endpointSamples[0]
+        expect(firstEndpoint).toBeDefined()
+        const firstRestart = timeline.find(
+            ({ time, value }) =>
+                time > firstEndpoint!.time &&
+                value < REPEAT_DELAY_CASE.expected.endScale - 0.08
+        )
+        expect(firstRestart).toBeDefined()
+        expect(firstRestart!.time - firstEndpoint!.time).toBeGreaterThanOrEqual(
+            REPEAT_DELAY_CASE.expected.holdMs - 80
+        )
+        expect(timeline.at(-1)!.value).toBeCloseTo(
+            REPEAT_DELAY_CASE.expected.endScale,
+            1
+        )
+    }
     expect(errors).toEqual([])
     await Promise.all([lynxPage.close(), webPage.close()])
 })
