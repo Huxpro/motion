@@ -25,6 +25,7 @@ import {
     PRIORITIZED_GAPS,
     REACTIVE_ANIMATE_CASE,
     REPEAT_INFINITY_CASE,
+    REPEAT_LOOP_FINAL_CASE,
     REPEAT_DELAY_CASE,
     REPEAT_MIRROR_CASE,
     REPEAT_REVERSE_CASE,
@@ -56,7 +57,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(35, { timeout: 15_000 })
+    await expect(animated).toHaveCount(36, { timeout: 15_000 })
 
     const styleOf = (selector: string) =>
         page
@@ -1539,6 +1540,45 @@ test("manifest case: repeatDelay holds the endpoint", async ({ browser }) => {
             1
         )
     }
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: loop repeat with odd count settles at target", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const target = page.locator("#target-repeat-loop-final")
+        await target.scrollIntoViewIfNeeded()
+        await page.locator("#example-repeat-loop-final").click()
+        await page.waitForTimeout(REPEAT_LOOP_FINAL_CASE.expected.settleMs)
+        const x = await target.evaluate((element) =>
+            new DOMMatrixReadOnly(getComputedStyle(element).transform).m41
+        )
+        expect(
+            x,
+            `${renderer} ${REPEAT_LOOP_FINAL_CASE.upstream.testName}`
+        ).toBeCloseTo(REPEAT_LOOP_FINAL_CASE.expected.endX, 0)
+    }
+
     expect(errors).toEqual([])
     await Promise.all([lynxPage.close(), webPage.close()])
 })
