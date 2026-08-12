@@ -166,6 +166,7 @@ export function App() {
     const [unseenPropertyActive, setUnseenPropertyActive] = useState(false)
     const [instantActive, setInstantActive] = useState(false)
     const [noOpStatus, setNoOpStatus] = useState("idle")
+    const [noOpKeyframesStatus, setNoOpKeyframesStatus] = useState("idle")
     const [transitionFromActive, setTransitionFromActive] = useState(false)
     const [defaultTransitionActive, setDefaultTransitionActive] =
         useState(false)
@@ -542,6 +543,34 @@ export function App() {
                                 }
                                 onAnimationComplete={() =>
                                     setNoOpStatus("idle")
+                                }
+                            />
+                        </view>
+                    </view>
+
+                    {/* equal keyframe arrays remain a no-op */}
+                    <view id="example-noop-keyframes" style={card}>
+                        <view style={info}>
+                            <text style={cardTitle}>No-op keyframes</text>
+                            <text id="status-noop-keyframes" style={code}>
+                                {noOpKeyframesStatus}
+                            </text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                id="target-noop-keyframes"
+                                style={{ ...dot, backgroundColor: "#9368c7" }}
+                                initial={{ opacity: 1, x: 0 }}
+                                animate={{ opacity: [1, 1], x: [0, 0] }}
+                                transition={{
+                                    opacity: { duration: 2, type: "tween", velocity: 100 },
+                                    x: { type: "spring", velocity: 0 },
+                                }}
+                                onAnimationStart={() =>
+                                    setNoOpKeyframesStatus("animating")
+                                }
+                                onAnimationComplete={() =>
+                                    setNoOpKeyframesStatus("idle")
                                 }
                             />
                         </view>
