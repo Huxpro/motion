@@ -3,6 +3,7 @@ import type { IntrinsicElements } from "@lynx-js/types"
 import { useState } from "@lynx-js/react"
 import {
     DELAY_CASE,
+    DELAY_CHILDREN_CASE,
     DEFAULT_TRANSITION_CASE,
     DISPLAY_REVEAL_CASE,
     FUNCTION_VARIANTS_CASE,
@@ -175,6 +176,7 @@ export function App() {
     const transformOriginMode = conformanceMode === "transform-origin"
     const complexGradientMode = conformanceMode === "complex-gradient"
     const variantPropagationMode = conformanceMode === "variant-propagation"
+    const delayChildrenMode = conformanceMode === "delay-children"
     const liveX = useMotionValue(STYLE_MOTION_VALUE_CASE.expected.startX)
     let styleMotionValueRenders = 0
     styleMotionValueRenders += 1
@@ -205,6 +207,7 @@ export function App() {
     const [complexGradientActive, setComplexGradientActive] = useState(false)
     const [variantPropagationActive, setVariantPropagationActive] =
         useState(false)
+    const [delayChildrenActive, setDelayChildrenActive] = useState(false)
     const [defaultTransitionActive, setDefaultTransitionActive] =
         useState(false)
     const [nullKeyframeActive, setNullKeyframeActive] = useState(false)
@@ -286,6 +289,66 @@ export function App() {
                                                         .expected.visibleOpacity,
                                                 x: VARIANT_PROPAGATION_CASE
                                                     .expected.visibleX,
+                                            },
+                                        }}
+                                        transition={{ type: false }}
+                                    />
+                                </motion.view>
+                            </view>
+                        </view>
+                    )}
+
+                    {delayChildrenMode && (
+                        <view
+                            id="example-delay-children"
+                            style={conformanceCard}
+                            bindtap={() => setDelayChildrenActive(true)}
+                        >
+                            <view style={info}>
+                                <text style={cardTitle}>Child delay</text>
+                                <text style={code}>
+                                    {`delayChildren: ${DELAY_CHILDREN_CASE.expected.delayMs / 1000}`}
+                                </text>
+                            </view>
+                            <view style={demo}>
+                                <motion.view
+                                    initial="hidden"
+                                    animate={
+                                        delayChildrenActive
+                                            ? "visible"
+                                            : "hidden"
+                                    }
+                                    variants={{
+                                        hidden: {},
+                                        visible: {
+                                            transition: {
+                                                delayChildren:
+                                                    DELAY_CHILDREN_CASE.expected
+                                                        .delayMs / 1000,
+                                            },
+                                        },
+                                    }}
+                                >
+                                    <motion.view
+                                        id="target-delay-children"
+                                        style={{
+                                            ...dot,
+                                            backgroundColor: "#d3df63",
+                                        }}
+                                        variants={{
+                                            hidden: {
+                                                opacity:
+                                                    DELAY_CHILDREN_CASE.expected
+                                                        .hiddenOpacity,
+                                                x: DELAY_CHILDREN_CASE.expected
+                                                    .hiddenX,
+                                            },
+                                            visible: {
+                                                opacity:
+                                                    DELAY_CHILDREN_CASE.expected
+                                                        .visibleOpacity,
+                                                x: DELAY_CHILDREN_CASE.expected
+                                                    .visibleX,
                                             },
                                         }}
                                         transition={{ type: false }}

@@ -12,6 +12,7 @@ declare module '@lynx-js/types' {
       | "transform-origin"
       | "complex-gradient"
       | "variant-propagation"
+      | "delay-children"
       | "hover-rest-transition"
   }
 }
