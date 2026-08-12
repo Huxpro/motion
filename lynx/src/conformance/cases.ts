@@ -1315,6 +1315,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "I5/F5/M1/R0/C0 · immutable bd151a1 package · dual-renderer overshoot/settle · native centers 785→1112→1069 · clean console.",
     },
     {
+        id: "motion-26",
+        date: "2026-08-12",
+        title: "Reverse repeat parity",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 26,
+        caseIds: ["transitions/repeat-reverse"],
+        lossBefore: 26,
+        lossAfter: 25,
+        note: "I3/F5/M1/R0/C0 · immutable bd151a1 package · dual-renderer 1→1.35→1 sampling · no new native host boundary.",
+    },
+    {
         id: "lynx-3457",
         date: "2026-08-11",
         title: "initial={false}",
