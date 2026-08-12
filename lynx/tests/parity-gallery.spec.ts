@@ -7,6 +7,7 @@ import {
     CONFORMANCE_METRICS,
     DELAY_CASE,
     DEFAULT_TRANSITION_CASE,
+    DISPLAY_REVEAL_CASE,
     FUNCTION_VARIANTS_CASE,
     GALLERY_EXAMPLES,
     HOVER_GESTURE_CASE,
@@ -48,7 +49,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(27, { timeout: 15_000 })
+    await expect(animated).toHaveCount(28, { timeout: 15_000 })
 
     const styleOf = (selector: string) =>
         page
@@ -295,6 +296,50 @@ test("manifest case: a later target introduces a new transform property", async 
         ).toEqual({
             x: UNSEEN_PROPERTY_CASE.expected.x,
             y: UNSEEN_PROPERTY_CASE.expected.endY,
+        })
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: display none switches to block before entrance", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const target = page.locator("#target-display-reveal")
+        await expect(target).toHaveCSS("display", "none")
+        await page.locator("#example-display-reveal").click({ force: true })
+        await page.waitForTimeout(DISPLAY_REVEAL_CASE.expected.sampleMs)
+        await expect(
+            target,
+            `${renderer} should reveal before opacity entrance completes`
+        ).toHaveCSS("display", "block")
+        const opacity = Number(await target.evaluate((element) =>
+            getComputedStyle(element).opacity
+        ))
+        expect(opacity).toBeGreaterThan(0)
+        expect(opacity).toBeLessThan(1)
+        await expect(target).toHaveCSS("opacity", "1", {
+            timeout: DISPLAY_REVEAL_CASE.expected.durationMs + 600,
         })
     }
 

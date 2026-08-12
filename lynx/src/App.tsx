@@ -4,6 +4,7 @@ import { useState } from "@lynx-js/react"
 import {
     DELAY_CASE,
     DEFAULT_TRANSITION_CASE,
+    DISPLAY_REVEAL_CASE,
     FUNCTION_VARIANTS_CASE,
     INSTANT_TRANSITION_CASE,
     KEYFRAME_TIMES_CASE,
@@ -159,6 +160,7 @@ export function App() {
     const [tapCount, setTapCount] = useState(0)
     const [hoverCount, setHoverCount] = useState(0)
     const [gestureStatus, setGestureStatus] = useState("resting")
+    const [displayRevealed, setDisplayRevealed] = useState(false)
     const [unseenPropertyActive, setUnseenPropertyActive] = useState(false)
     const [instantActive, setInstantActive] = useState(false)
     const [noOpStatus, setNoOpStatus] = useState("idle")
@@ -268,7 +270,12 @@ export function App() {
                                         : REACTIVE_ANIMATE_CASE.expected.startX,
                                     rotate: reactiveActive ? 12 : -12,
                                 }}
-                                transition={{ duration: 0.4, ease: "linear" }}
+                                transition={{
+                                    duration:
+                                        DISPLAY_REVEAL_CASE.expected
+                                            .durationMs / 1000,
+                                    ease: "linear",
+                                }}
                             >
                                 <text
                                     style={{
@@ -599,6 +606,31 @@ export function App() {
                                           }
                                 }
                                 transition={{ duration: 0.2, ease: "linear" }}
+                            />
+                        </view>
+                    </view>
+
+                    {/* discrete display reveals before the opacity entrance */}
+                    <view
+                        id="example-display-reveal"
+                        style={card}
+                        bindtap={() => setDisplayRevealed(true)}
+                    >
+                        <view style={info}>
+                            <text style={cardTitle}>Show, then fade in</text>
+                            <text style={code}>display: none → block</text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                id="target-display-reveal"
+                                style={{ ...dot, backgroundColor: "#55b89e" }}
+                                initial={{ display: "none", opacity: 0 }}
+                                animate={
+                                    displayRevealed
+                                        ? { display: "block", opacity: 1 }
+                                        : { display: "none", opacity: 0 }
+                                }
+                                transition={{ duration: 0.4, ease: "linear" }}
                             />
                         </view>
                     </view>
