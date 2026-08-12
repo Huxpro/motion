@@ -7,6 +7,7 @@ import {
     DISPLAY_REVEAL_CASE,
     FUNCTION_VARIANTS_CASE,
     INSTANT_TRANSITION_CASE,
+    INITIAL_FALSE_CASE,
     KEYFRAME_TIMES_CASE,
     KEYFRAMES_CASE,
     MOTION_CREATE_CASE,
@@ -164,6 +165,8 @@ export function App() {
     const [gestureStatus, setGestureStatus] = useState("resting")
     const [unmountVisible, setUnmountVisible] = useState(true)
     const [unmountComplete, setUnmountComplete] = useState(0)
+    const [initialFalseActive, setInitialFalseActive] = useState(false)
+    const [initialFalseStarts, setInitialFalseStarts] = useState(0)
     const [displayRevealed, setDisplayRevealed] = useState(false)
     const [visibilityRevealed, setVisibilityRevealed] = useState(false)
     const [unseenPropertyActive, setUnseenPropertyActive] = useState(false)
@@ -483,6 +486,44 @@ export function App() {
                                           : "Press"}
                                 </span>
                             </motion.div>
+                        </div>
+                    </div>
+
+                    <div
+                        id="case-initial-false"
+                        style={conformanceCard}
+                        onClick={() =>
+                            setInitialFalseActive((active) => !active)
+                        }
+                    >
+                        <div style={info}>
+                            <span style={badge}>
+                                {INITIAL_FALSE_CASE.status.toUpperCase()}
+                            </span>
+                            <span style={cardTitle}>
+                                {INITIAL_FALSE_CASE.title}
+                            </span>
+                            <span id="status-initial-false" style={code}>
+                                {`initial={false} · starts:${initialFalseStarts}`}
+                            </span>
+                            <span style={provenance}>
+                                {`${INITIAL_FALSE_CASE.upstream.sourceVersion} · ${INITIAL_FALSE_CASE.upstream.testName}`}
+                            </span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                id="target-initial-false"
+                                style={{ ...dot, backgroundColor: "#ff4f7b" }}
+                                initial={false}
+                                animate={{
+                                    opacity: 1,
+                                    x: initialFalseActive ? 48 : [0, 24],
+                                }}
+                                transition={{ duration: 0.12 }}
+                                onAnimationStart={() =>
+                                    setInitialFalseStarts((count) => count + 1)
+                                }
+                            />
                         </div>
                     </div>
 

@@ -14,6 +14,7 @@ import {
     GALLERY_EXAMPLES,
     HOVER_GESTURE_CASE,
     INSTANT_TRANSITION_CASE,
+    INITIAL_FALSE_CASE,
     KEYFRAME_TIMES_CASE,
     KEYFRAMES_CASE,
     MOTION_CREATE_CASE,
@@ -58,7 +59,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(38, { timeout: 15_000 })
+    await expect(animated).toHaveCount(39, { timeout: 15_000 })
 
     const styleOf = (selector: string) =>
         page
@@ -302,6 +303,68 @@ test("regression: unmount suppresses an active animation completion", async ({
             `${renderer} should suppress completion after unmount`
         ).toHaveText("complete: 0")
     }
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: initial false skips mount and preserves later updates", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        await page.reload()
+        const target = page.locator("#target-initial-false")
+        const semanticStyle = () =>
+            target.evaluate((element) => {
+                const style = getComputedStyle(element)
+                const transform = new DOMMatrixReadOnly(style.transform)
+                return {
+                    opacity: Number(style.opacity),
+                    translateX: Math.round(transform.m41),
+                }
+            })
+
+        await expect(page.locator("#case-initial-false")).toContainText(
+            INITIAL_FALSE_CASE.upstream.testName
+        )
+        await expect.poll(semanticStyle).toEqual({
+            opacity: 1,
+            translateX: 24,
+        })
+        await page.waitForTimeout(250)
+        await expect(
+            page.locator("#status-initial-false"),
+            `${renderer} should not run a mount animation`
+        ).toHaveText("initial={false} · starts:0")
+
+        await page.locator("#case-initial-false").click()
+        await expect.poll(semanticStyle).toEqual({
+            opacity: 1,
+            translateX: 48,
+        })
+        await expect(
+            page.locator("#status-initial-false"),
+            `${renderer} should animate a later target update`
+        ).toHaveText("initial={false} · starts:1")
+    }
+
     expect(errors).toEqual([])
     await Promise.all([lynxPage.close(), webPage.close()])
 })
@@ -1916,6 +1979,7 @@ test("manifest case: hover applies, fires, and restores rest", async ({
             scale: HOVER_GESTURE_CASE.expected.restScale,
             backgroundColor: "rgb(255, 255, 255)",
         })
+        await target.scrollIntoViewIfNeeded()
         await target.hover()
         await expect
             .poll(semanticStyle, {
