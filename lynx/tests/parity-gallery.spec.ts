@@ -13,6 +13,7 @@ import {
     PRIORITIZED_GAPS,
     REACTIVE_ANIMATE_CASE,
     REPEAT_INFINITY_CASE,
+    REPEAT_REVERSE_CASE,
     SPRING_CASE,
     TAP_GESTURE_CASE,
     WEIGHTED_LOSS,
@@ -55,11 +56,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Infinite scalar, keyframe, reverse, and color animations must remain
     // live after their first iteration instead of freezing at the end frame.
-    const liveSelectors = [
-        "#target-repeat-infinity",
-        "#target-repeat-reverse",
-        "#target-color-keyframes",
-    ]
+    const liveSelectors = ["#target-repeat-infinity", "#target-color-keyframes"]
     const before = await Promise.all(liveSelectors.map(styleOf))
     await page.waitForTimeout(173)
     const after = await Promise.all(liveSelectors.map(styleOf))
@@ -465,6 +462,72 @@ test("manifest case: infinite repeat remains live after its first duration", asy
             angularDistance,
             `${REPEAT_INFINITY_CASE.upstream.testName}: ${afterFirstDuration} → ${later}`
         ).toBeGreaterThan(10)
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: reverse repeat reaches its target and returns", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const page of [lynxPage, webPage]) {
+        const target = page.locator("#target-repeat-reverse")
+        const scale = () =>
+            target.evaluate((element) => {
+                const transform = new DOMMatrixReadOnly(
+                    getComputedStyle(element).transform
+                )
+                return Number(transform.a.toFixed(2))
+            })
+
+        await expect.poll(scale).toBe(REPEAT_REVERSE_CASE.expected.startScale)
+        await target.scrollIntoViewIfNeeded()
+        await page.locator("#example-repeat-reverse").click()
+        const peakScale = await target.evaluate(
+            (element, sampleDuration) =>
+                new Promise<number>((resolve) => {
+                    const startedAt = performance.now()
+                    let peak = Number.NEGATIVE_INFINITY
+                    const sample = () => {
+                        const transform = new DOMMatrixReadOnly(
+                            getComputedStyle(element).transform
+                        )
+                        peak = Math.max(peak, transform.a)
+                        if (performance.now() - startedAt >= sampleDuration) {
+                            resolve(peak)
+                        } else {
+                            setTimeout(sample, 16)
+                        }
+                    }
+                    sample()
+                }),
+            900
+        )
+
+        expect(
+            peakScale,
+            `${REPEAT_REVERSE_CASE.upstream.testName}: peak scale=${peakScale}`
+        ).toBeGreaterThanOrEqual(REPEAT_REVERSE_CASE.expected.peakScale - 0.02)
+        await expect
+            .poll(scale)
+            .toBeCloseTo(REPEAT_REVERSE_CASE.expected.startScale, 1)
     }
 
     expect(errors).toEqual([])

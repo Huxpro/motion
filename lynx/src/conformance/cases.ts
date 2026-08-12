@@ -229,6 +229,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { duration: 2 },
     },
     {
+        id: "transitions/repeat-reverse",
+        category: "Targets",
+        title: "Reverse repeat",
+        summary:
+            "A finite reverse repeat reaches the target, returns, and settles at its origin.",
+        status: "conformant",
+        api: ["transition.repeat", 'repeatType="reverse"'],
+        upstream: source(
+            "packages/motion-dom/src/animation/__tests__/JSAnimation.test.ts",
+            "Correctly applies repeat type 'reverse'"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the first iteration reaches the target scale",
+            "the reverse iteration returns toward the origin",
+            "the animation settles at its starting scale",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { startScale: 1, peakScale: 1.35 },
+    },
+    {
         id: "variants/named",
         category: "Variants",
         title: "Named variants",
@@ -467,6 +493,12 @@ export const SPRING_CASE = CONFORMANCE_CASES.find(
 export const REPEAT_INFINITY_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "transitions/repeat-infinity"
 ) as ConformanceCase & { expected: { duration: number } }
+
+export const REPEAT_REVERSE_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "transitions/repeat-reverse"
+) as ConformanceCase & {
+    expected: { startScale: number; peakScale: number }
+}
 
 export const TAP_GESTURE_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "gestures/tap"
@@ -958,6 +990,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         issue: "https://github.com/Huxpro/motion/issues/19",
     },
     {
+        caseId: "transitions/repeat-reverse",
+        importance: 3,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Finite repeat direction is implemented by the upstream animation sampler with no host-specific adaptation.",
+    },
+    {
         caseId: "variants/named",
         importance: 5,
         platformFit: 5,
@@ -1271,6 +1313,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 29,
         lossAfter: 26,
         note: "I5/F5/M1/R0/C0 · immutable bd151a1 package · dual-renderer overshoot/settle · native centers 785→1112→1069 · clean console.",
+    },
+    {
+        id: "motion-26",
+        date: "2026-08-12",
+        title: "Reverse repeat parity",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 26,
+        caseIds: ["transitions/repeat-reverse"],
+        lossBefore: 26,
+        lossAfter: 25,
+        note: "I3/F5/M1/R0/C0 · immutable bd151a1 package · dual-renderer 1→1.35→1 sampling · no new native host boundary.",
     },
     {
         id: "lynx-3457",
