@@ -9,6 +9,7 @@ import {
     FUNCTION_VARIANTS_CASE,
     INSTANT_TRANSITION_CASE,
     INITIAL_FALSE_CASE,
+    INITIAL_FALSE_PROPAGATION_CASE,
     KEYFRAME_TIMES_CASE,
     KEYFRAMES_CASE,
     MOTION_CREATE_CASE,
@@ -180,6 +181,8 @@ export function App() {
     const delayChildrenMode = conformanceMode === "delay-children"
     const variantInheritOptOutMode =
         conformanceMode === "variant-inherit-opt-out"
+    const initialFalsePropagationMode =
+        conformanceMode === "initial-false-propagation"
     const liveX = useMotionValue(STYLE_MOTION_VALUE_CASE.expected.startX)
     let styleMotionValueRenders = 0
     styleMotionValueRenders += 1
@@ -398,6 +401,45 @@ export function App() {
                                             transition={{ type: false }}
                                         />
                                     </motion.view>
+                                </motion.view>
+                            </view>
+                        </view>
+                    )}
+
+                    {initialFalsePropagationMode && (
+                        <view
+                            id="example-initial-false-propagation"
+                            style={conformanceCard}
+                        >
+                            <view style={info}>
+                                <text style={cardTitle}>
+                                    Inherited initial=false
+                                </text>
+                                <text style={code}>first frame: visible</text>
+                            </view>
+                            <view style={demo}>
+                                <motion.view
+                                    initial={false}
+                                    animate="visible"
+                                >
+                                    <motion.view
+                                        id="target-initial-false-propagation"
+                                        style={{
+                                            ...dot,
+                                            backgroundColor: "#d3df63",
+                                        }}
+                                        variants={{
+                                            hidden: { opacity: 0, x: -24 },
+                                            visible: {
+                                                opacity:
+                                                    INITIAL_FALSE_PROPAGATION_CASE
+                                                        .expected.opacity,
+                                                x: INITIAL_FALSE_PROPAGATION_CASE
+                                                    .expected.x,
+                                            },
+                                        }}
+                                        transition={{ duration: 0.4 }}
+                                    />
                                 </motion.view>
                             </view>
                         </view>
