@@ -153,6 +153,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { startX: -38, endX: 38 },
     },
     {
+        id: "targets/no-op",
+        category: "Targets",
+        title: "Equal target no-op",
+        summary:
+            "Equal initial and animate values return to idle without running a long animation.",
+        status: "conformant",
+        api: ["animate", "onAnimationStart", "onAnimationComplete"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "doesn't animate no-op values"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "equal opacity and transform targets do not remain active",
+            "velocity and spring options do not force a no-op target to run",
+            "both renderers report idle after two frames",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { settleMs: 100 },
+    },
+    {
         id: "targets/keyframes",
         category: "Targets",
         title: "Value keyframes",
@@ -835,6 +861,10 @@ export const REACTIVE_ANIMATE_CASE = CONFORMANCE_CASES.find(
     expected: { startX: number; endX: number }
 }
 
+export const NO_OP_TARGET_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/no-op"
+) as ConformanceCase & { expected: { settleMs: number } }
+
 export const KEYFRAMES_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/keyframes"
 ) as ConformanceCase & {
@@ -1025,6 +1055,13 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         title: "Reactive target",
         summary: "Tap to drive a later animate target update.",
         api: ["animate", "transition"],
+        evidence: "dual-renderer",
+    },
+    {
+        id: "noop-target",
+        title: "Equal target no-op",
+        summary: "Equal targets return to idle without a long animation.",
+        api: ["animate", "onAnimationComplete"],
         evidence: "dual-renderer",
     },
     {
@@ -1237,6 +1274,15 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         evidence: "dual-renderer",
         contract: "Animate when the target changes after mount.",
         exampleId: "reactive-target",
+    },
+    {
+        id: "animate-noop",
+        group: "Targets",
+        api: "equal animate targets",
+        status: "supported",
+        evidence: "dual-renderer",
+        contract: "Avoid keeping an animation active for unchanged values.",
+        exampleId: "noop-target",
     },
     {
         id: "style-motion-value",
@@ -1527,6 +1573,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Core target update with exact timing proof and no host-specific adaptation.",
+    },
+    {
+        caseId: "targets/no-op",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Common lifecycle and efficiency invariant is handled by the upstream MotionValue animation.",
     },
     {
         caseId: "targets/keyframes",
@@ -2184,6 +2240,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 23,
         lossAfter: 22,
         note: "I3/F5/M1/R0/C0 · immutable bd151a1 package · upstream transition.from restart semantics · focused from + gesture regression 15/15 · full suite 24/24 · no native host boundary.",
+    },
+    {
+        id: "motion-43",
+        date: "2026-08-12",
+        title: "Equal target no-op",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 43,
+        caseIds: ["targets/no-op"],
+        lossBefore: 22,
+        lossAfter: 21,
+        note: "I4/F5/M1/R0/C0 · immutable bd151a1 package · upstream equal-target idle semantics · focused no-op + gesture regression 15/15 · full suite 25/25 · no native host boundary.",
     },
     {
         id: "lynx-3457",
