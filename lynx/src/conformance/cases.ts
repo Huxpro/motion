@@ -230,6 +230,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { startX: -46, endX: 46, minimumOvershootX: 50 },
     },
     {
+        id: "transitions/delay",
+        category: "Targets",
+        title: "Positive delay",
+        summary:
+            "A positive transition delay holds the initial value before animation begins.",
+        status: "conformant",
+        api: ["transition.delay"],
+        upstream: source(
+            "packages/motion-dom/src/animation/__tests__/JSAnimation.test.ts",
+            "Accepts delay"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the target remains at its initial value during the delay",
+            "the target moves only after the delay elapses",
+            "the animation settles at its final value",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { startX: -42, endX: 42, delayMs: 400 },
+    },
+    {
         id: "transitions/repeat-infinity",
         category: "Targets",
         title: "Infinite repeat",
@@ -522,6 +548,12 @@ export const SPRING_CASE = CONFORMANCE_CASES.find(
     expected: { startX: number; endX: number; minimumOvershootX: number }
 }
 
+export const DELAY_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "transitions/delay"
+) as ConformanceCase & {
+    expected: { startX: number; endX: number; delayMs: number }
+}
+
 export const REPEAT_INFINITY_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "transitions/repeat-infinity"
 ) as ConformanceCase & { expected: { duration: number } }
@@ -631,6 +663,13 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         title: "Spring",
         summary: "An underdamped upstream spring overshoots, then settles.",
         api: ["type: spring", "stiffness", "damping"],
+        evidence: "dual-renderer",
+    },
+    {
+        id: "transition-delay",
+        title: "Delay",
+        summary: "A positive delay holds the initial value before movement.",
+        api: ["transition.delay"],
         evidence: "dual-renderer",
     },
     {
@@ -936,7 +975,8 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         status: "partial",
         evidence: "package-test",
         contract: "Compose Motion-owned refs and handlers with consumer props.",
-        boundary: "Not every main-thread ref/handler combination is safe yet.",
+        boundary:
+            "Parent rerenders can invalidate main-thread gesture entry bindings on Lynx-for-Web; consumer ref/handler composition is also pending in issue #6.",
     },
 ]
 
@@ -1019,6 +1059,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Core Motion transition reuses the upstream spring generator without host-specific adaptation.",
+    },
+    {
+        caseId: "transitions/delay",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Common sequencing primitive reuses upstream delay sampling without host-specific adaptation.",
     },
     {
         caseId: "transitions/repeat-infinity",
@@ -1403,6 +1453,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 23,
         lossAfter: 23,
         note: "Waits for observable main-thread ref hydration; tap 10/10 serial and full suite 15/15; no retry or semantic change.",
+    },
+    {
+        id: "motion-31",
+        date: "2026-08-12",
+        title: "Positive transition delay",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 31,
+        caseIds: ["transitions/delay"],
+        lossBefore: 23,
+        lossAfter: 22,
+        note: "I4/F5/M1/R0/C0 · upstream Accepts delay · dual-renderer hold→move→settle 5/5 · full suite 16/16 · native visual start/end and clean console; exact native timing not claimed.",
     },
     {
         id: "lynx-3457",

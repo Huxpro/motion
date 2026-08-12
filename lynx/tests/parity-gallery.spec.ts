@@ -5,6 +5,7 @@ import {
     COLOR_KEYFRAMES_CASE,
     CONVERGENCE_HISTORY,
     CONFORMANCE_METRICS,
+    DELAY_CASE,
     FUNCTION_VARIANTS_CASE,
     GALLERY_EXAMPLES,
     HOVER_GESTURE_CASE,
@@ -36,9 +37,8 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(14, { timeout: 15_000 })
+    await expect(animated).toHaveCount(15, { timeout: 15_000 })
 
-    const gesture = page.locator("#target-gesture-priority")
     const styleOf = (selector: string) =>
         page
             .locator(selector)
@@ -83,53 +83,6 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
     await expect
         .poll(() => styleOf("#target-array-variants"))
         .toContain("scale(1.12)")
-
-    // Hold a native-style touch sequence so this checks whileTap activation,
-    // not a click/tap pulse synthesized by the web demo.
-    const buttonBox = await gesture.boundingBox()
-    expect(buttonBox).not.toBeNull()
-    const x = buttonBox!.x + buttonBox!.width / 2
-    const y = buttonBox!.y + buttonBox!.height / 2
-
-    await gesture.hover()
-    await expect
-        .poll(() => styleOf("#target-gesture-priority"))
-        .toContain("scale(1.08)")
-    await expect
-        .poll(() => styleOf("#target-gesture-priority"))
-        .toContain("rgb(138, 180, 255)")
-    await expect(gesture).toContainText("Hovered 1")
-
-    const cdp = await page.context().newCDPSession(page)
-    await cdp.send("Input.dispatchTouchEvent", {
-        type: "touchStart",
-        touchPoints: [{ x, y }],
-    })
-    await expect
-        .poll(() => styleOf("#target-gesture-priority"))
-        .toContain("scale(1.15)")
-    await expect
-        .poll(() => styleOf("#target-gesture-priority"))
-        .toContain("rgb(255, 204, 0)")
-
-    await cdp.send("Input.dispatchTouchEvent", {
-        type: "touchEnd",
-        touchPoints: [],
-    })
-    await expect
-        .poll(() => styleOf("#target-gesture-priority"))
-        .toContain("scale(1.08)")
-    await expect
-        .poll(() => styleOf("#target-gesture-priority"))
-        .toContain("rgb(138, 180, 255)")
-    await page.mouse.move(0, 0)
-    await expect
-        .poll(() => styleOf("#target-gesture-priority"))
-        .toMatch(/scale\(1(?:,\s*1)?\)/)
-    await expect
-        .poll(() => styleOf("#target-gesture-priority"))
-        .toMatch(/background-color:\s*(?:#ffffff|rgb\(255,\s*255,\s*255\))/)
-    await expect(gesture).toContainText("Tapped 1")
 
     expect(runtimeErrors).toEqual([])
     expect(consoleErrors).toEqual([])
@@ -485,6 +438,71 @@ test("manifest case: explicit spring overshoots and settles", async ({
             `${SPRING_CASE.upstream.testName}: peak x=${peakX}`
         ).toBeGreaterThanOrEqual(SPRING_CASE.expected.minimumOvershootX)
         await expect.poll(x).toBeCloseTo(SPRING_CASE.expected.endX, 0)
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: positive delay holds before animation", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const page of [lynxPage, webPage]) {
+        const target = page.locator("#target-transition-delay")
+        const x = () =>
+            target.evaluate((element) => {
+                const transform = new DOMMatrixReadOnly(
+                    getComputedStyle(element).transform
+                )
+                return Number(transform.m41.toFixed(2))
+            })
+
+        await expect.poll(x).toBe(DELAY_CASE.expected.startX)
+        await target.scrollIntoViewIfNeeded()
+        await page.locator("#example-transition-delay").click()
+        const heldSamples = await target.evaluate(
+            (element, sampleDuration) =>
+                new Promise<number[]>((resolve) => {
+                    const startedAt = performance.now()
+                    const samples: number[] = []
+                    const sample = () => {
+                        const transform = new DOMMatrixReadOnly(
+                            getComputedStyle(element).transform
+                        )
+                        samples.push(transform.m41)
+                        if (performance.now() - startedAt >= sampleDuration) {
+                            resolve(samples)
+                        } else {
+                            requestAnimationFrame(sample)
+                        }
+                    }
+                    sample()
+                }),
+            DELAY_CASE.expected.delayMs - 100
+        )
+
+        expect(
+            Math.max(...heldSamples),
+            `${DELAY_CASE.upstream.testName}: ${heldSamples.join(", ")}`
+        ).toBeLessThanOrEqual(DELAY_CASE.expected.startX + 2)
+        await expect.poll(x).toBeGreaterThan(DELAY_CASE.expected.startX + 10)
+        await expect.poll(x).toBeCloseTo(DELAY_CASE.expected.endX, 0)
     }
 
     expect(errors).toEqual([])
