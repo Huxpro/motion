@@ -287,6 +287,31 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { startX: -42, endX: 42, delayMs: 400 },
     },
     {
+        id: "transitions/negative-delay",
+        category: "Targets",
+        title: "Negative delay",
+        summary:
+            "A negative transition delay starts partway through the animation as elapsed time.",
+        status: "conformant",
+        api: ["transition.delay < 0"],
+        upstream: source(
+            "packages/motion-dom/src/animation/__tests__/JSAnimation.test.ts",
+            "Accepts negative delay as elapsed"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the first animated sample skips the nominal start",
+            "the animation settles at its final value sooner than a full-duration tween",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { startX: -42, endX: 42, delayMs: -200, durationMs: 400 },
+    },
+    {
         id: "transitions/repeat-infinity",
         category: "Targets",
         title: "Infinite repeat",
@@ -591,6 +616,17 @@ export const DELAY_CASE = CONFORMANCE_CASES.find(
     expected: { startX: number; endX: number; delayMs: number }
 }
 
+export const NEGATIVE_DELAY_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "transitions/negative-delay"
+) as ConformanceCase & {
+    expected: {
+        startX: number
+        endX: number
+        delayMs: number
+        durationMs: number
+    }
+}
+
 export const REPEAT_INFINITY_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "transitions/repeat-infinity"
 ) as ConformanceCase & { expected: { duration: number } }
@@ -714,6 +750,13 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         title: "Delay",
         summary: "A positive delay holds the initial value before movement.",
         api: ["transition.delay"],
+        evidence: "dual-renderer",
+    },
+    {
+        id: "transition-negative-delay",
+        title: "Negative delay",
+        summary: "Elapsed time starts a tween partway through its timeline.",
+        api: ["transition.delay < 0"],
         evidence: "dual-renderer",
     },
     {
@@ -1125,6 +1168,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "Common sequencing primitive reuses upstream delay sampling without host-specific adaptation.",
     },
     {
+        caseId: "transitions/negative-delay",
+        importance: 3,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Useful timeline-offset primitive reuses upstream elapsed-time sampling without host-specific adaptation.",
+    },
+    {
         caseId: "transitions/repeat-infinity",
         importance: 3,
         platformFit: 4,
@@ -1531,6 +1584,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: WEIGHTED_LOSS,
         lossAfter: WEIGHTED_LOSS,
         note: "I5/F4/M2/R1/C0 · 119/119 package tests · local declaration hypothesis passes dual-renderer 5/5 · immutable preview-package dual/native evidence pending.",
+    },
+    {
+        id: "motion-33",
+        date: "2026-08-12",
+        title: "Negative transition delay",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 33,
+        caseIds: ["transitions/negative-delay"],
+        lossBefore: 27,
+        lossAfter: 26,
+        note: "I3/F5/M1/R0/C0 · upstream negative delay as elapsed · dual-renderer first-change skip and early settle 5/5 · full suite 17/17 · no native timing claim.",
     },
     {
         id: "lynx-3457",

@@ -7,6 +7,7 @@ import {
     KEYFRAMES_CASE,
     MOTION_CREATE_CASE,
     NAMED_VARIANTS_CASE,
+    NEGATIVE_DELAY_CASE,
     REACTIVE_ANIMATE_CASE,
     REPEAT_REVERSE_CASE,
     SPRING_CASE,
@@ -152,6 +153,7 @@ export function App() {
     const [reactiveActive, setReactiveActive] = useState(false)
     const [springActive, setSpringActive] = useState(false)
     const [delayActive, setDelayActive] = useState(false)
+    const [negativeDelayActive, setNegativeDelayActive] = useState(false)
     const [reverseActive, setReverseActive] = useState(false)
     const [namedActive, setNamedActive] = useState(false)
     const [arrayActive, setArrayActive] = useState(false)
@@ -449,6 +451,45 @@ export function App() {
                                         : "Press"}
                                 </text>
                             </motion.view>
+                        </view>
+                    </view>
+
+                    {/* negative delay starts from elapsed time */}
+                    <view
+                        id="example-negative-delay"
+                        style={card}
+                        bindtap={() => setNegativeDelayActive(true)}
+                    >
+                        <view style={info}>
+                            <text style={cardTitle}>Negative delay</text>
+                            <text style={code}>
+                                {negativeDelayActive
+                                    ? "delay: -0.2 · elapsed"
+                                    : "tap to start halfway"}
+                            </text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                id="target-negative-delay"
+                                style={{ ...dot, backgroundColor: "#e4588c" }}
+                                initial={{
+                                    x: NEGATIVE_DELAY_CASE.expected.startX,
+                                }}
+                                animate={{
+                                    x: negativeDelayActive
+                                        ? NEGATIVE_DELAY_CASE.expected.endX
+                                        : NEGATIVE_DELAY_CASE.expected.startX,
+                                }}
+                                transition={{
+                                    delay:
+                                        NEGATIVE_DELAY_CASE.expected.delayMs /
+                                        1000,
+                                    duration:
+                                        NEGATIVE_DELAY_CASE.expected
+                                            .durationMs / 1000,
+                                    ease: "linear",
+                                }}
+                            />
                         </view>
                     </view>
 

@@ -12,6 +12,7 @@ import {
     KEYFRAMES_CASE,
     MOTION_CREATE_CASE,
     NAMED_VARIANTS_CASE,
+    NEGATIVE_DELAY_CASE,
     PRIORITIZED_GAPS,
     REACTIVE_ANIMATE_CASE,
     REPEAT_INFINITY_CASE,
@@ -37,7 +38,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(15, { timeout: 15_000 })
+    await expect(animated).toHaveCount(16, { timeout: 15_000 })
 
     const styleOf = (selector: string) =>
         page
@@ -509,6 +510,53 @@ test("manifest case: positive delay holds before animation", async ({
     await Promise.all([lynxPage.close(), webPage.close()])
 })
 
+test("manifest case: negative delay starts from elapsed time", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const page of [lynxPage, webPage]) {
+        const target = page.locator("#target-negative-delay")
+        const x = () =>
+            target.evaluate((element) => {
+                const transform = new DOMMatrixReadOnly(
+                    getComputedStyle(element).transform
+                )
+                return Number(transform.m41.toFixed(2))
+            })
+
+        await expect.poll(x).toBe(NEGATIVE_DELAY_CASE.expected.startX)
+        await target.scrollIntoViewIfNeeded()
+        await page.locator("#example-negative-delay").click()
+        await expect
+            .poll(x, { intervals: [16] })
+            .not.toBe(NEGATIVE_DELAY_CASE.expected.startX)
+        expect(
+            await x(),
+            NEGATIVE_DELAY_CASE.upstream.testName
+        ).toBeGreaterThan(NEGATIVE_DELAY_CASE.expected.startX + 5)
+        await page.waitForTimeout(200)
+        expect(await x()).toBeCloseTo(NEGATIVE_DELAY_CASE.expected.endX, 0)
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
 test("manifest case: infinite repeat remains live after its first duration", async ({
     browser,
 }) => {
@@ -753,10 +801,17 @@ test("manifest case: hover applies, fires, and restores rest", async ({
             backgroundColor: "rgb(255, 255, 255)",
         })
         await target.hover()
-        await expect.poll(semanticStyle).toEqual({
-            scale: HOVER_GESTURE_CASE.expected.hoverScale,
-            backgroundColor: "rgb(138, 180, 255)",
-        })
+        await expect
+            .poll(semanticStyle, {
+                message:
+                    page === lynxPage
+                        ? "Lynx hover target"
+                        : "Web hover target",
+            })
+            .toEqual({
+                scale: HOVER_GESTURE_CASE.expected.hoverScale,
+                backgroundColor: "rgb(138, 180, 255)",
+            })
         await expect(target).toContainText("Hovered 1")
         await page.mouse.move(0, 0)
         await expect.poll(semanticStyle).toEqual({
