@@ -19,6 +19,7 @@ import {
     REPEAT_MIRROR_CASE,
     SPRING_CASE,
     TRANSITION_FROM_CASE,
+    UNSEEN_PROPERTY_CASE,
 } from "./conformance/cases.js"
 import { motion } from "./motion/index.js"
 import "./App.css"
@@ -158,6 +159,7 @@ export function App() {
     const [tapCount, setTapCount] = useState(0)
     const [hoverCount, setHoverCount] = useState(0)
     const [gestureStatus, setGestureStatus] = useState("resting")
+    const [unseenPropertyActive, setUnseenPropertyActive] = useState(false)
     const [instantActive, setInstantActive] = useState(false)
     const [noOpStatus, setNoOpStatus] = useState("idle")
     const [transitionFromActive, setTransitionFromActive] = useState(false)
@@ -560,6 +562,43 @@ export function App() {
                                               .startX,
                                 }}
                                 transition={{ type: false }}
+                            />
+                        </view>
+                    </view>
+
+                    {/* a later target can introduce a new transform property */}
+                    <view
+                        id="example-unseen-property"
+                        style={card}
+                        bindtap={() => setUnseenPropertyActive(true)}
+                    >
+                        <view style={info}>
+                            <text style={cardTitle}>New target property</text>
+                            <text style={code}>
+                                x retained · y introduced later
+                            </text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                id="target-unseen-property"
+                                style={{ ...dot, backgroundColor: "#4cb79d" }}
+                                initial={{
+                                    x: UNSEEN_PROPERTY_CASE.expected.x,
+                                }}
+                                animate={
+                                    unseenPropertyActive
+                                        ? {
+                                              x: UNSEEN_PROPERTY_CASE.expected
+                                                  .x,
+                                              y: UNSEEN_PROPERTY_CASE.expected
+                                                  .endY,
+                                          }
+                                        : {
+                                              x: UNSEEN_PROPERTY_CASE.expected
+                                                  .x,
+                                          }
+                                }
+                                transition={{ duration: 0.2, ease: "linear" }}
                             />
                         </view>
                     </view>

@@ -153,6 +153,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { startX: -38, endX: 38 },
     },
     {
+        id: "targets/unseen-property",
+        category: "Targets",
+        title: "New target property",
+        summary:
+            "A later target can introduce a previously unseen transform property while retaining existing values.",
+        status: "conformant",
+        api: ["animate", "dynamic target shape"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "animates previously unseen properties"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the first target contains only x",
+            "a later target introduces y and settles at its value",
+            "the existing x transform is retained in both renderers",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { x: 20, startY: 0, endY: 30 },
+    },
+    {
         id: "targets/no-op",
         category: "Targets",
         title: "Equal target no-op",
@@ -887,6 +913,12 @@ export const REACTIVE_ANIMATE_CASE = CONFORMANCE_CASES.find(
     expected: { startX: number; endX: number }
 }
 
+export const UNSEEN_PROPERTY_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/unseen-property"
+) as ConformanceCase & {
+    expected: { x: number; startY: number; endY: number }
+}
+
 export const NO_OP_TARGET_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/no-op"
 ) as ConformanceCase & { expected: { settleMs: number } }
@@ -1087,6 +1119,13 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         title: "Reactive target",
         summary: "Tap to drive a later animate target update.",
         api: ["animate", "transition"],
+        evidence: "dual-renderer",
+    },
+    {
+        id: "unseen-property",
+        title: "New target property",
+        summary: "Introduce y on a later target while retaining x.",
+        api: ["animate", "dynamic target shape"],
         evidence: "dual-renderer",
     },
     {
@@ -1313,6 +1352,16 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         evidence: "dual-renderer",
         contract: "Animate when the target changes after mount.",
         exampleId: "reactive-target",
+    },
+    {
+        id: "animate-unseen-property",
+        group: "Targets",
+        api: "dynamic animate keys",
+        status: "supported",
+        evidence: "dual-renderer",
+        contract:
+            "Create MotionValues for properties introduced by later targets.",
+        exampleId: "unseen-property",
     },
     {
         id: "animate-noop",
@@ -1621,6 +1670,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Core target update with exact timing proof and no host-specific adaptation.",
+    },
+    {
+        caseId: "targets/unseen-property",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Common dynamic target shape is created through upstream MotionValues with no platform-specific path.",
     },
     {
         caseId: "targets/no-op",
@@ -2322,6 +2381,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 21,
         lossAfter: 21,
         note: "I4/F5/M1/R0/C0 · immutable bd151a1 package · first changed frame is the final target · focused instant + gesture regression 15/15 · full suite 26/26 · rounded loss remains 21 while raw coverage grows · no native host boundary.",
+    },
+    {
+        id: "motion-45",
+        date: "2026-08-12",
+        title: "New target property",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 45,
+        caseIds: ["targets/unseen-property"],
+        lossBefore: 21,
+        lossAfter: 20,
+        note: "I4/F5/M1/R0/C0 · immutable bd151a1 package · later target adds y while retaining x · focused unseen property + gesture regression 15/15 · full suite 27/27 · no removed-key claim and no native host boundary.",
     },
     {
         id: "lynx-3457",
