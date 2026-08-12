@@ -2609,6 +2609,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "I4/F5/M1/R0/C0 · immutable bd151a1 package · equal opacity and transform keyframe arrays remain idle · focused scalar/keyframe no-op + hover regression 15/15 · full suite 30/30 · no native host boundary.",
     },
     {
+        id: "motion-49",
+        date: "2026-08-12",
+        title: "Spring velocity lifecycle",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 49,
+        caseIds: ["transitions/spring-velocity"],
+        lossBefore: 18,
+        lossAfter: 17,
+        note: "I4/F5/M1/R0/C0 · immutable bd151a1 package · non-zero velocity starts an equal-target spring through the upstream generator · focused spring/keyframe no-op + hover regression 15/15 · full suite 31/31 · no native host boundary.",
+    },
+    {
         id: "lynx-3457",
         date: "2026-08-11",
         title: "initial={false}",
