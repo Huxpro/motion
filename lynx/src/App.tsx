@@ -161,6 +161,8 @@ export function App() {
     const [tapCount, setTapCount] = useState(0)
     const [hoverCount, setHoverCount] = useState(0)
     const [gestureStatus, setGestureStatus] = useState("resting")
+    const [unmountVisible, setUnmountVisible] = useState(true)
+    const [unmountComplete, setUnmountComplete] = useState(0)
     const [displayRevealed, setDisplayRevealed] = useState(false)
     const [visibilityRevealed, setVisibilityRevealed] = useState(false)
     const [unseenPropertyActive, setUnseenPropertyActive] = useState(false)
@@ -825,6 +827,41 @@ export function App() {
                                 }
                                 transition={{ duration: 0.4, ease: "linear" }}
                             />
+                        </view>
+                    </view>
+
+                    {/* unmount cancels an active animation */}
+                    <view
+                        id="example-unmount-cancel"
+                        style={card}
+                        bindtap={() => setUnmountVisible(false)}
+                    >
+                        <view style={info}>
+                            <text style={cardTitle}>Unmount cancellation</text>
+                            <text id="status-unmount-cancel" style={code}>
+                                complete: {unmountComplete}
+                            </text>
+                        </view>
+                        <view style={demo}>
+                            {unmountVisible ? (
+                                <motion.view
+                                    id="target-unmount-cancel"
+                                    style={{
+                                        ...dot,
+                                        backgroundColor: "#cf76a4",
+                                    }}
+                                    initial={{ x: -40 }}
+                                    animate={{ x: 40 }}
+                                    transition={{ duration: 2, ease: "linear" }}
+                                    onAnimationComplete={() =>
+                                        setUnmountComplete((count) => count + 1)
+                                    }
+                                />
+                            ) : (
+                                <text id="target-unmount-placeholder" style={code}>
+                                    unmounted
+                                </text>
+                            )}
                         </view>
                     </view>
 
