@@ -178,6 +178,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { startY: 0, peakY: -34, endY: 12 },
     },
     {
+        id: "targets/color-keyframes",
+        category: "Targets",
+        title: "Color keyframes",
+        summary:
+            "String color keyframes interpolate through the middle color and settle at the final color.",
+        status: "conformant",
+        api: ["backgroundColor", "keyframes", "color interpolation"],
+        upstream: source(
+            "packages/motion-dom/src/animation/__tests__/JSAnimation.test.ts",
+            "Performs a keyframes animations when to is an array of strings"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the sequence starts red",
+            "intermediate samples are green-dominant",
+            "the sequence settles blue",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: true,
+        },
+        expected: { startRed: 255, middleGreen: 255, endBlue: 255 },
+    },
+    {
         id: "transitions/spring",
         category: "Targets",
         title: "Underdamped spring",
@@ -484,6 +510,12 @@ export const KEYFRAMES_CASE = CONFORMANCE_CASES.find(
     expected: { startY: number; peakY: number; endY: number }
 }
 
+export const COLOR_KEYFRAMES_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/color-keyframes"
+) as ConformanceCase & {
+    expected: { startRed: number; middleGreen: number; endBlue: number }
+}
+
 export const SPRING_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "transitions/spring"
 ) as ConformanceCase & {
@@ -613,7 +645,7 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         title: "Color mixer",
         summary: "Upstream color interpolation drives Lynx styles.",
         api: ["backgroundColor", "keyframes"],
-        evidence: "lynx-e2e",
+        evidence: "dual-renderer",
     },
     {
         id: "function-variant",
@@ -967,6 +999,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 1,
         rationale:
             "Popular upstream primitive with exact ordered-keyframe sampling.",
+    },
+    {
+        caseId: "targets/color-keyframes",
+        importance: 4,
+        platformFit: 4,
+        mts: 1,
+        reactLynx: 0,
+        css: 2,
+        rationale:
+            "Common style animation reuses upstream color parsing/mixing; host CSS serialization is the remaining platform-sensitive layer.",
     },
     {
         caseId: "transitions/spring",
@@ -1337,6 +1379,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 25,
         lossAfter: 25,
         note: "Reconciles atomic/API evidence with merged exact cases; hover supported at its documented scope; no new semantic claim.",
+    },
+    {
+        id: "motion-29",
+        date: "2026-08-12",
+        title: "Color keyframes parity",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 29,
+        caseIds: ["targets/color-keyframes"],
+        lossBefore: 25,
+        lossAfter: 23,
+        note: "I4/F4/M1/R0/C2 · immutable bd151a1 package · dual-renderer red→green→blue sampling · native frame sequence · clean console.",
     },
     {
         id: "lynx-3457",
