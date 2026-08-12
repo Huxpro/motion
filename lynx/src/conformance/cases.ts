@@ -274,6 +274,39 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         },
     },
     {
+        id: "transitions/manual-from",
+        category: "Targets",
+        title: "Manual transition start",
+        summary:
+            "transition.from overrides the current MotionValue when an animation starts.",
+        status: "conformant",
+        api: ["transition.from"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "transition accepts manual from value"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the update restarts from the explicit from value instead of the current value",
+            "early samples progress from the manual start towards the target",
+            "both renderers settle at the final target",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            initialX: 100,
+            fromX: 0,
+            endX: 50,
+            durationMs: 800,
+            earlySampleMs: 100,
+            maximumEarlyX: 20,
+        },
+    },
+    {
         id: "transitions/named-easing",
         category: "Targets",
         title: "Named easing",
@@ -844,6 +877,19 @@ export const DEFAULT_TRANSITION_CASE = CONFORMANCE_CASES.find(
     }
 }
 
+export const TRANSITION_FROM_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "transitions/manual-from"
+) as ConformanceCase & {
+    expected: {
+        initialX: number
+        fromX: number
+        endX: number
+        durationMs: number
+        earlySampleMs: number
+        maximumEarlyX: number
+    }
+}
+
 export const NAMED_EASING_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "transitions/named-easing"
 ) as ConformanceCase & {
@@ -1040,6 +1086,13 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         evidence: "dual-renderer",
     },
     {
+        id: "transition-from",
+        title: "Manual transition start",
+        summary: "Override the current value with transition.from.",
+        api: ["transition.from"],
+        evidence: "dual-renderer",
+    },
+    {
         id: "named-easing",
         title: "Named easing",
         summary: "Compare easeInOut sampling with a simultaneous linear tween.",
@@ -1228,6 +1281,15 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         contract:
             "Use default options when no value-specific transition exists.",
         exampleId: "default-transition",
+    },
+    {
+        id: "transition-from",
+        group: "Targets",
+        api: "transition.from",
+        status: "supported",
+        evidence: "dual-renderer",
+        contract: "Override the current value used to start an animation.",
+        exampleId: "transition-from",
     },
     {
         id: "repeat",
@@ -1505,6 +1567,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Common transition routing fallback reuses upstream getValueTransition without host adaptation.",
+    },
+    {
+        caseId: "transitions/manual-from",
+        importance: 3,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Useful start-value override is consumed directly by the upstream MotionValue animation.",
     },
     {
         caseId: "transitions/named-easing",
@@ -2100,6 +2172,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 24,
         lossAfter: 23,
         note: "I4/F5/M1/R0/C0 · immutable bd151a1 package · upstream default-key routing · focused fallback + gesture regression 15/15 · full suite 23/23 · no native host boundary; property-specific override remains #3459.",
+    },
+    {
+        id: "motion-42",
+        date: "2026-08-12",
+        title: "Manual transition start",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 42,
+        caseIds: ["transitions/manual-from"],
+        lossBefore: 23,
+        lossAfter: 22,
+        note: "I3/F5/M1/R0/C0 · immutable bd151a1 package · upstream transition.from restart semantics · focused from + gesture regression 15/15 · full suite 24/24 · no native host boundary.",
     },
     {
         id: "lynx-3457",

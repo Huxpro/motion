@@ -17,6 +17,7 @@ import {
     REPEAT_DELAY_CASE,
     REPEAT_MIRROR_CASE,
     SPRING_CASE,
+    TRANSITION_FROM_CASE,
 } from "./conformance/cases.js"
 import { motion } from "./motion/index.js"
 import "./App.css"
@@ -156,6 +157,7 @@ export function App() {
     const [tapCount, setTapCount] = useState(0)
     const [hoverCount, setHoverCount] = useState(0)
     const [gestureStatus, setGestureStatus] = useState("resting")
+    const [transitionFromActive, setTransitionFromActive] = useState(false)
     const [defaultTransitionActive, setDefaultTransitionActive] =
         useState(false)
     const [nullKeyframeActive, setNullKeyframeActive] = useState(false)
@@ -464,6 +466,42 @@ export function App() {
                                         : "Press"}
                                 </text>
                             </motion.view>
+                        </view>
+                    </view>
+
+                    {/* transition.from overrides the current value */}
+                    <view
+                        id="example-transition-from"
+                        style={card}
+                        bindtap={() => setTransitionFromActive(true)}
+                    >
+                        <view style={info}>
+                            <text style={cardTitle}>
+                                Manual transition start
+                            </text>
+                            <text style={code}>from: 0 · target: 50</text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                id="target-transition-from"
+                                style={{ ...dot, backgroundColor: "#43a6c6" }}
+                                initial={{
+                                    x: TRANSITION_FROM_CASE.expected.initialX,
+                                }}
+                                animate={{
+                                    x: transitionFromActive
+                                        ? TRANSITION_FROM_CASE.expected.endX
+                                        : TRANSITION_FROM_CASE.expected
+                                              .initialX,
+                                }}
+                                transition={{
+                                    from: TRANSITION_FROM_CASE.expected.fromX,
+                                    duration:
+                                        TRANSITION_FROM_CASE.expected
+                                            .durationMs / 1000,
+                                    ease: "linear",
+                                }}
+                            />
                         </view>
                     </view>
 
