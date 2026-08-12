@@ -28,6 +28,7 @@ import {
     SPRING_CASE,
     TAP_GESTURE_CASE,
     TRANSITION_FROM_CASE,
+    UNSEEN_PROPERTY_CASE,
     WEIGHTED_LOSS,
 } from "../src/conformance/cases.js"
 
@@ -47,7 +48,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(26, { timeout: 15_000 })
+    await expect(animated).toHaveCount(27, { timeout: 15_000 })
 
     const styleOf = (selector: string) =>
         page
@@ -242,6 +243,59 @@ test("manifest case: transition type false applies immediately", async ({
             )
         ).toBe(INSTANT_TRANSITION_CASE.expected.endX)
         expect(samples.at(-1)).toBe(INSTANT_TRANSITION_CASE.expected.endX)
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: a later target introduces a new transform property", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const target = page.locator("#target-unseen-property")
+        const transform = () =>
+            target.evaluate((element) => {
+                const matrix = new DOMMatrixReadOnly(
+                    getComputedStyle(element).transform
+                )
+                return { x: Math.round(matrix.m41), y: Math.round(matrix.m42) }
+            })
+        await expect.poll(transform).toEqual({
+            x: UNSEEN_PROPERTY_CASE.expected.x,
+            y: UNSEEN_PROPERTY_CASE.expected.startY,
+        })
+        await page.locator("#example-unseen-property").click()
+        await expect.poll(transform).toEqual({
+            x: UNSEEN_PROPERTY_CASE.expected.x,
+            y: UNSEEN_PROPERTY_CASE.expected.endY,
+        })
+        expect(
+            await transform(),
+            `${renderer} ${UNSEEN_PROPERTY_CASE.upstream.testName}`
+        ).toEqual({
+            x: UNSEEN_PROPERTY_CASE.expected.x,
+            y: UNSEEN_PROPERTY_CASE.expected.endY,
+        })
     }
 
     expect(errors).toEqual([])
