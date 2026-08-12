@@ -7,6 +7,7 @@ import {
     MOTION_CREATE_CASE,
     NAMED_VARIANTS_CASE,
     REACTIVE_ANIMATE_CASE,
+    REPEAT_REVERSE_CASE,
     SPRING_CASE,
 } from "../../src/conformance/cases"
 
@@ -150,6 +151,7 @@ export function App() {
     const [gestureStatus, setGestureStatus] = useState("resting")
     const [reactiveActive, setReactiveActive] = useState(false)
     const [springActive, setSpringActive] = useState(false)
+    const [reverseActive, setReverseActive] = useState(false)
     const [namedActive, setNamedActive] = useState(false)
     const [arrayActive, setArrayActive] = useState(false)
     const [keyframesActive, setKeyframesActive] = useState(false)
@@ -511,11 +513,17 @@ export function App() {
                     </div>
 
                     {/* reverse — breathing scale */}
-                    <div id="example-repeat-reverse" style={card}>
+                    <div
+                        id="example-repeat-reverse"
+                        style={card}
+                        onClick={() => setReverseActive(true)}
+                    >
                         <div style={info}>
-                            <span style={cardTitle}>Reverse — breathe</span>
+                            <span style={cardTitle}>Reverse — return</span>
                             <span style={code}>
-                                scale: 1.35 · repeatType: "reverse"
+                                {reverseActive
+                                    ? '1 → 1.35 → 1 · repeatType: "reverse"'
+                                    : "tap to run reverse repeat"}
                             </span>
                         </div>
                         <div style={demo}>
@@ -526,12 +534,21 @@ export function App() {
                                     backgroundColor: "#ff0088",
                                     borderRadius: "28px",
                                 }}
-                                animate={{ scale: 1.35 }}
+                                initial={{
+                                    scale: REPEAT_REVERSE_CASE.expected
+                                        .startScale,
+                                }}
+                                animate={{
+                                    scale: reverseActive
+                                        ? REPEAT_REVERSE_CASE.expected.peakScale
+                                        : REPEAT_REVERSE_CASE.expected
+                                              .startScale,
+                                }}
                                 transition={{
-                                    repeat: Infinity,
+                                    repeat: 1,
                                     repeatType: "reverse",
-                                    ease: "easeInOut",
-                                    duration: 0.7,
+                                    ease: "linear",
+                                    duration: 0.4,
                                 }}
                             />
                         </div>
