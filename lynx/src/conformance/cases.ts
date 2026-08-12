@@ -1348,20 +1348,59 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
     {
         id: "variants/propagation",
         category: "Variants",
-        title: "Variant propagation",
-        summary: "Children inherit labels through the Motion component tree.",
-        status: "blocked",
-        api: ["variants", "inheritance", "staggerChildren"],
+        title: "Base variant label propagation",
+        summary:
+            "Children inherit a parent's declarative initial and animate labels.",
+        status: "conformant",
+        api: ["variants", "initial", "animate", "inheritance"],
         upstream: source(
             "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
             "child animates to set variant"
         ),
         baseline: "framer-motion@13.0.0",
         assertions: [
-            "parent label reaches descendants",
-            "orchestration preserves child order",
+            "a child inherits the parent's base animate label",
+            "a reactive parent label update reaches the child",
+            "an explicit child animate prop overrides the inherited label",
         ],
-        gap: "Requires a Lynx-side visual-element/component orchestration tree.",
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            hiddenOpacity: 0.25,
+            hiddenX: -24,
+            visibleOpacity: 1,
+            visibleX: 24,
+        },
+    },
+    {
+        id: "variants/orchestration",
+        category: "Variants",
+        title: "Variant orchestration + controls",
+        summary:
+            "Coordinate descendant variants through timing, controls, and gesture state.",
+        status: "blocked",
+        api: [
+            "animation controls",
+            "gesture propagation",
+            "when",
+            "delayChildren",
+            "staggerChildren",
+        ],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "when: beforeChildren works correctly"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "parent and child timing honors when",
+            "delayChildren and staggerChildren order descendants",
+            "controls and gesture labels propagate through the subtree",
+        ],
+        gap: "Requires a cross-thread visual-element registry and subtree lifecycle aggregation; tracked in issue #10.",
         evidence: {
             gallery: false,
             packageTest: false,
@@ -1692,6 +1731,17 @@ export const TAP_ANIMATION_LIFECYCLE_CASE = CONFORMANCE_CASES.find(
 export const INITIAL_FALSE_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "initial/false"
 ) as ConformanceCase
+
+export const VARIANT_PROPAGATION_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "variants/propagation"
+) as ConformanceCase & {
+    expected: {
+        hiddenOpacity: number
+        hiddenX: number
+        visibleOpacity: number
+        visibleX: number
+    }
+}
 
 export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
     {
@@ -2165,10 +2215,11 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         id: "variant-propagation",
         group: "Variants",
         api: "variant propagation",
-        status: "blocked",
-        evidence: "planned",
-        contract: "Inherit labels through descendant Motion components.",
-        boundary: "Requires a Lynx component orchestration tree.",
+        status: "supported",
+        evidence: "dual-renderer",
+        contract:
+            "Inherit declarative initial and animate labels through descendant Motion components.",
+        exampleId: "variant-propagation",
     },
     {
         id: "variant-orchestration",
@@ -2794,12 +2845,22 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
     {
         caseId: "variants/propagation",
         importance: 5,
+        platformFit: 4,
+        mts: 1,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Core declarative composition now fits ReactLynx context and reuses each child's existing upstream MotionValue path.",
+    },
+    {
+        caseId: "variants/orchestration",
+        importance: 5,
         platformFit: 2,
         mts: 2,
         reactLynx: 4,
         css: 0,
         rationale:
-            "High-value pattern blocked on a cross-thread visual-element tree.",
+            "Controls, gesture propagation, and ordered subtree timing still need a cross-thread visual-element registry and lifecycle aggregation.",
         issue: "https://github.com/Huxpro/motion/issues/10",
     },
     {
@@ -3574,5 +3635,17 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 10,
         lossAfter: WEIGHTED_LOSS,
         note: "Validation-only draft publishes exact motion/react/react-umd packages at d4d34c7 because feature-base PRs do not trigger pkg.pr.new · full Hux evidence build and headless Web/Lynx suite pass 47/47 · complex gradient I4/F4/M1/R0/C2 was already supported and adds source-linked evidence without a Lynx source patch · no Full Demo or native claim.",
+    },
+    {
+        id: "lynx-3492",
+        date: "2026-08-12",
+        title: "Base variant label propagation",
+        kind: "capability",
+        status: "verified",
+        lynxStackPr: 3492,
+        caseIds: ["variants/propagation"],
+        lossBefore: 10,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I5/F4/M1/R1/C0 · immutable e17bcaf motion/react/react-umd set · parent initial/animate labels propagate reactively while explicit child animate wins · package 144/144 and complete dual-renderer suite 48/48 · orchestration, controls, and gesture propagation remain scoped to issue #10 · no Full Demo or native claim.",
     },
 ]

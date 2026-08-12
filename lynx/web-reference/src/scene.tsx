@@ -23,6 +23,7 @@ import {
     STYLE_MOTION_VALUE_CASE,
     TRANSITION_FROM_CASE,
     UNSEEN_PROPERTY_CASE,
+    VARIANT_PROPAGATION_CASE,
     VISIBILITY_REVEAL_CASE,
 } from "../../src/conformance/cases"
 
@@ -176,6 +177,7 @@ export function App() {
     const removedAnimateValues = conformanceMode === "removed-animate-values"
     const transformOriginMode = conformanceMode === "transform-origin"
     const complexGradientMode = conformanceMode === "complex-gradient"
+    const variantPropagationMode = conformanceMode === "variant-propagation"
     const liveX = useMotionValue(STYLE_MOTION_VALUE_CASE.expected.startX)
     let styleMotionValueRenders = 0
     styleMotionValueRenders += 1
@@ -201,6 +203,8 @@ export function App() {
     const [removedAnimateActive, setRemovedAnimateActive] = useState(true)
     const [transformOriginActive, setTransformOriginActive] = useState(false)
     const [complexGradientActive, setComplexGradientActive] = useState(false)
+    const [variantPropagationActive, setVariantPropagationActive] =
+        useState(false)
     const [defaultTransitionActive, setDefaultTransitionActive] =
         useState(false)
     const [nullKeyframeActive, setNullKeyframeActive] = useState(false)
@@ -237,6 +241,59 @@ export function App() {
                     <span style={{ ...cardTitle, marginBottom: 10 }}>
                         Conformance cases
                     </span>
+
+                    {variantPropagationMode && (
+                        <div
+                            id="example-variant-propagation"
+                            style={conformanceCard}
+                            onClick={() => setVariantPropagationActive(true)}
+                        >
+                            <div style={info}>
+                                <span style={cardTitle}>
+                                    Parent variant label
+                                </span>
+                                <span style={code}>
+                                    {variantPropagationActive
+                                        ? 'parent animate="visible"'
+                                        : 'parent animate="hidden"'}
+                                </span>
+                            </div>
+                            <div style={demo}>
+                                <motion.div
+                                    animate={
+                                        variantPropagationActive
+                                            ? "visible"
+                                            : "hidden"
+                                    }
+                                >
+                                    <motion.div
+                                        id="target-variant-propagation"
+                                        style={{
+                                            ...dot,
+                                            backgroundColor: "#d3df63",
+                                        }}
+                                        variants={{
+                                            hidden: {
+                                                opacity:
+                                                    VARIANT_PROPAGATION_CASE
+                                                        .expected.hiddenOpacity,
+                                                x: VARIANT_PROPAGATION_CASE
+                                                    .expected.hiddenX,
+                                            },
+                                            visible: {
+                                                opacity:
+                                                    VARIANT_PROPAGATION_CASE
+                                                        .expected.visibleOpacity,
+                                                x: VARIANT_PROPAGATION_CASE
+                                                    .expected.visibleX,
+                                            },
+                                        }}
+                                        transition={{ type: false }}
+                                    />
+                                </motion.div>
+                            </div>
+                        </div>
+                    )}
 
                     <div
                         id={`case-${MOTION_CREATE_CASE.id}`}

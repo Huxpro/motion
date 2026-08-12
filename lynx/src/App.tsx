@@ -23,6 +23,7 @@ import {
     STYLE_MOTION_VALUE_CASE,
     TRANSITION_FROM_CASE,
     UNSEEN_PROPERTY_CASE,
+    VARIANT_PROPAGATION_CASE,
     VISIBILITY_REVEAL_CASE,
 } from "./conformance/cases.js"
 import { motion, useMotionValue } from "./motion/index.js"
@@ -173,6 +174,7 @@ export function App() {
     const removedAnimateValues = conformanceMode === "removed-animate-values"
     const transformOriginMode = conformanceMode === "transform-origin"
     const complexGradientMode = conformanceMode === "complex-gradient"
+    const variantPropagationMode = conformanceMode === "variant-propagation"
     const liveX = useMotionValue(STYLE_MOTION_VALUE_CASE.expected.startX)
     let styleMotionValueRenders = 0
     styleMotionValueRenders += 1
@@ -201,6 +203,8 @@ export function App() {
     const [removedAnimateActive, setRemovedAnimateActive] = useState(true)
     const [transformOriginActive, setTransformOriginActive] = useState(false)
     const [complexGradientActive, setComplexGradientActive] = useState(false)
+    const [variantPropagationActive, setVariantPropagationActive] =
+        useState(false)
     const [defaultTransitionActive, setDefaultTransitionActive] =
         useState(false)
     const [nullKeyframeActive, setNullKeyframeActive] = useState(false)
@@ -237,6 +241,59 @@ export function App() {
                     <text style={{ ...cardTitle, marginBottom: "10px" }}>
                         Conformance cases
                     </text>
+
+                    {variantPropagationMode && (
+                        <view
+                            id="example-variant-propagation"
+                            style={conformanceCard}
+                            bindtap={() => setVariantPropagationActive(true)}
+                        >
+                            <view style={info}>
+                                <text style={cardTitle}>
+                                    Parent variant label
+                                </text>
+                                <text style={code}>
+                                    {variantPropagationActive
+                                        ? 'parent animate="visible"'
+                                        : 'parent animate="hidden"'}
+                                </text>
+                            </view>
+                            <view style={demo}>
+                                <motion.view
+                                    animate={
+                                        variantPropagationActive
+                                            ? "visible"
+                                            : "hidden"
+                                    }
+                                >
+                                    <motion.view
+                                        id="target-variant-propagation"
+                                        style={{
+                                            ...dot,
+                                            backgroundColor: "#d3df63",
+                                        }}
+                                        variants={{
+                                            hidden: {
+                                                opacity:
+                                                    VARIANT_PROPAGATION_CASE
+                                                        .expected.hiddenOpacity,
+                                                x: VARIANT_PROPAGATION_CASE
+                                                    .expected.hiddenX,
+                                            },
+                                            visible: {
+                                                opacity:
+                                                    VARIANT_PROPAGATION_CASE
+                                                        .expected.visibleOpacity,
+                                                x: VARIANT_PROPAGATION_CASE
+                                                    .expected.visibleX,
+                                            },
+                                        }}
+                                        transition={{ type: false }}
+                                    />
+                                </motion.view>
+                            </view>
+                        </view>
+                    )}
 
                     {/* One manifest entry maps one upstream behavior to one card. */}
                     <view

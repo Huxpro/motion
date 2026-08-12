@@ -11,6 +11,7 @@ declare module '@lynx-js/types' {
       | "removed-animate-values"
       | "transform-origin"
       | "complex-gradient"
+      | "variant-propagation"
       | "hover-rest-transition"
   }
 }
