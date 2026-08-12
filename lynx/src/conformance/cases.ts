@@ -2982,6 +2982,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "I3/F5/M1/R0/C0 · immutable bd151a1 package · repeat 1 + loop runs two forward iterations and settles at x 20 through the upstream repeat generator · focused loop/reverse + hover regression 15/15 · full suite 36/36 · rounded loss remains 16 while raw coverage grows · no native host boundary.",
     },
     {
+        id: "motion-56-issue-55",
+        date: "2026-08-12",
+        title: "Transform template blocker",
+        kind: "architecture",
+        status: "verified",
+        motionPr: 56,
+        caseIds: ["targets/transform-template"],
+        lossBefore: 16,
+        lossAfter: 18,
+        note: "I4/F2/M5/R4/C0 · issue #55 · Web x/y 30/30; immutable Lynx-for-Web 30/0 across 5 repeats; Android native DOM transform is translateX(30px) only · known scope expands tracked 38→39 and blocked 5→6, so loss rises honestly rather than hiding the public API gap.",
+    },
+    {
         id: "lynx-3457",
         date: "2026-08-11",
         title: "initial={false}",
