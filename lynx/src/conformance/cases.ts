@@ -648,6 +648,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         },
     },
     {
+        id: "targets/transform-template",
+        category: "Targets",
+        title: "Transform template",
+        summary:
+            "A consumer callback composes custom transform text around Motion's generated transform.",
+        status: "blocked",
+        api: ["transformTemplate", "transform composition"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "applies custom transform"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the callback receives the latest transform values",
+            "the callback receives Motion's generated transform string",
+            "Web, Lynx-for-Web, and native Lynx render translateY(30px) translateX(30px)",
+        ],
+        gap: "Web composes x/y as 30/30; immutable Lynx-for-Web and Android native render only x/y 30/0. Consumer closures need generic lifecycle-managed main-thread callable handles; tracked in issue #55.",
+        evidence: {
+            gallery: false,
+            packageTest: false,
+            dualRenderer: false,
+            native: true,
+        },
+    },
+    {
         id: "targets/style-motion-value",
         category: "Targets",
         title: "Live style MotionValue",
@@ -1722,6 +1748,17 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         contract: "Bind upstream MotionValues to Lynx styles.",
     },
     {
+        id: "transform-template",
+        group: "Targets",
+        api: "transformTemplate",
+        status: "blocked",
+        evidence: "planned",
+        contract:
+            "Compose consumer transform text around Motion's generated transform each frame.",
+        boundary:
+            "Consumer closures are not lifecycle-managed callables in the main-thread declarative style path; tracked in issue #55.",
+    },
+    {
         id: "keyframes",
         group: "Targets",
         api: "animate={{ x: […] }}",
@@ -2192,6 +2229,17 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         rationale:
             "Useful per-segment customization is blocked on generic nested callable hydration across the background/main boundary.",
         issue: "https://github.com/Huxpro/motion/issues/37",
+    },
+    {
+        caseId: "targets/transform-template",
+        importance: 4,
+        platformFit: 2,
+        mts: 5,
+        reactLynx: 4,
+        css: 0,
+        rationale:
+            "Useful transform composition escape hatch requires an arbitrary consumer closure to run on every main-thread style frame.",
+        issue: "https://github.com/Huxpro/motion/issues/55",
     },
     {
         caseId: "targets/style-motion-value",
@@ -2932,6 +2980,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 16,
         lossAfter: 16,
         note: "I3/F5/M1/R0/C0 · immutable bd151a1 package · repeat 1 + loop runs two forward iterations and settles at x 20 through the upstream repeat generator · focused loop/reverse + hover regression 15/15 · full suite 36/36 · rounded loss remains 16 while raw coverage grows · no native host boundary.",
+    },
+    {
+        id: "motion-56-issue-55",
+        date: "2026-08-12",
+        title: "Transform template blocker",
+        kind: "architecture",
+        status: "verified",
+        motionPr: 56,
+        caseIds: ["targets/transform-template"],
+        lossBefore: 16,
+        lossAfter: 18,
+        note: "I4/F2/M5/R4/C0 · issue #55 · Web x/y 30/30; immutable Lynx-for-Web 30/0 across 5 repeats; Android native DOM transform is translateX(30px) only · known scope expands tracked 38→39 and blocked 5→6, so loss rises honestly rather than hiding the public API gap.",
     },
     {
         id: "lynx-3457",
