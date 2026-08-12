@@ -283,6 +283,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { settleMs: 100 },
     },
     {
+        id: "transitions/spring-velocity",
+        category: "Transitions",
+        title: "Spring velocity lifecycle",
+        summary:
+            "A non-zero spring velocity starts motion even when the target equals the origin.",
+        status: "conformant",
+        api: ["transition.type", "transition.velocity", "onAnimationStart"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "does animate no-op values if velocity is non-zero and animation type is spring"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "a spring with non-zero velocity starts for an equal target",
+            "the lifecycle remains active after two post-render frames",
+            "both renderers expose the same animation state",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { sampleMs: 0 },
+    },
+    {
         id: "targets/keyframes",
         category: "Targets",
         title: "Value keyframes",
@@ -1017,6 +1043,10 @@ export const NO_OP_KEYFRAMES_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/no-op-keyframes"
 ) as ConformanceCase & { expected: { settleMs: number } }
 
+export const SPRING_VELOCITY_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "transitions/spring-velocity"
+) as ConformanceCase & { expected: { sampleMs: number } }
+
 export const KEYFRAMES_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/keyframes"
 ) as ConformanceCase & {
@@ -1234,6 +1264,13 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         title: "Equal keyframe no-op",
         summary: "Equal keyframe arrays remain idle instead of running.",
         api: ["animate", "keyframes", "onAnimationStart"],
+        evidence: "dual-renderer",
+    },
+    {
+        id: "spring-velocity",
+        title: "Spring velocity lifecycle",
+        summary: "Non-zero velocity starts a spring for an equal target.",
+        api: ["transition.type", "transition.velocity"],
         evidence: "dual-renderer",
     },
     {
@@ -1821,6 +1858,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Core keyframe lifecycle invariant is already handled by the upstream MotionValue animation on immutable Lynx.",
+    },
+    {
+        caseId: "transitions/spring-velocity",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Spring physics and lifecycle semantics directly reuse the upstream MotionValue generator on immutable Lynx.",
     },
     {
         caseId: "targets/keyframes",
@@ -2560,6 +2607,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 19,
         lossAfter: 18,
         note: "I4/F5/M1/R0/C0 · immutable bd151a1 package · equal opacity and transform keyframe arrays remain idle · focused scalar/keyframe no-op + hover regression 15/15 · full suite 30/30 · no native host boundary.",
+    },
+    {
+        id: "motion-49",
+        date: "2026-08-12",
+        title: "Spring velocity lifecycle",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 49,
+        caseIds: ["transitions/spring-velocity"],
+        lossBefore: 18,
+        lossAfter: 17,
+        note: "I4/F5/M1/R0/C0 · immutable bd151a1 package · non-zero velocity starts an equal-target spring through the upstream generator · focused spring/keyframe no-op + hover regression 15/15 · full suite 31/31 · no native host boundary.",
     },
     {
         id: "lynx-3457",

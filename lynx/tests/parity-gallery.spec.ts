@@ -28,6 +28,7 @@ import {
     REPEAT_MIRROR_CASE,
     REPEAT_REVERSE_CASE,
     SPRING_CASE,
+    SPRING_VELOCITY_CASE,
     TAP_GESTURE_CASE,
     TRANSITION_FROM_CASE,
     UNSEEN_PROPERTY_CASE,
@@ -51,7 +52,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(30, { timeout: 15_000 })
+    await expect(animated).toHaveCount(31, { timeout: 15_000 })
 
     const styleOf = (selector: string) =>
         page
@@ -458,6 +459,41 @@ test("manifest case: equal keyframe arrays do not remain active", async ({
             page.locator("#status-noop-keyframes"),
             `${renderer} ${NO_OP_KEYFRAMES_CASE.upstream.testName}`
         ).toHaveText("idle")
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: spring velocity animates an equal target", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        await expect(page.locator("#target-spring-velocity")).toBeVisible()
+        await page.waitForTimeout(SPRING_VELOCITY_CASE.expected.sampleMs)
+        await expect(
+            page.locator("#status-spring-velocity"),
+            `${renderer} ${SPRING_VELOCITY_CASE.upstream.testName}`
+        ).toHaveText("animating")
     }
 
     expect(errors).toEqual([])
