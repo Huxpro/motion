@@ -162,6 +162,8 @@ export function App() {
     const [tapCount, setTapCount] = useState(0)
     const [hoverCount, setHoverCount] = useState(0)
     const [gestureStatus, setGestureStatus] = useState("resting")
+    const [unmountVisible, setUnmountVisible] = useState(true)
+    const [unmountComplete, setUnmountComplete] = useState(0)
     const [displayRevealed, setDisplayRevealed] = useState(false)
     const [visibilityRevealed, setVisibilityRevealed] = useState(false)
     const [unseenPropertyActive, setUnseenPropertyActive] = useState(false)
@@ -823,6 +825,41 @@ export function App() {
                                 }
                                 transition={{ duration: 0.4, ease: "linear" }}
                             />
+                        </div>
+                    </div>
+
+                    {/* unmount cancels an active animation */}
+                    <div
+                        id="example-unmount-cancel"
+                        style={card}
+                        onClick={() => setUnmountVisible(false)}
+                    >
+                        <div style={info}>
+                            <span style={cardTitle}>Unmount cancellation</span>
+                            <span id="status-unmount-cancel" style={code}>
+                                complete: {unmountComplete}
+                            </span>
+                        </div>
+                        <div style={demo}>
+                            {unmountVisible ? (
+                                <motion.div
+                                    id="target-unmount-cancel"
+                                    style={{
+                                        ...dot,
+                                        backgroundColor: "#cf76a4",
+                                    }}
+                                    initial={{ x: -40 }}
+                                    animate={{ x: 40 }}
+                                    transition={{ duration: 2, ease: "linear" }}
+                                    onAnimationComplete={() =>
+                                        setUnmountComplete((count) => count + 1)
+                                    }
+                                />
+                            ) : (
+                                <span id="target-unmount-placeholder" style={code}>
+                                    unmounted
+                                </span>
+                            )}
                         </div>
                     </div>
 

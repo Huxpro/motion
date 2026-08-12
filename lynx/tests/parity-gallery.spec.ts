@@ -58,7 +58,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(37, { timeout: 15_000 })
+    await expect(animated).toHaveCount(38, { timeout: 15_000 })
 
     const styleOf = (selector: string) =>
         page
@@ -255,6 +255,53 @@ test("manifest case: transition type false applies immediately", async ({
         expect(samples.at(-1)).toBe(INSTANT_TRANSITION_CASE.expected.endX)
     }
 
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("regression: unmount suppresses an active animation completion", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        await page.reload()
+        const target = page.locator("#target-unmount-cancel")
+        await expect(target).toBeVisible()
+        await page.waitForTimeout(150)
+        expect(
+            await page.locator("#status-unmount-cancel").textContent(),
+            `${renderer} should still be active before unmount`
+        ).toBe("complete: 0")
+        await page.locator("#example-unmount-cancel").click()
+        await expect(target).toHaveCount(0)
+        await page.waitForTimeout(100)
+        expect(
+            await page.locator("#status-unmount-cancel").textContent(),
+            `${renderer} should not complete immediately after unmount`
+        ).toBe("complete: 0")
+        await page.waitForTimeout(2200)
+        await expect(
+            page.locator("#status-unmount-cancel"),
+            `${renderer} should suppress completion after unmount`
+        ).toHaveText("complete: 0")
+    }
     expect(errors).toEqual([])
     await Promise.all([lynxPage.close(), webPage.close()])
 })
