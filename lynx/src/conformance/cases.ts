@@ -178,6 +178,38 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { startY: 0, peakY: -34, endY: 12 },
     },
     {
+        id: "transitions/keyframe-times",
+        category: "Targets",
+        title: "Keyframe times",
+        summary:
+            "Custom keyframe offsets preserve duplicate boundary times and their instantaneous jumps.",
+        status: "conformant",
+        api: ["transition.times"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/transition-keyframes.test.tsx",
+            "times works as expected"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the first changed frame starts at or beyond the second keyframe",
+            "the final pre-completion frame stays at or before the third keyframe",
+            "the animation settles at the final keyframe",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            startX: -42,
+            secondX: -14,
+            thirdX: 14,
+            endX: 42,
+            durationMs: 800,
+        },
+    },
+    {
         id: "targets/style-motion-value",
         category: "Targets",
         title: "Live style MotionValue",
@@ -623,6 +655,18 @@ export const KEYFRAMES_CASE = CONFORMANCE_CASES.find(
     expected: { startY: number; peakY: number; endY: number }
 }
 
+export const KEYFRAME_TIMES_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "transitions/keyframe-times"
+) as ConformanceCase & {
+    expected: {
+        startX: number
+        secondX: number
+        thirdX: number
+        endX: number
+        durationMs: number
+    }
+}
+
 export const STYLE_MOTION_VALUE_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/style-motion-value"
 ) as ConformanceCase & {
@@ -771,6 +815,13 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         title: "Keyframes",
         summary: "Transform keyframes remain live across iterations.",
         api: ["keyframes", "repeat"],
+        evidence: "dual-renderer",
+    },
+    {
+        id: "keyframe-times",
+        title: "Keyframe times",
+        summary: "Custom offsets preserve duplicate-time boundary jumps.",
+        api: ["transition.times"],
         evidence: "dual-renderer",
     },
     {
@@ -1175,6 +1226,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 1,
         rationale:
             "Popular upstream primitive with exact ordered-keyframe sampling.",
+    },
+    {
+        caseId: "transitions/keyframe-times",
+        importance: 3,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Useful keyframe orchestration option reuses upstream offset sampling without host-specific adaptation.",
     },
     {
         caseId: "targets/style-motion-value",
@@ -1667,6 +1728,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 26,
         lossAfter: 25,
         note: "I4/F5/M1/R0/C0 · upstream endpoint hold semantics · full-timeline dual-renderer hold→restart→settle 5/5 · full suite 18/18 · no native timing claim.",
+    },
+    {
+        id: "motion-35",
+        date: "2026-08-12",
+        title: "Keyframe times",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 35,
+        caseIds: ["transitions/keyframe-times"],
+        lossBefore: 25,
+        lossAfter: 24,
+        note: "I3/F5/M1/R0/C0 · upstream duplicate-offset semantics · focused times + gesture regression 15/15 · full suite 19/19 · no native host boundary.",
     },
     {
         id: "lynx-3457",
