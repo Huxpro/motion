@@ -185,6 +185,8 @@ export function App() {
     const [arrayActive, setArrayActive] = useState(false)
     const [keyframesActive, setKeyframesActive] = useState(false)
     const [colorActive, setColorActive] = useState(false)
+    const [colorRepresentationActive, setColorRepresentationActive] =
+        useState(false)
     const [functionActive, setFunctionActive] = useState(false)
     const [lifecycleStatus, setLifecycleStatus] = useState("idle")
     const [lifecycleEvents, setLifecycleEvents] = useState("events")
@@ -1211,6 +1213,34 @@ export function App() {
                                     ease: "linear",
                                     duration: 0.8,
                                 }}
+                            />
+                        </view>
+                    </view>
+
+                    {/* color interpolation across HSLA and RGBA representations */}
+                    <view
+                        id="example-color-representation"
+                        style={card}
+                        bindtap={() => setColorRepresentationActive(true)}
+                    >
+                        <view style={info}>
+                            <text style={cardTitle}>HSLA to RGBA</text>
+                            <text style={code}>cross-representation color mix</text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                id="target-color-representation"
+                                style={{ ...dot, width: "112px" }}
+                                initial={{
+                                    backgroundColor:
+                                        "hsla(345, 100%, 60%, 1)",
+                                }}
+                                animate={{
+                                    backgroundColor: colorRepresentationActive
+                                        ? "rgba(0, 136, 255, 1)"
+                                        : "hsla(345, 100%, 60%, 1)",
+                                }}
+                                transition={{ ease: "linear", duration: 0.4 }}
                             />
                         </view>
                     </view>

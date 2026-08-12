@@ -628,6 +628,40 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { startRed: 255, middleGreen: 255, endBlue: 255 },
     },
     {
+        id: "targets/color-hsla-rgba",
+        category: "Targets",
+        title: "HSLA to RGBA",
+        summary:
+            "Color animation interpolates across HSLA and RGBA representations.",
+        status: "conformant",
+        api: ["backgroundColor", "HSLA", "RGBA", "color interpolation"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "Correctly animates from HSLA to RGB"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the animation starts from the HSLA color",
+            "an intermediate sample is neither endpoint",
+            "both renderers settle at rgba(0, 136, 255, 1)",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            startRed: 255,
+            startGreen: 51,
+            startBlue: 102,
+            endRed: 0,
+            endGreen: 136,
+            endBlue: 255,
+            sampleMs: 120,
+        },
+    },
+    {
         id: "transitions/spring",
         category: "Targets",
         title: "Underdamped spring",
@@ -1160,6 +1194,20 @@ export const COLOR_KEYFRAMES_CASE = CONFORMANCE_CASES.find(
     expected: { startRed: number; middleGreen: number; endBlue: number }
 }
 
+export const COLOR_HSLA_RGBA_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/color-hsla-rgba"
+) as ConformanceCase & {
+    expected: {
+        startRed: number
+        startGreen: number
+        startBlue: number
+        endRed: number
+        endGreen: number
+        endBlue: number
+        sampleMs: number
+    }
+}
+
 export const SPRING_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "transitions/spring"
 ) as ConformanceCase & {
@@ -1443,6 +1491,13 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         title: "Color mixer",
         summary: "Upstream color interpolation drives Lynx styles.",
         api: ["backgroundColor", "keyframes"],
+        evidence: "dual-renderer",
+    },
+    {
+        id: "color-hsla-rgba",
+        title: "HSLA to RGBA",
+        summary: "Interpolate between common color representations.",
+        api: ["backgroundColor", "HSLA", "RGBA"],
         evidence: "dual-renderer",
     },
     {
@@ -2015,6 +2070,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 2,
         rationale:
             "Common style animation reuses upstream color parsing/mixing; host CSS serialization is the remaining platform-sensitive layer.",
+    },
+    {
+        caseId: "targets/color-hsla-rgba",
+        importance: 4,
+        platformFit: 4,
+        mts: 1,
+        reactLynx: 0,
+        css: 2,
+        rationale:
+            "Common cross-representation color animation reuses the upstream mixer; Lynx accepts every emitted intermediate RGB value.",
     },
     {
         caseId: "transitions/spring",
@@ -2677,6 +2742,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 17,
         lossAfter: 17,
         note: "I3/F5/M1/R0/C1 · immutable bd151a1 package · zIndex applies target 100 immediately despite a long transition · focused zIndex/spring + hover regression 15/15 · full suite 32/32 · rounded loss remains 17 while raw coverage grows · no native host boundary.",
+    },
+    {
+        id: "motion-51",
+        date: "2026-08-12",
+        title: "HSLA to RGBA",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 51,
+        caseIds: ["targets/color-hsla-rgba"],
+        lossBefore: 17,
+        lossAfter: 17,
+        note: "I4/F4/M1/R0/C2 · immutable bd151a1 package · upstream mixer produces observable cross-representation intermediate colors and settles rgba(0,136,255,1) · focused color + hover regression 15/15 · full suite 33/33 · rounded loss remains 17 while raw coverage grows · no native host boundary.",
     },
     {
         id: "lynx-3457",

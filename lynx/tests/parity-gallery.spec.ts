@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test"
 import {
     ANIMATION_LIFECYCLE_CASE,
     API_METRICS,
+    COLOR_HSLA_RGBA_CASE,
     COLOR_KEYFRAMES_CASE,
     CONVERGENCE_HISTORY,
     CONFORMANCE_METRICS,
@@ -53,7 +54,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(32, { timeout: 15_000 })
+    await expect(animated).toHaveCount(33, { timeout: 15_000 })
 
     const styleOf = (selector: string) =>
         page
@@ -1042,6 +1043,65 @@ test("manifest case: color keyframes pass through green and settle blue", async 
         await expect
             .poll(rgb)
             .toEqual([0, 0, COLOR_KEYFRAMES_CASE.expected.endBlue])
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: HSLA animates to RGBA", async ({ browser }) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const target = page.locator("#target-color-representation")
+        await target.scrollIntoViewIfNeeded()
+        await page.locator("#example-color-representation").click()
+        await page.waitForTimeout(COLOR_HSLA_RGBA_CASE.expected.sampleMs)
+        const intermediate = await target.evaluate((element) =>
+            (getComputedStyle(element).backgroundColor.match(/\d+/g) ?? [])
+                .slice(0, 3)
+                .map(Number)
+        )
+        expect(intermediate, `${renderer} should interpolate color`).not.toEqual([
+            COLOR_HSLA_RGBA_CASE.expected.startRed,
+            COLOR_HSLA_RGBA_CASE.expected.startGreen,
+            COLOR_HSLA_RGBA_CASE.expected.startBlue,
+        ])
+        expect(intermediate, `${renderer} should not jump to target`).not.toEqual([
+            COLOR_HSLA_RGBA_CASE.expected.endRed,
+            COLOR_HSLA_RGBA_CASE.expected.endGreen,
+            COLOR_HSLA_RGBA_CASE.expected.endBlue,
+        ])
+        await expect
+            .poll(() =>
+                target.evaluate((element) =>
+                    (getComputedStyle(element).backgroundColor.match(/\d+/g) ?? [])
+                        .slice(0, 3)
+                        .map(Number)
+                )
+            )
+            .toEqual([
+                COLOR_HSLA_RGBA_CASE.expected.endRed,
+                COLOR_HSLA_RGBA_CASE.expected.endGreen,
+                COLOR_HSLA_RGBA_CASE.expected.endBlue,
+            ])
     }
 
     expect(errors).toEqual([])
