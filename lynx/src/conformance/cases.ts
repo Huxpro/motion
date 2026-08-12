@@ -205,6 +205,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { durationMs: 400, sampleMs: 120 },
     },
     {
+        id: "targets/visibility-reveal",
+        category: "Targets",
+        title: "Reveal, then fade in",
+        summary:
+            "A discrete visibility target switches from hidden to visible before its opacity entrance continues.",
+        status: "conformant",
+        api: ["animate", "visibility", "opacity"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "animate visibility hidden => visible immediately switches to visible"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "visibility switches to visible before opacity entrance completes",
+            "opacity exposes an intermediate entrance frame",
+            "both renderers settle at full opacity",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { durationMs: 400, sampleMs: 120 },
+    },
+    {
         id: "targets/no-op",
         category: "Targets",
         title: "Equal target no-op",
@@ -947,6 +973,12 @@ export const UNSEEN_PROPERTY_CASE = CONFORMANCE_CASES.find(
 
 export const DISPLAY_REVEAL_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/display-reveal"
+) as ConformanceCase & {
+    expected: { durationMs: number; sampleMs: number }
+}
+
+export const VISIBILITY_REVEAL_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/visibility-reveal"
 ) as ConformanceCase & {
     expected: { durationMs: number; sampleMs: number }
 }
@@ -1724,6 +1756,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "Common fade-in visibility pattern already reuses upstream discrete value mixing on immutable Lynx.",
     },
     {
+        caseId: "targets/visibility-reveal",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 1,
+        rationale:
+            "Common visibility fade-in pattern directly reuses upstream invisible-value mixing on immutable Lynx.",
+    },
+    {
         caseId: "targets/no-op",
         importance: 4,
         platformFit: 5,
@@ -2447,6 +2489,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 20,
         lossAfter: 19,
         note: "I4/F5/M1/R0/C1 · immutable bd151a1 package · display switches from none to block before opacity entrance completes · focused display + gesture regression 15/15 · full suite 28/28 · no native host boundary.",
+    },
+    {
+        id: "motion-47",
+        date: "2026-08-12",
+        title: "Discrete visibility reveal",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 47,
+        caseIds: ["targets/visibility-reveal"],
+        lossBefore: 19,
+        lossAfter: 19,
+        note: "I4/F5/M1/R0/C1 · immutable bd151a1 package · visibility switches from hidden to visible before opacity entrance completes · focused visibility + gesture regression 15/15 · full suite 29/29 · rounded loss remains 19 while raw coverage grows · no native host boundary.",
     },
     {
         id: "lynx-3457",
