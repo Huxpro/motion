@@ -46,6 +46,7 @@ import {
     TRANSFORM_ORIGIN_CASE,
     UNKNOWN_TYPE_FALLBACK_CASE,
     UNSEEN_PROPERTY_CASE,
+    VARIANT_PROPAGATION_CASE,
     VISIBILITY_REVEAL_CASE,
     WEIGHTED_LOSS,
     Z_INDEX_DISCRETE_CASE,
@@ -117,6 +118,56 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     expect(runtimeErrors).toEqual([])
     expect(consoleErrors).toEqual([])
+})
+
+test("manifest case: parent animate label propagates to a child", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "variant-propagation" })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=variant-propagation"
+        ),
+    ])
+
+    for (const page of [lynxPage, webPage]) {
+        const example = page.locator("#example-variant-propagation")
+        const target = page.locator("#target-variant-propagation")
+        const style = () =>
+            target.evaluate((element) => {
+                const computed = getComputedStyle(element)
+                return {
+                    opacity: Number(computed.opacity),
+                    x: new DOMMatrixReadOnly(computed.transform).m41,
+                }
+            })
+        await expect.poll(style).toEqual({
+            opacity: VARIANT_PROPAGATION_CASE.expected.hiddenOpacity,
+            x: VARIANT_PROPAGATION_CASE.expected.hiddenX,
+        })
+        await example.click()
+        await expect.poll(style).toEqual({
+            opacity: VARIANT_PROPAGATION_CASE.expected.visibleOpacity,
+            x: VARIANT_PROPAGATION_CASE.expected.visibleX,
+        })
+    }
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
 })
 
 test("manifest case: transition.default wins over top-level options", async ({

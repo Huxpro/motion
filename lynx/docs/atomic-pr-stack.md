@@ -110,11 +110,12 @@ behavior independently reviewable:
                 └── #3488 transitionEnd-only base animate
                     └── #3489 values removed from animate
                         └── #3490 initial transform origin
+                            └── #3492 base variant label propagation
 ```
 
 Feature-base PRs do not trigger the repository's `pkg.pr.new` workflow. Draft
 #3491 is therefore a validation-only rollup against `main`; it must not be
-merged. Its immutable `d4d34c7` motion/react/react-umd package set passes the
-Hux evidence build and all 47 headless Web/Lynx tests. The manifest records the
+merged. Its immutable `e17bcaf` motion/react/react-umd package set passes the
+Hux evidence build and all 48 headless Web/Lynx tests. The manifest records the
 capability PR that owns each contract, while #3491 records only the immutable
 validation gate.
