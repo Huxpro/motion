@@ -1393,6 +1393,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "I4/F4/M1/R0/C2 · immutable bd151a1 package · dual-renderer red→green→blue sampling · native frame sequence · clean console.",
     },
     {
+        id: "motion-30",
+        date: "2026-08-12",
+        title: "Tap harness readiness gate",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 30,
+        caseIds: ["gestures/tap"],
+        lossBefore: 23,
+        lossAfter: 23,
+        note: "Waits for observable main-thread ref hydration; tap 10/10 serial and full suite 15/15; no retry or semantic change.",
+    },
+    {
         id: "lynx-3457",
         date: "2026-08-11",
         title: "initial={false}",
