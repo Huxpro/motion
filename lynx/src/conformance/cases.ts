@@ -2667,6 +2667,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "I4/F5/M1/R0/C0 · immutable bd151a1 package · non-zero velocity starts an equal-target spring through the upstream generator · focused spring/keyframe no-op + hover regression 15/15 · full suite 31/31 · no native host boundary.",
     },
     {
+        id: "motion-50",
+        date: "2026-08-12",
+        title: "Discrete zIndex",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 50,
+        caseIds: ["targets/z-index-discrete"],
+        lossBefore: 17,
+        lossAfter: 17,
+        note: "I3/F5/M1/R0/C1 · immutable bd151a1 package · zIndex applies target 100 immediately despite a long transition · focused zIndex/spring + hover regression 15/15 · full suite 32/32 · rounded loss remains 17 while raw coverage grows · no native host boundary.",
+    },
+    {
         id: "lynx-3457",
         date: "2026-08-11",
         title: "initial={false}",
