@@ -160,6 +160,19 @@ function ForwardingView(props: IntrinsicElements["view"]) {
 const MotionForwardingView = motion.create(ForwardingView)
 
 export function App() {
+    const conformanceMode = lynx.__globalProps.conformanceMode
+    const isolateTapLifecycle =
+        conformanceMode === "tap-lifecycle" ||
+        conformanceMode === "tap-rest-transition" ||
+        conformanceMode === "tap-transition-end-only"
+    const instantGestureRest =
+        conformanceMode === "tap-rest-transition" ||
+        conformanceMode === "hover-rest-transition"
+    const animateTransitionEndOnly =
+        conformanceMode === "animate-transition-end-only"
+    const removedAnimateValues = conformanceMode === "removed-animate-values"
+    const transformOriginMode = conformanceMode === "transform-origin"
+    const complexGradientMode = conformanceMode === "complex-gradient"
     const liveX = useMotionValue(STYLE_MOTION_VALUE_CASE.expected.startX)
     let styleMotionValueRenders = 0
     styleMotionValueRenders += 1
@@ -181,6 +194,13 @@ export function App() {
     const [noOpKeyframesStatus, setNoOpKeyframesStatus] = useState("idle")
     const [springVelocityStatus, setSpringVelocityStatus] = useState("idle")
     const [transitionFromActive, setTransitionFromActive] = useState(false)
+    const [animateTransitionEndActive, setAnimateTransitionEndActive] =
+        useState(false)
+    const [animateTransitionEndLifecycle, setAnimateTransitionEndLifecycle] =
+        useState<string[]>([])
+    const [removedAnimateActive, setRemovedAnimateActive] = useState(true)
+    const [transformOriginActive, setTransformOriginActive] = useState(false)
+    const [complexGradientActive, setComplexGradientActive] = useState(false)
     const [defaultTransitionActive, setDefaultTransitionActive] =
         useState(false)
     const [nullKeyframeActive, setNullKeyframeActive] = useState(false)
@@ -203,6 +223,7 @@ export function App() {
     const [functionActive, setFunctionActive] = useState(false)
     const [lifecycleStatus, setLifecycleStatus] = useState("idle")
     const [lifecycleEvents, setLifecycleEvents] = useState("events")
+    const [tapLifecycle, setTapLifecycle] = useState<string[]>([])
 
     return (
         <view style={page}>
@@ -436,6 +457,14 @@ export function App() {
                             <text style={code}>
                                 {`whileTap="pressed" · ${gestureStatus}`}
                             </text>
+                            <text
+                                id="status-tap-animation-lifecycle"
+                                style={code}
+                            >
+                                {tapLifecycle.length > 0
+                                    ? tapLifecycle.join(" | ")
+                                    : "lifecycle: waiting for press"}
+                            </text>
                         </view>
                         <view style={demo}>
                             <motion.view
@@ -447,25 +476,45 @@ export function App() {
                                 }}
                                 initial="rest"
                                 animate="rest"
-                                whileHover="hover"
+                                whileHover={
+                                    isolateTapLifecycle ? undefined : "hover"
+                                }
                                 whileTap="pressed"
                                 variants={{
                                     rest: {
                                         scale: 1,
+                                        opacity: 1,
                                         backgroundColor: "#ffffff",
+                                        transition: instantGestureRest
+                                            ? { type: false }
+                                            : undefined,
                                     },
-                                    pressed: {
-                                        scale: 1.15,
-                                        backgroundColor: "#ffcc00",
-                                        transition: {
-                                            duration: 0.2,
-                                            ease: "easeOut",
-                                        },
-                                    },
+                                    pressed:
+                                        conformanceMode ===
+                                            "tap-transition-end-only"
+                                            ? {
+                                                  transition: { type: false },
+                                                  transitionEnd: {
+                                                      opacity: 0.4,
+                                                  },
+                                              }
+                                            : {
+                                                  scale: 1.15,
+                                                  backgroundColor: "#ffcc00",
+                                                  transition: {
+                                                      duration: 0.2,
+                                                      ease: "easeOut",
+                                                  },
+                                                  transitionEnd: {
+                                                      opacity: 0.75,
+                                                  },
+                                              },
                                     hover: {
                                         scale: 1.08,
+                                        opacity: 0.9,
                                         backgroundColor: "#8ab4ff",
                                         transition: { duration: 0.15 },
+                                        transitionEnd: { opacity: 0.8 },
                                     },
                                 }}
                                 onHoverStart={() => {
@@ -480,6 +529,18 @@ export function App() {
                                 }}
                                 onTapCancel={() =>
                                     setGestureStatus("tap cancelled")
+                                }
+                                onAnimationStart={(definition) =>
+                                    setTapLifecycle((events) => [
+                                        ...events,
+                                        `start:${String(definition)}`,
+                                    ])
+                                }
+                                onAnimationComplete={(definition) =>
+                                    setTapLifecycle((events) => [
+                                        ...events,
+                                        `complete:${String(definition)}`,
+                                    ])
                                 }
                             >
                                 <text
@@ -538,10 +599,7 @@ export function App() {
                         </view>
                     </view>
 
-                    <view
-                        id="case-style-motion-value"
-                        style={conformanceCard}
-                    >
+                    <view id="case-style-motion-value" style={conformanceCard}>
                         <view style={info}>
                             <text style={badge}>
                                 {STYLE_MOTION_VALUE_CASE.status.toUpperCase()}
@@ -604,6 +662,179 @@ export function App() {
                             />
                         </view>
                     </view>
+
+                    {animateTransitionEndOnly ? (
+                        <view
+                            id="example-animate-transition-end-only"
+                            style={card}
+                            bindtap={() =>
+                                setAnimateTransitionEndActive(true)
+                            }
+                        >
+                            <view style={info}>
+                                <text style={cardTitle}>
+                                    transitionEnd-only animate
+                                </text>
+                                <text style={code}>tap · opacity 1 → 0.4</text>
+                                <text
+                                    id="status-animate-transition-end-only"
+                                    style={code}
+                                >
+                                    {animateTransitionEndLifecycle.length > 0
+                                        ? animateTransitionEndLifecycle.join(
+                                              " | "
+                                          )
+                                        : "lifecycle: idle"}
+                                </text>
+                            </view>
+                            <view style={demo}>
+                                <motion.view
+                                    id="target-animate-transition-end-only"
+                                    style={{ ...dot, opacity: 1 }}
+                                    animate={
+                                        animateTransitionEndActive
+                                            ? {
+                                                  transitionEnd: {
+                                                      opacity: 0.4,
+                                                  },
+                                              }
+                                            : {}
+                                    }
+                                    transition={{ type: false }}
+                                    onAnimationStart={() =>
+                                        setAnimateTransitionEndLifecycle(
+                                            (events) => [...events, "start"]
+                                        )
+                                    }
+                                    onAnimationComplete={() =>
+                                        setAnimateTransitionEndLifecycle(
+                                            (events) => [...events, "complete"]
+                                        )
+                                    }
+                                />
+                            </view>
+                        </view>
+                    ) : null}
+
+                    {removedAnimateValues ? (
+                        <view
+                            id="example-removed-animate-values"
+                            style={card}
+                            bindtap={() => setRemovedAnimateActive(false)}
+                        >
+                            <view style={info}>
+                                <text style={cardTitle}>
+                                    Removed animate values
+                                </text>
+                                <text style={code}>
+                                    initial fallback · current initial · retain
+                                </text>
+                            </view>
+                            <view style={demo}>
+                                <motion.view
+                                    id="target-removed-original"
+                                    style={{ ...dot, backgroundColor: "#7784c8" }}
+                                    initial={{ opacity: 0 }}
+                                    animate={
+                                        removedAnimateActive
+                                            ? { opacity: 1 }
+                                            : {}
+                                    }
+                                    transition={{ type: false }}
+                                />
+                                <motion.view
+                                    id="target-removed-current"
+                                    style={{ ...dot, backgroundColor: "#43a6c6" }}
+                                    initial={{
+                                        opacity: removedAnimateActive ? 0 : 0.5,
+                                    }}
+                                    animate={
+                                        removedAnimateActive
+                                            ? { opacity: 1 }
+                                            : {}
+                                    }
+                                    transition={{ type: false }}
+                                />
+                                <motion.view
+                                    id="target-removed-both"
+                                    style={{ ...dot, backgroundColor: "#22cc88" }}
+                                    initial={
+                                        removedAnimateActive ? { x: 0 } : {}
+                                    }
+                                    animate={
+                                        removedAnimateActive ? { x: 24 } : {}
+                                    }
+                                    transition={{ type: false }}
+                                />
+                            </view>
+                        </view>
+                    ) : null}
+
+                    {transformOriginMode ? (
+                        <view
+                            id="example-transform-origin"
+                            style={card}
+                            bindtap={() => setTransformOriginActive(true)}
+                        >
+                            <view style={info}>
+                                <text style={cardTitle}>Transform origin</text>
+                                <text style={code}>0% 0% → 100% 100%</text>
+                            </view>
+                            <view style={demo}>
+                                <view
+                                    id="control-transform-origin"
+                                    style={{
+                                        ...dot,
+                                        backgroundColor: "#7784c8",
+                                        transformOrigin: transformOriginActive
+                                            ? "100% 100%"
+                                            : "0% 0%",
+                                    }}
+                                />
+                                <motion.view
+                                    id="target-transform-origin"
+                                    style={{ ...dot, backgroundColor: "#9368c7" }}
+                                    initial={{ originX: 0, originY: 0 }}
+                                    animate={
+                                        transformOriginActive
+                                            ? { originX: 1, originY: 1 }
+                                            : { originX: 0, originY: 0 }
+                                    }
+                                    transition={{ type: false }}
+                                />
+                            </view>
+                        </view>
+                    ) : null}
+
+                    {complexGradientMode ? (
+                        <view
+                            id="example-complex-gradient"
+                            style={card}
+                            bindtap={() => setComplexGradientActive(true)}
+                        >
+                            <view style={info}>
+                                <text style={cardTitle}>Complex gradient</text>
+                                <text style={code}>120deg → 0deg</text>
+                            </view>
+                            <view style={demo}>
+                                <motion.view
+                                    id="target-complex-gradient"
+                                    style={{
+                                        ...dot,
+                                        width: "96px",
+                                        background:
+                                            "linear-gradient(120deg, hsl(216, 100%, 50%) 0%, hsl(301, 100%, 50%) 100%)",
+                                    }}
+                                    animate={{
+                                        background: complexGradientActive
+                                            ? "linear-gradient(0deg, hsl(216, 100%, 50%) 0%, hsl(301, 100%, 50%) 100%)"
+                                            : "linear-gradient(120deg, hsl(216, 100%, 50%) 0%, hsl(301, 100%, 50%) 100%)",
+                                    }}
+                                    transition={{ duration: 0.4, ease: "linear" }}
+                                />
+                            </view>
+                        </view>
+                    ) : null}
 
                     {/* equal initial/animate values remain a no-op */}
                     <view id="example-noop-target" style={card}>
@@ -937,7 +1168,10 @@ export function App() {
                                     }
                                 />
                             ) : (
-                                <text id="target-unmount-placeholder" style={code}>
+                                <text
+                                    id="target-unmount-placeholder"
+                                    style={code}
+                                >
                                     unmounted
                                 </text>
                             )}

@@ -4,6 +4,7 @@ import {
     API_METRICS,
     COLOR_HSLA_RGBA_CASE,
     COLOR_KEYFRAMES_CASE,
+    COMPLEX_GRADIENT_CASE,
     CSS_CUSTOM_PROPERTY_CASE,
     CONVERGENCE_HISTORY,
     CONFORMANCE_METRICS,
@@ -12,6 +13,7 @@ import {
     DISPLAY_REVEAL_CASE,
     FUNCTION_VARIANTS_CASE,
     GALLERY_EXAMPLES,
+    GESTURE_TRANSITION_END_CASE,
     HOVER_GESTURE_CASE,
     INSTANT_TRANSITION_CASE,
     INITIAL_FALSE_CASE,
@@ -26,6 +28,9 @@ import {
     NULL_KEYFRAME_CASE,
     PRIORITIZED_GAPS,
     REACTIVE_ANIMATE_CASE,
+    REMOVED_ANIMATE_CURRENT_CASE,
+    REMOVED_ANIMATE_ORIGINAL_CASE,
+    REMOVED_ANIMATE_RETAIN_CASE,
     REPEAT_INFINITY_CASE,
     REPEAT_LOOP_FINAL_CASE,
     REPEAT_DELAY_CASE,
@@ -34,8 +39,11 @@ import {
     SPRING_CASE,
     SPRING_VELOCITY_CASE,
     STYLE_MOTION_VALUE_CASE,
+    TAP_ANIMATION_LIFECYCLE_CASE,
     TAP_GESTURE_CASE,
     TRANSITION_FROM_CASE,
+    TRANSITION_END_SUBSEQUENT_CASE,
+    TRANSFORM_ORIGIN_CASE,
     UNKNOWN_TYPE_FALLBACK_CASE,
     UNSEEN_PROPERTY_CASE,
     VISIBILITY_REVEAL_CASE,
@@ -195,6 +203,249 @@ test("manifest case: transition.from overrides the current value", async ({
         await expect
             .poll(async () => Math.round(await x()))
             .toBe(TRANSITION_FROM_CASE.expected.endX)
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: animate applies a transitionEnd-only update", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({
+                conformanceMode: "animate-transition-end-only",
+            })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=animate-transition-end-only"
+        ),
+    ])
+
+    for (const page of [lynxPage, webPage]) {
+        const example = page.locator("#example-animate-transition-end-only")
+        const target = page.locator("#target-animate-transition-end-only")
+        const status = page.locator("#status-animate-transition-end-only")
+        const opacity = () =>
+            target.evaluate((element) =>
+                Number(getComputedStyle(element).opacity)
+            )
+        await expect.poll(opacity).toBe(1)
+        await example.click()
+        await expect
+            .poll(opacity)
+            .toBe(TRANSITION_END_SUBSEQUENT_CASE.expected.opacity)
+        await expect(status).toHaveText("start | complete")
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest cases: removed animate values follow upstream ownership", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "removed-animate-values" })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=removed-animate-values"
+        ),
+    ])
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const opacity = (selector: string) =>
+            page
+                .locator(selector)
+                .evaluate((element) => Number(getComputedStyle(element).opacity))
+        const x = () =>
+            page.locator("#target-removed-both").evaluate(
+                (element) =>
+                    new DOMMatrixReadOnly(getComputedStyle(element).transform)
+                        .m41
+            )
+
+        await expect.poll(() => opacity("#target-removed-original")).toBe(1)
+        await expect.poll(() => opacity("#target-removed-current")).toBe(1)
+        await expect.poll(x).toBe(24)
+        await page.locator("#example-removed-animate-values").click()
+        await expect
+            .poll(() => opacity("#target-removed-original"), {
+                message: `${renderer} restores the original initial value`,
+            })
+            .toBe(REMOVED_ANIMATE_ORIGINAL_CASE.expected.opacity)
+        await expect
+            .poll(() => opacity("#target-removed-current"), {
+                message: `${renderer} uses the current initial value`,
+            })
+            .toBe(REMOVED_ANIMATE_CURRENT_CASE.expected.opacity)
+        await expect
+            .poll(x, {
+                message: `${renderer} retains values removed from both props`,
+            })
+            .toBe(REMOVED_ANIMATE_RETAIN_CASE.expected.x)
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: transform origin aliases render and update", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "transform-origin" })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=transform-origin"
+        ),
+    ])
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const example = page.locator("#example-transform-origin")
+        const target = page.locator("#target-transform-origin")
+        const control = page.locator("#control-transform-origin")
+        const origin = () =>
+            target.evaluate((element) => getComputedStyle(element).transformOrigin)
+        const controlOrigin = () =>
+            control.evaluate((element) => getComputedStyle(element).transformOrigin)
+
+        await expect
+            .poll(origin, { message: `${renderer} initial transform origin` })
+            .toMatch(
+                new RegExp(
+                    `^${TRANSFORM_ORIGIN_CASE.expected.start}px ${TRANSFORM_ORIGIN_CASE.expected.start}px(?: 0px)?$`
+                )
+            )
+        await example.click()
+        const box = await target.boundingBox()
+        expect(box).not.toBeNull()
+        const resolvedOrigin = async (read: () => Promise<string>) => {
+            const [x, y] = (await read()).split(" ").map(Number.parseFloat)
+            return { x, y }
+        }
+        await expect
+            .poll(() => resolvedOrigin(controlOrigin), {
+                message: `${renderer} React control transform origin`,
+            })
+            .toEqual({
+                x: box!.width * TRANSFORM_ORIGIN_CASE.expected.end,
+                y: box!.height * TRANSFORM_ORIGIN_CASE.expected.end,
+            })
+        await expect
+            .poll(() => resolvedOrigin(origin), {
+                message: `${renderer} updated transform origin`,
+            })
+            .toEqual({
+                x: box!.width * TRANSFORM_ORIGIN_CASE.expected.end,
+                y: box!.height * TRANSFORM_ORIGIN_CASE.expected.end,
+            })
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: complex gradient exposes an intermediate frame", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "complex-gradient" })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=complex-gradient"
+        ),
+    ])
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const example = page.locator("#example-complex-gradient")
+        const target = page.locator("#target-complex-gradient")
+        const background = () =>
+            target.evaluate((element) => getComputedStyle(element).backgroundImage)
+        await expect
+            .poll(background)
+            .toContain(`${COMPLEX_GRADIENT_CASE.expected.startDeg}deg`)
+        await example.click()
+        await page.waitForTimeout(COMPLEX_GRADIENT_CASE.expected.sampleMs)
+        const intermediate = await background()
+        expect(intermediate, `${renderer} complex gradient intermediate`).not.toContain(
+            `${COMPLEX_GRADIENT_CASE.expected.startDeg}deg`
+        )
+        expect(intermediate, `${renderer} complex gradient intermediate`).not.toContain(
+            `${COMPLEX_GRADIENT_CASE.expected.endDeg}deg`
+        )
+        await expect
+            .poll(background)
+            .toContain(`${COMPLEX_GRADIENT_CASE.expected.endDeg}deg`)
     }
 
     expect(errors).toEqual([])
@@ -1945,9 +2196,17 @@ test("manifest case: tap applies, fires, and restores rest", async ({
         })
     }
 
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "tap-rest-transition" })
+        )
+    })
     await Promise.all([
         lynxPage.goto(`http://localhost:3000${previewUrl}`),
-        webPage.goto("http://localhost:4173/?mode=baseline"),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=tap-rest-transition"
+        ),
     ])
 
     for (const page of [lynxPage, webPage]) {
@@ -1959,12 +2218,14 @@ test("manifest case: tap applies, fires, and restores rest", async ({
                 const transform = new DOMMatrixReadOnly(style.transform)
                 return {
                     scale: Number(transform.a.toFixed(2)),
+                    opacity: Number(style.opacity),
                     backgroundColor: style.backgroundColor,
                 }
             })
 
         await expect.poll(semanticStyle).toEqual({
             scale: TAP_GESTURE_CASE.expected.restScale,
+            opacity: 1,
             backgroundColor: "rgb(255, 255, 255)",
         })
         if (lynxTouch) {
@@ -1979,31 +2240,51 @@ test("manifest case: tap applies, fires, and restores rest", async ({
             )
         }
         await target.scrollIntoViewIfNeeded()
-        const box = await target.boundingBox()
-        expect(box).not.toBeNull()
-        const x = box!.x + box!.width / 2
-        const y = box!.y + box!.height / 2
-        const cdp = lynxTouch
+        let cdp = lynxTouch
             ? await page.context().newCDPSession(page)
             : undefined
         await target.hover()
         if (cdp) {
-            await cdp.send("Input.dispatchTouchEvent", {
-                type: "touchStart",
-                touchPoints: [{ x, y }],
-            })
+            for (let attempt = 0; attempt < 3; attempt += 1) {
+                const box = await target.boundingBox()
+                expect(box).not.toBeNull()
+                await cdp.send("Input.dispatchTouchEvent", {
+                    type: "touchStart",
+                    touchPoints: [
+                        {
+                            x: box!.x + box!.width / 2,
+                            y: box!.y + box!.height / 2,
+                        },
+                    ],
+                })
+                try {
+                    await expect
+                        .poll(semanticStyle, { timeout: 2_000 })
+                        .toEqual({
+                            scale: TAP_GESTURE_CASE.expected.tapScale,
+                            opacity: 0.75,
+                            backgroundColor: "rgb(255, 204, 0)",
+                        })
+                    break
+                } catch (error) {
+                    await cdp.send("Input.dispatchTouchEvent", {
+                        type: "touchCancel",
+                        touchPoints: [],
+                    })
+                    await cdp.detach()
+                    if (attempt === 2) throw error
+                    cdp = await page.context().newCDPSession(page)
+                    await target.hover()
+                }
+            }
         } else {
             await page.mouse.down()
-        }
-        await expect
-            .poll(semanticStyle, {
-                message:
-                    page === lynxPage ? "Lynx tap target" : "Web tap target",
-            })
-            .toEqual({
+            await expect.poll(semanticStyle).toEqual({
                 scale: TAP_GESTURE_CASE.expected.tapScale,
+                opacity: 0.75,
                 backgroundColor: "rgb(255, 204, 0)",
             })
+        }
         if (cdp) {
             await cdp.send("Input.dispatchTouchEvent", {
                 type: "touchEnd",
@@ -2013,11 +2294,327 @@ test("manifest case: tap applies, fires, and restores rest", async ({
             await page.mouse.up()
         }
         await page.mouse.move(0, 0)
+        await page.waitForTimeout(30)
+        expect(
+            await semanticStyle(),
+            page === lynxPage
+                ? "Lynx tap rest transition"
+                : "Web tap rest transition"
+        ).toEqual({
+            scale: TAP_GESTURE_CASE.expected.restScale,
+            opacity: 1,
+            backgroundColor: "rgb(255, 255, 255)",
+        })
         await expect.poll(semanticStyle).toEqual({
             scale: TAP_GESTURE_CASE.expected.restScale,
+            opacity: 1,
             backgroundColor: "rgb(255, 255, 255)",
         })
         await expect(target).toContainText("Tapped 1")
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: a transitionEnd-only tap applies and restores", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "tap-transition-end-only" })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=tap-transition-end-only"
+        ),
+    ])
+
+    for (const page of [lynxPage, webPage]) {
+        const target = page.locator("#target-gesture-priority")
+        const status = page.locator("#status-tap-animation-lifecycle")
+        const lynxTouch = page === lynxPage
+        const opacity = () =>
+            target.evaluate((element) =>
+                Number(getComputedStyle(element).opacity)
+            )
+
+        await expect.poll(opacity).toBe(1)
+        await target.scrollIntoViewIfNeeded()
+        await target.hover()
+        if (lynxTouch) {
+            await expect(target).toHaveAttribute("has-react-ref", "true")
+            await target.evaluate(
+                () =>
+                    new Promise<void>((resolve) =>
+                        requestAnimationFrame(() =>
+                            requestAnimationFrame(() => resolve())
+                        )
+                    )
+            )
+            let cdp = await page.context().newCDPSession(page)
+            for (let attempt = 0; attempt < 3; attempt += 1) {
+                const box = await target.boundingBox()
+                expect(box).not.toBeNull()
+                await cdp.send("Input.dispatchTouchEvent", {
+                    type: "touchStart",
+                    touchPoints: [
+                        {
+                            x: box!.x + box!.width / 2,
+                            y: box!.y + box!.height / 2,
+                        },
+                    ],
+                })
+                try {
+                    await expect
+                        .poll(opacity, { timeout: 2_000 })
+                        .toBe(GESTURE_TRANSITION_END_CASE.expected.pressedOpacity)
+                    break
+                } catch (error) {
+                    await cdp.send("Input.dispatchTouchEvent", {
+                        type: "touchEnd",
+                        touchPoints: [],
+                    })
+                    await cdp.detach()
+                    if (attempt === 2) throw error
+                    cdp = await page.context().newCDPSession(page)
+                    await target.hover()
+                }
+            }
+            await expect(status).toContainText("start:pressed")
+            await expect(status).toContainText("complete:pressed")
+            await cdp.send("Input.dispatchTouchEvent", {
+                type: "touchEnd",
+                touchPoints: [],
+            })
+            await cdp.detach()
+        } else {
+            await page.mouse.down()
+            await expect
+                .poll(opacity)
+                .toBe(GESTURE_TRANSITION_END_CASE.expected.pressedOpacity)
+            await expect(status).toContainText("start:pressed")
+            await expect(status).toContainText("complete:pressed")
+            await page.mouse.up()
+        }
+        await expect
+            .poll(opacity)
+            .toBe(GESTURE_TRANSITION_END_CASE.expected.restOpacity)
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: tap animation reports pressed and restoration lifecycle", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "tap-lifecycle" })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=tap-lifecycle"
+        ),
+    ])
+
+    for (const page of [lynxPage, webPage]) {
+        const target = page.locator("#target-gesture-priority")
+        const status = page.locator("#status-tap-animation-lifecycle")
+        const lynxTouch = page === lynxPage
+
+        if (lynxTouch) {
+            await expect(target).toHaveAttribute("has-react-ref", "true")
+            await target.evaluate(
+                () =>
+                    new Promise<void>((resolve) =>
+                        requestAnimationFrame(() =>
+                            requestAnimationFrame(() => resolve())
+                        )
+                    )
+            )
+        }
+        await target.scrollIntoViewIfNeeded()
+        await target.hover()
+
+        if (lynxTouch) {
+            let cdp = await page.context().newCDPSession(page)
+            const scale = () =>
+                target.evaluate((element) => {
+                    const transform = new DOMMatrixReadOnly(
+                        getComputedStyle(element).transform
+                    )
+                    return Number(transform.a.toFixed(2))
+                })
+            for (let attempt = 0; attempt < 3; attempt += 1) {
+                const box = await target.boundingBox()
+                expect(box).not.toBeNull()
+                await cdp.send("Input.dispatchTouchEvent", {
+                    type: "touchStart",
+                    touchPoints: [
+                        {
+                            x: box!.x + box!.width / 2,
+                            y: box!.y + box!.height / 2,
+                        },
+                    ],
+                })
+                try {
+                    await expect.poll(scale, { timeout: 2_000 }).toBe(1.15)
+                    break
+                } catch (error) {
+                    await cdp.send("Input.dispatchTouchEvent", {
+                        type: "touchEnd",
+                        touchPoints: [],
+                    })
+                    await cdp.detach()
+                    if (attempt === 2) throw error
+                    cdp = await page.context().newCDPSession(page)
+                    await target.hover()
+                }
+            }
+            await expect(status).toContainText("complete:pressed")
+            await cdp.send("Input.dispatchTouchEvent", {
+                type: "touchEnd",
+                touchPoints: [],
+            })
+        } else {
+            await page.mouse.down()
+            await expect(status).toContainText("complete:pressed")
+            await page.mouse.up()
+        }
+
+        const restoredDefinition =
+            TAP_ANIMATION_LIFECYCLE_CASE.expectedDefinitions.rest
+        await expect
+            .poll(async () => {
+                const events = (await status.textContent())?.split(" | ") ?? []
+                const pressedStart = events.lastIndexOf(
+                    `start:${TAP_ANIMATION_LIFECYCLE_CASE.expectedDefinitions.pressed}`
+                )
+                const restoredStart = events.indexOf(
+                    `start:${restoredDefinition}`,
+                    pressedStart + 2
+                )
+                const restoredComplete = events.indexOf(
+                    `complete:${restoredDefinition}`,
+                    restoredStart + 1
+                )
+                return {
+                    pressed: events.slice(pressedStart, pressedStart + 2),
+                    restored:
+                        restoredStart >= 0 && restoredComplete > restoredStart,
+                }
+            })
+            .toEqual({
+                pressed: [
+                    `start:${TAP_ANIMATION_LIFECYCLE_CASE.expectedDefinitions.pressed}`,
+                    `complete:${TAP_ANIMATION_LIFECYCLE_CASE.expectedDefinitions.pressed}`,
+                ],
+                restored: true,
+            })
+
+        const eventsBeforeInterruption =
+            (await status.textContent())?.split(" | ").length ?? 0
+        if (lynxTouch) {
+            let cdp = await page.context().newCDPSession(page)
+            for (let attempt = 0; attempt < 3; attempt += 1) {
+                const box = await target.boundingBox()
+                expect(box).not.toBeNull()
+                await cdp.send("Input.dispatchTouchEvent", {
+                    type: "touchStart",
+                    touchPoints: [
+                        {
+                            x: box!.x + box!.width / 2,
+                            y: box!.y + box!.height / 2,
+                        },
+                    ],
+                })
+                try {
+                    await expect
+                        .poll(
+                            async () =>
+                                (await status.textContent())
+                                    ?.split(" | ")
+                                    .slice(eventsBeforeInterruption)
+                                    .at(-1),
+                            { intervals: [10], timeout: 500 }
+                        )
+                        .toBe(
+                            `start:${TAP_ANIMATION_LIFECYCLE_CASE.expectedDefinitions.pressed}`
+                        )
+                    break
+                } catch (error) {
+                    await cdp.send("Input.dispatchTouchEvent", {
+                        type: "touchEnd",
+                        touchPoints: [],
+                    })
+                    await cdp.detach()
+                    if (attempt === 2) throw error
+                    cdp = await page.context().newCDPSession(page)
+                }
+            }
+            await cdp.send("Input.dispatchTouchEvent", {
+                type: "touchEnd",
+                touchPoints: [],
+            })
+            await cdp.detach()
+        } else {
+            await page.mouse.down()
+            await expect
+                .poll(
+                    async () =>
+                        (await status.textContent())
+                            ?.split(" | ")
+                            .slice(eventsBeforeInterruption)
+                            .at(-1),
+                    { intervals: [10], timeout: 500 }
+                )
+                .toBe(
+                    `start:${TAP_ANIMATION_LIFECYCLE_CASE.expectedDefinitions.pressed}`
+                )
+            await page.mouse.up()
+        }
+
+        await expect
+            .poll(async () =>
+                (await status.textContent())
+                    ?.split(" | ")
+                    .slice(eventsBeforeInterruption)
+            )
+            .toEqual([
+                `start:${TAP_ANIMATION_LIFECYCLE_CASE.expectedDefinitions.pressed}`,
+                `start:${restoredDefinition}`,
+                `complete:${restoredDefinition}`,
+            ])
     }
 
     expect(errors).toEqual([])
@@ -2038,27 +2635,43 @@ test("manifest case: hover applies, fires, and restores rest", async ({
         })
     }
 
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "hover-rest-transition" })
+        )
+    })
     await Promise.all([
         lynxPage.goto(`http://localhost:3000${previewUrl}`),
-        webPage.goto("http://localhost:4173/?mode=baseline"),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=hover-rest-transition"
+        ),
     ])
 
     for (const page of [lynxPage, webPage]) {
         const target = page.locator("#target-gesture-priority")
+        const status = page.locator("#status-tap-animation-lifecycle")
         const semanticStyle = () =>
             target.evaluate((element) => {
                 const style = getComputedStyle(element)
                 const transform = new DOMMatrixReadOnly(style.transform)
                 return {
                     scale: Number(transform.a.toFixed(2)),
+                    opacity: Number(style.opacity),
                     backgroundColor: style.backgroundColor,
                 }
             })
 
         await expect.poll(semanticStyle).toEqual({
             scale: HOVER_GESTURE_CASE.expected.restScale,
+            opacity: 1,
             backgroundColor: "rgb(255, 255, 255)",
         })
+        await page.waitForTimeout(450)
+        const initialStatus = (await status.textContent()) ?? ""
+        const baseline = initialStatus.startsWith("lifecycle:")
+            ? 0
+            : initialStatus.split(" | ").length
         await target.scrollIntoViewIfNeeded()
         await target.hover()
         await expect
@@ -2070,18 +2683,143 @@ test("manifest case: hover applies, fires, and restores rest", async ({
             })
             .toEqual({
                 scale: HOVER_GESTURE_CASE.expected.hoverScale,
+                opacity: 0.8,
                 backgroundColor: "rgb(138, 180, 255)",
             })
+        await expect
+            .poll(async () =>
+                (await status.textContent())?.split(" | ").slice(baseline)
+            )
+            .toEqual(["start:hover", "complete:hover"])
         await expect(target).toContainText("Hovered 1")
         await page.mouse.move(0, 0)
-        await expect.poll(semanticStyle).toEqual({
+        await page.waitForTimeout(30)
+        expect(
+            await semanticStyle(),
+            page === lynxPage
+                ? "Lynx hover rest transition"
+                : "Web hover rest transition"
+        ).toEqual({
             scale: HOVER_GESTURE_CASE.expected.restScale,
+            opacity: 1,
             backgroundColor: "rgb(255, 255, 255)",
         })
+        await expect.poll(semanticStyle).toEqual({
+            scale: HOVER_GESTURE_CASE.expected.restScale,
+            opacity: 1,
+            backgroundColor: "rgb(255, 255, 255)",
+        })
+        await expect
+            .poll(async () =>
+                (await status.textContent())?.split(" | ").slice(baseline)
+            )
+            .toEqual([
+                "start:hover",
+                "complete:hover",
+                "start:rest",
+                "complete:rest",
+            ])
     }
 
     expect(errors).toEqual([])
     await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("regression: hover entry cancels tap restoration completion", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const errors: string[] = []
+
+    lynxPage.on("pageerror", (error) => errors.push(error.message))
+    lynxPage.on("console", (message) => {
+        if (message.type() === "error") errors.push(message.text())
+    })
+    await lynxPage.goto(`http://localhost:3000${previewUrl}`)
+
+    const target = lynxPage.locator("#target-gesture-priority")
+    const status = lynxPage.locator("#status-tap-animation-lifecycle")
+    const scale = () =>
+        target.evaluate((element) => {
+            const transform = new DOMMatrixReadOnly(
+                getComputedStyle(element).transform
+            )
+            return Number(transform.a.toFixed(2))
+        })
+    await target.scrollIntoViewIfNeeded()
+    await lynxPage.mouse.move(0, 0)
+    await expect.poll(scale).toBe(HOVER_GESTURE_CASE.expected.restScale)
+    await lynxPage.waitForTimeout(450)
+    await expect(target).toHaveAttribute("has-react-ref", "true")
+    await target.evaluate(
+        () =>
+            new Promise<void>((resolve) =>
+                requestAnimationFrame(() =>
+                    requestAnimationFrame(() => resolve())
+                )
+            )
+    )
+    await expect(status).toContainText("complete:rest")
+    const baseline = (await status.textContent())?.split(" | ").length ?? 0
+    let cdp = await lynxPage.context().newCDPSession(lynxPage)
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+        const box = await target.boundingBox()
+        expect(box).not.toBeNull()
+        await cdp.send("Input.dispatchTouchEvent", {
+            type: "touchStart",
+            touchPoints: [
+                {
+                    x: box!.x + box!.width / 2,
+                    y: box!.y + box!.height / 2,
+                },
+            ],
+        })
+        try {
+            await expect.poll(scale, { timeout: 2_000 }).toBe(1.15)
+            break
+        } catch (error) {
+            await cdp.send("Input.dispatchTouchEvent", {
+                type: "touchEnd",
+                touchPoints: [],
+            })
+            await cdp.detach()
+            if (attempt === 2) throw error
+            cdp = await lynxPage.context().newCDPSession(lynxPage)
+        }
+    }
+    await expect
+        .poll(async () =>
+            (await status.textContent())?.split(" | ").slice(baseline).at(-1)
+        )
+        .toBe("complete:pressed")
+    await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+    })
+    await cdp.detach()
+    await expect
+        .poll(async () =>
+            (await status.textContent())
+                ?.split(" | ")
+                .slice(baseline)
+                .includes("start:rest")
+        )
+        .toBe(true)
+    await target.hover()
+    await expect.poll(scale).toBe(HOVER_GESTURE_CASE.expected.hoverScale)
+    await lynxPage.waitForTimeout(250)
+    expect(
+        (await status.textContent())?.split(" | ").slice(baseline, baseline + 5)
+    ).toEqual([
+        "start:pressed",
+        "complete:pressed",
+        "start:rest",
+        "start:hover",
+        "complete:hover",
+    ])
+
+    expect(errors).toEqual([])
+    await lynxPage.close()
 })
 
 test("manifest case: function variants receive custom and resolve distinct delays", async ({
