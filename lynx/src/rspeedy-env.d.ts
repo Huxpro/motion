@@ -13,6 +13,7 @@ declare module '@lynx-js/types' {
       | "complex-gradient"
       | "variant-propagation"
       | "delay-children"
+      | "variant-inherit-opt-out"
       | "hover-rest-transition"
   }
 }

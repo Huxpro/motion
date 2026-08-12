@@ -1443,6 +1443,35 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         },
     },
     {
+        id: "variants/inherit-opt-out",
+        category: "Variants",
+        title: "Variant inheritance opt-out",
+        summary:
+            "Stop inherited initial and animate labels at an explicit variant boundary.",
+        status: "conformant",
+        api: ["variants", "inherit={false}", "inheritance"],
+        upstream: source(
+            "packages/framer-motion/src/context/MotionContext/__tests__/utils.test.ts",
+            "getCurrentTreeVariants returns no inherited labels when inherit is false"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the boundary publishes no inherited initial label",
+            "a descendant keeps its own static style instead of resolving the parent label",
+            "the inherit prop is not forwarded to the Lynx host element",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            opacity: 0.5,
+            x: 10,
+        },
+    },
+    {
         id: "presence/exit",
         category: "Layout & presence",
         title: "Exit + AnimatePresence",
@@ -1788,6 +1817,12 @@ export const DELAY_CHILDREN_CASE = CONFORMANCE_CASES.find(
         visibleOpacity: number
         visibleX: number
     }
+}
+
+export const VARIANT_INHERIT_OPT_OUT_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "variants/inherit-opt-out"
+) as ConformanceCase & {
+    expected: { opacity: number; x: number }
 }
 
 export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
@@ -2277,6 +2312,15 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         contract:
             "Delay inherited child variants while preserving each child's upstream MotionValue animation path.",
         exampleId: "delay-children",
+    },
+    {
+        id: "variant-inherit-opt-out",
+        group: "Variants",
+        api: "inherit={false}",
+        status: "supported",
+        evidence: "dual-renderer",
+        contract: "Stop inherited labels at an explicit variant boundary.",
+        exampleId: "variant-inherit-opt-out",
     },
     {
         id: "variant-orchestration",
@@ -2918,6 +2962,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Common parent/child timing composes through ReactLynx context and leaves animation execution on each child's upstream MotionValue.",
+    },
+    {
+        caseId: "variants/inherit-opt-out",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "A common variant-composition boundary maps directly to ReactLynx context without host, callable, or CSS adaptation.",
     },
     {
         caseId: "variants/orchestration",
@@ -3726,5 +3780,17 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 10,
         lossAfter: WEIGHTED_LOSS,
         note: "I4/F4/M1/R2/C0 · immutable b9850fc motion/react/react-umd set · numeric delayChildren holds and then settles inherited child targets while explicit child animate resets ownership · package 147/147 and complete dual-renderer suite 49/49 · synthetic Web press retries preserve the unchanged transitionEnd assertion after an isolated 3/3 diagnosis · dynamic delay, stagger, when, controls, and gesture propagation remain scoped to issue #10 · no Full Demo or native claim.",
+    },
+    {
+        id: "lynx-3494",
+        date: "2026-08-12",
+        title: "Variant inheritance opt-out",
+        kind: "capability",
+        status: "verified",
+        lynxStackPr: 3494,
+        caseIds: ["variants/inherit-opt-out"],
+        lossBefore: 10,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F5/M1/R1/C0 · immutable c394dd3 motion/react/react-umd set · inherit={false} publishes an empty variant context so an inherited initial label stops at the boundary · package 148/148 and complete dual-renderer suite 50/50 · parent-driven dynamic orchestration remains scoped to issue #10 · no Full Demo or native claim.",
     },
 ]
