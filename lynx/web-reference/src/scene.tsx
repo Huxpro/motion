@@ -21,6 +21,7 @@ import {
     SPRING_CASE,
     TRANSITION_FROM_CASE,
     UNSEEN_PROPERTY_CASE,
+    VISIBILITY_REVEAL_CASE,
 } from "../../src/conformance/cases"
 
 /**
@@ -162,6 +163,7 @@ export function App() {
     const [hoverCount, setHoverCount] = useState(0)
     const [gestureStatus, setGestureStatus] = useState("resting")
     const [displayRevealed, setDisplayRevealed] = useState(false)
+    const [visibilityRevealed, setVisibilityRevealed] = useState(false)
     const [unseenPropertyActive, setUnseenPropertyActive] = useState(false)
     const [instantActive, setInstantActive] = useState(false)
     const [noOpStatus, setNoOpStatus] = useState("idle")
@@ -625,6 +627,38 @@ export function App() {
                                     displayRevealed
                                         ? { display: "block", opacity: 1 }
                                         : { display: "none", opacity: 0 }
+                                }
+                                transition={{
+                                    duration:
+                                        VISIBILITY_REVEAL_CASE.expected
+                                            .durationMs / 1000,
+                                    ease: "linear",
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* discrete visibility reveals before opacity entrance */}
+                    <div
+                        id="example-visibility-reveal"
+                        style={card}
+                        onClick={() => setVisibilityRevealed(true)}
+                    >
+                        <div style={info}>
+                            <span style={cardTitle}>Reveal, then fade in</span>
+                            <span style={code}>
+                                visibility: hidden → visible
+                            </span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                id="target-visibility-reveal"
+                                style={{ ...dot, backgroundColor: "#7e85dc" }}
+                                initial={{ visibility: "hidden", opacity: 0 }}
+                                animate={
+                                    visibilityRevealed
+                                        ? { visibility: "visible", opacity: 1 }
+                                        : { visibility: "hidden", opacity: 0 }
                                 }
                                 transition={{ duration: 0.4, ease: "linear" }}
                             />
