@@ -9,6 +9,7 @@ import {
     FUNCTION_VARIANTS_CASE,
     GALLERY_EXAMPLES,
     HOVER_GESTURE_CASE,
+    KEYFRAME_TIMES_CASE,
     KEYFRAMES_CASE,
     MOTION_CREATE_CASE,
     NAMED_VARIANTS_CASE,
@@ -39,7 +40,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(17, { timeout: 15_000 })
+    await expect(animated).toHaveCount(18, { timeout: 15_000 })
 
     const styleOf = (selector: string) =>
         page
@@ -305,6 +306,92 @@ test("manifest case: ordered keyframes pass through their peak and settle", asyn
         await expect
             .poll(async () => Math.round(await translateY()))
             .toBe(KEYFRAMES_CASE.expected.endY)
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: keyframe times preserve duplicate boundary jumps", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const page of [lynxPage, webPage]) {
+        const target = page.locator("#target-keyframe-times")
+        const translateX = () =>
+            target.evaluate((element) =>
+                Number(
+                    new DOMMatrixReadOnly(
+                        getComputedStyle(element).transform
+                    ).m41.toFixed(2)
+                )
+            )
+
+        await expect.poll(translateX).toBe(KEYFRAME_TIMES_CASE.expected.startX)
+        await target.scrollIntoViewIfNeeded()
+        await page.locator("#example-keyframe-times").click()
+
+        const timeline = await target.evaluate(
+            (element, duration) =>
+                new Promise<Array<{ time: number; value: number }>>(
+                    (resolve) => {
+                        const startedAt = performance.now()
+                        const samples: Array<{ time: number; value: number }> =
+                            []
+                        const sample = () => {
+                            samples.push({
+                                time: performance.now() - startedAt,
+                                value: new DOMMatrixReadOnly(
+                                    getComputedStyle(element).transform
+                                ).m41,
+                            })
+                            performance.now() - startedAt >= duration
+                                ? resolve(samples)
+                                : requestAnimationFrame(sample)
+                        }
+                        sample()
+                    }
+                ),
+            KEYFRAME_TIMES_CASE.expected.durationMs + 100
+        )
+        const firstChanged = timeline.find(
+            ({ value }) => value > KEYFRAME_TIMES_CASE.expected.startX + 0.5
+        )
+        const beforeCompletion = timeline.filter(
+            ({ time }) => time < KEYFRAME_TIMES_CASE.expected.durationMs - 40
+        )
+        expect(firstChanged).toBeDefined()
+        expect(
+            firstChanged!.value,
+            `${KEYFRAME_TIMES_CASE.upstream.testName}: first=${
+                firstChanged!.value
+            }`
+        ).toBeGreaterThanOrEqual(KEYFRAME_TIMES_CASE.expected.secondX - 1)
+        expect(
+            Math.max(...beforeCompletion.map(({ value }) => value)),
+            `${KEYFRAME_TIMES_CASE.upstream.testName}: ${beforeCompletion
+                .map(({ value }) => value.toFixed(1))
+                .join(", ")}`
+        ).toBeLessThanOrEqual(KEYFRAME_TIMES_CASE.expected.thirdX + 2)
+        expect(timeline.at(-1)!.value).toBeCloseTo(
+            KEYFRAME_TIMES_CASE.expected.endX,
+            0
+        )
     }
 
     expect(errors).toEqual([])

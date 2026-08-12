@@ -4,6 +4,7 @@ import { useState } from "@lynx-js/react"
 import {
     DELAY_CASE,
     FUNCTION_VARIANTS_CASE,
+    KEYFRAME_TIMES_CASE,
     KEYFRAMES_CASE,
     MOTION_CREATE_CASE,
     NAMED_VARIANTS_CASE,
@@ -157,6 +158,7 @@ export function App() {
     const [negativeDelayActive, setNegativeDelayActive] = useState(false)
     const [reverseActive, setReverseActive] = useState(false)
     const [repeatDelayActive, setRepeatDelayActive] = useState(false)
+    const [keyframeTimesActive, setKeyframeTimesActive] = useState(false)
     const [namedActive, setNamedActive] = useState(false)
     const [arrayActive, setArrayActive] = useState(false)
     const [keyframesActive, setKeyframesActive] = useState(false)
@@ -531,6 +533,51 @@ export function App() {
                                     repeatDelay:
                                         REPEAT_DELAY_CASE.expected.holdMs /
                                         1000,
+                                }}
+                            />
+                        </view>
+                    </view>
+
+                    {/* duplicate keyframe offsets */}
+                    <view
+                        id="example-keyframe-times"
+                        style={card}
+                        bindtap={() => setKeyframeTimesActive(true)}
+                    >
+                        <view style={info}>
+                            <text style={cardTitle}>Keyframe times</text>
+                            <text style={code}>
+                                {keyframeTimesActive
+                                    ? "times: [0, 0, 1, 1]"
+                                    : "tap to verify boundary jumps"}
+                            </text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                id="target-keyframe-times"
+                                style={{ ...dot, backgroundColor: "#6f74e8" }}
+                                initial={{
+                                    x: KEYFRAME_TIMES_CASE.expected.startX,
+                                }}
+                                animate={{
+                                    x: keyframeTimesActive
+                                        ? [
+                                              KEYFRAME_TIMES_CASE.expected
+                                                  .startX,
+                                              KEYFRAME_TIMES_CASE.expected
+                                                  .secondX,
+                                              KEYFRAME_TIMES_CASE.expected
+                                                  .thirdX,
+                                              KEYFRAME_TIMES_CASE.expected.endX,
+                                          ]
+                                        : KEYFRAME_TIMES_CASE.expected.startX,
+                                }}
+                                transition={{
+                                    duration:
+                                        KEYFRAME_TIMES_CASE.expected
+                                            .durationMs / 1000,
+                                    ease: "linear",
+                                    times: [0, 0, 1, 1],
                                 }}
                             />
                         </view>
