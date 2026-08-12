@@ -16,6 +16,7 @@ import {
     NAMED_EASING_CASE,
     NAMED_VARIANTS_CASE,
     NEGATIVE_DELAY_CASE,
+    NO_OP_TARGET_CASE,
     NULL_KEYFRAME_CASE,
     PRIORITIZED_GAPS,
     REACTIVE_ANIMATE_CASE,
@@ -45,7 +46,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(24, { timeout: 15_000 })
+    await expect(animated).toHaveCount(25, { timeout: 15_000 })
 
     const styleOf = (selector: string) =>
         page
@@ -180,6 +181,42 @@ test("manifest case: transition.from overrides the current value", async ({
         await expect
             .poll(async () => Math.round(await x()))
             .toBe(TRANSITION_FROM_CASE.expected.endX)
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: equal targets do not remain active", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const target = page.locator("#target-noop-target")
+        await expect(target).toBeVisible()
+        await page.waitForTimeout(NO_OP_TARGET_CASE.expected.settleMs)
+        await expect(
+            page.locator("#status-noop-target"),
+            `${renderer} ${NO_OP_TARGET_CASE.upstream.testName}`
+        ).toHaveText("idle")
     }
 
     expect(errors).toEqual([])

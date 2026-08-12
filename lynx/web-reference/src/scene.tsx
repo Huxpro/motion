@@ -158,6 +158,7 @@ export function App() {
     const [tapCount, setTapCount] = useState(0)
     const [hoverCount, setHoverCount] = useState(0)
     const [gestureStatus, setGestureStatus] = useState("resting")
+    const [noOpStatus, setNoOpStatus] = useState("idle")
     const [transitionFromActive, setTransitionFromActive] = useState(false)
     const [defaultTransitionActive, setDefaultTransitionActive] =
         useState(false)
@@ -497,6 +498,34 @@ export function App() {
                                             .durationMs / 1000,
                                     ease: "linear",
                                 }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* equal initial/animate values remain a no-op */}
+                    <div id="example-noop-target" style={card}>
+                        <div style={info}>
+                            <span style={cardTitle}>No-op target</span>
+                            <span id="status-noop-target" style={code}>
+                                {noOpStatus}
+                            </span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                id="target-noop-target"
+                                style={{ ...dot, backgroundColor: "#7784c8" }}
+                                initial={{ opacity: 1, x: 0 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{
+                                    opacity: { duration: 0.4, velocity: 100 },
+                                    x: { type: "spring", velocity: 0 },
+                                }}
+                                onAnimationStart={() =>
+                                    setNoOpStatus("animating")
+                                }
+                                onAnimationComplete={() =>
+                                    setNoOpStatus("idle")
+                                }
                             />
                         </div>
                     </div>
