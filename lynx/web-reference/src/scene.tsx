@@ -155,6 +155,7 @@ export function App() {
     const [namedActive, setNamedActive] = useState(false)
     const [arrayActive, setArrayActive] = useState(false)
     const [keyframesActive, setKeyframesActive] = useState(false)
+    const [colorActive, setColorActive] = useState(false)
     const [functionActive, setFunctionActive] = useState(false)
     const [lifecycleStatus, setLifecycleStatus] = useState("idle")
     const [lifecycleEvents, setLifecycleEvents] = useState("events")
@@ -555,30 +556,32 @@ export function App() {
                     </div>
 
                     {/* color keyframes */}
-                    <div id="example-color-keyframes" style={card}>
+                    <div
+                        id="example-color-keyframes"
+                        style={card}
+                        onClick={() => setColorActive(true)}
+                    >
                         <div style={info}>
                             <span style={cardTitle}>Color keyframes</span>
                             <span style={code}>
-                                backgroundColor: ["#ff0088", …]
+                                {colorActive
+                                    ? "#f00 → #0f0 → #00f"
+                                    : "tap to run color keyframes"}
                             </span>
                         </div>
                         <div style={demo}>
                             <motion.div
                                 id="target-color-keyframes"
                                 style={{ ...dot, width: "112px" }}
+                                initial={{ backgroundColor: "#ff0000" }}
                                 animate={{
-                                    backgroundColor: [
-                                        "#ff0088",
-                                        "#ff8800",
-                                        "#22cc88",
-                                        "#3366ff",
-                                        "#ff0088",
-                                    ],
+                                    backgroundColor: colorActive
+                                        ? ["#ff0000", "#00ff00", "#0000ff"]
+                                        : "#ff0000",
                                 }}
                                 transition={{
-                                    repeat: Infinity,
                                     ease: "linear",
-                                    duration: 4,
+                                    duration: 0.8,
                                 }}
                             />
                         </div>

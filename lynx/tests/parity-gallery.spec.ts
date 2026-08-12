@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test"
 import {
     ANIMATION_LIFECYCLE_CASE,
     API_METRICS,
+    COLOR_KEYFRAMES_CASE,
     CONVERGENCE_HISTORY,
     CONFORMANCE_METRICS,
     FUNCTION_VARIANTS_CASE,
@@ -56,7 +57,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Infinite scalar, keyframe, reverse, and color animations must remain
     // live after their first iteration instead of freezing at the end frame.
-    const liveSelectors = ["#target-repeat-infinity", "#target-color-keyframes"]
+    const liveSelectors = ["#target-repeat-infinity"]
     const before = await Promise.all(liveSelectors.map(styleOf))
     await page.waitForTimeout(173)
     const after = await Promise.all(liveSelectors.map(styleOf))
@@ -349,6 +350,77 @@ test("manifest case: ordered keyframes pass through their peak and settle", asyn
         await expect
             .poll(async () => Math.round(await translateY()))
             .toBe(KEYFRAMES_CASE.expected.endY)
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: color keyframes pass through green and settle blue", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const page of [lynxPage, webPage]) {
+        const target = page.locator("#target-color-keyframes")
+        const rgb = () =>
+            target.evaluate((element) =>
+                (getComputedStyle(element).backgroundColor.match(/\d+/g) ?? [])
+                    .slice(0, 3)
+                    .map(Number)
+            )
+
+        await expect
+            .poll(rgb)
+            .toEqual([COLOR_KEYFRAMES_CASE.expected.startRed, 0, 0])
+        await target.scrollIntoViewIfNeeded()
+        await page.locator("#example-color-keyframes").click()
+        const maxGreenDominance = await target.evaluate(
+            (element, sampleDuration) =>
+                new Promise<number>((resolve) => {
+                    const startedAt = performance.now()
+                    let maximum = Number.NEGATIVE_INFINITY
+                    const sample = () => {
+                        const [red = 0, green = 0, blue = 0] = (
+                            getComputedStyle(element).backgroundColor.match(
+                                /\d+/g
+                            ) ?? []
+                        )
+                            .slice(0, 3)
+                            .map(Number)
+                        maximum = Math.max(maximum, green - Math.max(red, blue))
+                        if (performance.now() - startedAt >= sampleDuration) {
+                            resolve(maximum)
+                        } else {
+                            setTimeout(sample, 16)
+                        }
+                    }
+                    sample()
+                }),
+            900
+        )
+
+        expect(
+            maxGreenDominance,
+            COLOR_KEYFRAMES_CASE.upstream.testName
+        ).toBeGreaterThan(80)
+        await expect
+            .poll(rgb)
+            .toEqual([0, 0, COLOR_KEYFRAMES_CASE.expected.endBlue])
     }
 
     expect(errors).toEqual([])
