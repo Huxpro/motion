@@ -37,6 +37,7 @@ import {
     VISIBILITY_REVEAL_CASE,
     WEIGHTED_LOSS,
     Z_INDEX_DISCRETE_CASE,
+    ZERO_UNIT_NORMALIZATION_CASE,
 } from "../src/conformance/cases.js"
 
 const previewUrl = "/__web_preview?casename=main.web.bundle"
@@ -55,7 +56,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(34, { timeout: 15_000 })
+    await expect(animated).toHaveCount(35, { timeout: 15_000 })
 
     const styleOf = (selector: string) =>
         page
@@ -559,6 +560,42 @@ test("manifest case: unknown animation type does not crash", async ({ browser })
             page.locator("#target-unknown-animation-type"),
             `${renderer} ${UNKNOWN_TYPE_FALLBACK_CASE.upstream.testName}`
         ).toBeVisible()
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: zero unit normalizes to an animatable number", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const target = page.locator("#target-zero-unit")
+        await expect(
+            target,
+            `${renderer} ${ZERO_UNIT_NORMALIZATION_CASE.upstream.testName}`
+        ).toHaveCSS("border-radius", `${ZERO_UNIT_NORMALIZATION_CASE.expected.targetPx}px`, {
+            timeout: 1000,
+        })
     }
 
     expect(errors).toEqual([])

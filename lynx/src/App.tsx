@@ -641,6 +641,26 @@ export function App() {
                         </view>
                     </view>
 
+                    {/* zero-valued units normalize to an animatable number */}
+                    <view id="example-zero-unit" style={card}>
+                        <view style={info}>
+                            <text style={cardTitle}>Zero-unit normalization</text>
+                            <text style={code}>borderRadius: 0px → 20</text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                id="target-zero-unit"
+                                style={{
+                                    ...dot,
+                                    backgroundColor: "#b27b51",
+                                    borderRadius: "0px",
+                                }}
+                                animate={{ borderRadius: 20 }}
+                                transition={{ duration: 0.01 }}
+                            />
+                        </view>
+                    </view>
+
                     {/* transition type false applies the target immediately */}
                     <view
                         id="example-instant-transition"
