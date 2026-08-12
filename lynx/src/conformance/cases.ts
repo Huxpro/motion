@@ -1387,7 +1387,7 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
             "animation controls",
             "gesture propagation",
             "when",
-            "delayChildren",
+            "dynamic delayChildren",
             "staggerChildren",
         ],
         upstream: source(
@@ -1397,7 +1397,7 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         baseline: "framer-motion@13.0.0",
         assertions: [
             "parent and child timing honors when",
-            "delayChildren and staggerChildren order descendants",
+            "dynamic delayChildren and staggerChildren order descendants",
             "controls and gesture labels propagate through the subtree",
         ],
         gap: "Requires a cross-thread visual-element registry and subtree lifecycle aggregation; tracked in issue #10.",
@@ -1406,6 +1406,40 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
             packageTest: false,
             dualRenderer: false,
             native: false,
+        },
+    },
+    {
+        id: "variants/delay-children",
+        category: "Variants",
+        title: "Numeric delayChildren",
+        summary:
+            "Delay an inherited child variant without introducing a second animation engine.",
+        status: "conformant",
+        api: ["variants", "inheritance", "delayChildren"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/delay.test.tsx",
+            "in variant children via delayChildren"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the inherited child remains at its initial target during the numeric delay",
+            "the child settles at the inherited animate target after the delay",
+            "nested uncontrolled descendants accumulate delayChildren",
+            "an explicit child animate prop starts a new timing owner",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            delayMs: 350,
+            holdMs: 150,
+            hiddenOpacity: 0,
+            hiddenX: -24,
+            visibleOpacity: 1,
+            visibleX: 24,
         },
     },
     {
@@ -1736,6 +1770,19 @@ export const VARIANT_PROPAGATION_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "variants/propagation"
 ) as ConformanceCase & {
     expected: {
+        hiddenOpacity: number
+        hiddenX: number
+        visibleOpacity: number
+        visibleX: number
+    }
+}
+
+export const DELAY_CHILDREN_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "variants/delay-children"
+) as ConformanceCase & {
+    expected: {
+        delayMs: number
+        holdMs: number
         hiddenOpacity: number
         hiddenX: number
         visibleOpacity: number
@@ -2222,9 +2269,19 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         exampleId: "variant-propagation",
     },
     {
+        id: "variant-delay-children",
+        group: "Variants",
+        api: "delayChildren: number",
+        status: "supported",
+        evidence: "dual-renderer",
+        contract:
+            "Delay inherited child variants while preserving each child's upstream MotionValue animation path.",
+        exampleId: "delay-children",
+    },
+    {
         id: "variant-orchestration",
         group: "Variants",
-        api: "staggerChildren / when",
+        api: "dynamic delayChildren / staggerChildren / when",
         status: "blocked",
         evidence: "planned",
         contract: "Orchestrate descendant animations.",
@@ -2853,6 +2910,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "Core declarative composition now fits ReactLynx context and reuses each child's existing upstream MotionValue path.",
     },
     {
+        caseId: "variants/delay-children",
+        importance: 4,
+        platformFit: 4,
+        mts: 1,
+        reactLynx: 2,
+        css: 0,
+        rationale:
+            "Common parent/child timing composes through ReactLynx context and leaves animation execution on each child's upstream MotionValue.",
+    },
+    {
         caseId: "variants/orchestration",
         importance: 5,
         platformFit: 2,
@@ -2860,7 +2927,7 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         reactLynx: 4,
         css: 0,
         rationale:
-            "Controls, gesture propagation, and ordered subtree timing still need a cross-thread visual-element registry and lifecycle aggregation.",
+            "Controls, gesture propagation, dynamic stagger, and ordered subtree lifecycle still need a cross-thread visual-element registry and aggregation.",
         issue: "https://github.com/Huxpro/motion/issues/10",
     },
     {
@@ -3647,5 +3714,17 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 10,
         lossAfter: WEIGHTED_LOSS,
         note: "I5/F4/M1/R1/C0 · immutable e17bcaf motion/react/react-umd set · parent initial/animate labels propagate reactively while explicit child animate wins · package 144/144 and complete dual-renderer suite 48/48 · orchestration, controls, and gesture propagation remain scoped to issue #10 · no Full Demo or native claim.",
+    },
+    {
+        id: "lynx-3493",
+        date: "2026-08-12",
+        title: "Numeric delayChildren",
+        kind: "capability",
+        status: "verified",
+        lynxStackPr: 3493,
+        caseIds: ["variants/delay-children"],
+        lossBefore: 10,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F4/M1/R2/C0 · immutable b9850fc motion/react/react-umd set · numeric delayChildren holds and then settles inherited child targets while explicit child animate resets ownership · package 147/147 and complete dual-renderer suite 49/49 · synthetic Web press retries preserve the unchanged transitionEnd assertion after an isolated 3/3 diagnosis · dynamic delay, stagger, when, controls, and gesture propagation remain scoped to issue #10 · no Full Demo or native claim.",
     },
 ]

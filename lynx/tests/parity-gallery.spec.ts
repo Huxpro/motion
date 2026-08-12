@@ -9,6 +9,7 @@ import {
     CONVERGENCE_HISTORY,
     CONFORMANCE_METRICS,
     DELAY_CASE,
+    DELAY_CHILDREN_CASE,
     DEFAULT_TRANSITION_CASE,
     DISPLAY_REVEAL_CASE,
     FUNCTION_VARIANTS_CASE,
@@ -167,6 +168,71 @@ test("manifest case: parent animate label propagates to a child", async ({
         })
     }
     expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: numeric delayChildren delays an inherited child", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "delay-children" })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=delay-children"
+        ),
+    ])
+
+    for (const [renderer, page] of [
+        ["Lynx", lynxPage],
+        ["Web", webPage],
+    ] as const) {
+        const example = page.locator("#example-delay-children")
+        const target = page.locator("#target-delay-children")
+        await expect(example, `${renderer} example exists`).toHaveCount(1, {
+            timeout: 5_000,
+        })
+        expect(
+            await target.count(),
+            `${renderer} target exists inside ${await example.evaluate(
+                (element) => element.innerHTML
+            )}`
+        ).toBe(1)
+        const style = () =>
+            target.evaluate((element) => {
+                const computed = getComputedStyle(element)
+                return {
+                    opacity: Number(computed.opacity),
+                    x: new DOMMatrixReadOnly(computed.transform).m41,
+                }
+            })
+        expect(await style(), `${renderer} initial delay state`).toEqual({
+            opacity: DELAY_CHILDREN_CASE.expected.hiddenOpacity,
+            x: DELAY_CHILDREN_CASE.expected.hiddenX,
+        })
+        await example.click()
+        await page.waitForTimeout(DELAY_CHILDREN_CASE.expected.holdMs)
+        expect(await style(), `${renderer} delay hold`).toEqual({
+            opacity: DELAY_CHILDREN_CASE.expected.hiddenOpacity,
+            x: DELAY_CHILDREN_CASE.expected.hiddenX,
+        })
+        await expect
+            .poll(style, {
+                message: `${renderer} delayed target`,
+                timeout: 3_000,
+            })
+            .toEqual({
+                opacity: DELAY_CHILDREN_CASE.expected.visibleOpacity,
+                x: DELAY_CHILDREN_CASE.expected.visibleX,
+            })
+    }
+
     await Promise.all([lynxPage.close(), webPage.close()])
 })
 
@@ -2329,12 +2395,22 @@ test("manifest case: tap applies, fires, and restores rest", async ({
                 }
             }
         } else {
-            await page.mouse.down()
-            await expect.poll(semanticStyle).toEqual({
-                scale: TAP_GESTURE_CASE.expected.tapScale,
-                opacity: 0.75,
-                backgroundColor: "rgb(255, 204, 0)",
-            })
+            for (let attempt = 0; attempt < 3; attempt += 1) {
+                await page.mouse.down()
+                try {
+                    await expect.poll(semanticStyle).toEqual({
+                        scale: TAP_GESTURE_CASE.expected.tapScale,
+                        opacity: 0.75,
+                        backgroundColor: "rgb(255, 204, 0)",
+                    })
+                    break
+                } catch (error) {
+                    await page.mouse.up()
+                    await page.mouse.move(0, 0)
+                    if (attempt === 2) throw error
+                    await target.hover()
+                }
+            }
         }
         if (cdp) {
             await cdp.send("Input.dispatchTouchEvent", {

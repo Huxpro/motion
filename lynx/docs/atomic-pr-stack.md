@@ -111,11 +111,13 @@ behavior independently reviewable:
                     └── #3489 values removed from animate
                         └── #3490 initial transform origin
                             └── #3492 base variant label propagation
+                                └── #3493 numeric delayChildren
 ```
 
 Feature-base PRs do not trigger the repository's `pkg.pr.new` workflow. Draft
 #3491 is therefore a validation-only rollup against `main`; it must not be
-merged. Its immutable `e17bcaf` motion/react/react-umd package set passes the
-Hux evidence build and all 48 headless Web/Lynx tests. The manifest records the
+merged. Its immutable `b9850fc` motion/react/react-umd package set contains the
+stack through #3493 and passes the Hux evidence build. The manifest records the
 capability PR that owns each contract, while #3491 records only the immutable
-validation gate.
+validation gate. Numeric `delayChildren` is deliberately separate from the
+dynamic stagger/`when`/controls boundary tracked in issue #10.

@@ -33,10 +33,10 @@ npm run build:evidence
 starts both the locked upstream Web reference and Lynx-for-Web, then uses
 headless Chromium to verify manifest-backed semantic assertions as well as the
 legacy live/infinite animation, variants, lifecycle, and gesture checks.
-The current dependency gate is the immutable `e17bcaf` preview set published
+The current dependency gate is the immutable `b9850fc` preview set published
 by validation-only [lynx-stack#3491](https://github.com/lynx-family/lynx-stack/pull/3491);
-the complete suite passes 48/48. Capability ownership remains with the atomic
-#3483–#3492 stack rather than the validation rollup.
+the complete suite passes 49/49 source-linked behaviors. Capability ownership
+remains with the atomic #3483–#3493 stack rather than the validation rollup.
 
 The Web reference in `web-reference/` is pinned to the same upstream Motion
 major as the lynx-stack preview package.
@@ -68,7 +68,7 @@ contract.
 - scalar targets, keyframes, repeat/reverse, colors, and transform aliases
 - live `MotionValue` styles
 - string/array/function variants, `custom`, target-local transitions, and
-  parent `initial`/`animate` label inheritance
+  parent `initial`/`animate` label inheritance with numeric `delayChildren`
 - `whileTap` plus tap callbacks
 - `whileHover` plus hover callbacks on mouse-capable clients
 - `onAnimationStart` / `onAnimationComplete` for base `animate` and
@@ -85,7 +85,7 @@ The source-backed roadmap and reproduced blockers live in
 [Huxpro/motion#3](https://github.com/Huxpro/motion/issues/3). They cover
 focus/in-view/drag, layout and presence, consumer main-thread ref/handler
 composition, remaining gesture lifecycles, animation controls, gesture variant
-propagation, and child timing orchestration.
+propagation, and dynamic/staggered child timing orchestration.
 
 The main long-term reuse boundary is:
 
