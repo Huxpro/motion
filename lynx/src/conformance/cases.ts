@@ -385,6 +385,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { targetPx: 20 },
     },
     {
+        id: "transitions/repeat-loop-final",
+        category: "Transitions",
+        title: "Loop final keyframe",
+        summary:
+            "An odd finite loop repeat settles at the animation target.",
+        status: "conformant",
+        api: ["repeat", "repeatType", "repeatDelay", "keyframes"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "Correctly applies final keyframe with repeatType loop and odd numbered repeat"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the loop runs two forward iterations when repeat is one",
+            "repeatDelay does not alter the terminal keyframe",
+            "both renderers settle at x 20",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { startX: 0, endX: 20, settleMs: 500 },
+    },
+    {
         id: "targets/keyframes",
         category: "Targets",
         title: "Value keyframes",
@@ -1169,6 +1195,12 @@ export const ZERO_UNIT_NORMALIZATION_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/zero-unit-normalization"
 ) as ConformanceCase & { expected: { targetPx: number } }
 
+export const REPEAT_LOOP_FINAL_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "transitions/repeat-loop-final"
+) as ConformanceCase & {
+    expected: { startX: number; endX: number; settleMs: number }
+}
+
 export const KEYFRAMES_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/keyframes"
 ) as ConformanceCase & {
@@ -1428,6 +1460,13 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         title: "Zero-unit normalization",
         summary: "Normalize 0px to a compatible numeric target.",
         api: ["borderRadius", "value types"],
+        evidence: "dual-renderer",
+    },
+    {
+        id: "repeat-loop-final",
+        title: "Loop final keyframe",
+        summary: "An odd finite loop settles at its target.",
+        api: ["repeat", "repeatType: loop", "repeatDelay"],
         evidence: "dual-renderer",
     },
     {
@@ -2062,6 +2101,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 1,
         rationale:
             "A common CSS value-type edge directly reuses upstream normalization and settles through Lynx style serialization.",
+    },
+    {
+        caseId: "transitions/repeat-loop-final",
+        importance: 3,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Finite loop terminal semantics are handled entirely by the upstream repeat generator on immutable Lynx.",
     },
     {
         caseId: "targets/keyframes",
@@ -2871,6 +2920,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 16,
         lossAfter: 16,
         note: "I3/F5/M1/R0/C1 · immutable bd151a1 package · upstream value-type conversion normalizes borderRadius 0px to numeric target 20/20px · focused zero-unit/fallback + hover regression 15/15 · full suite 35/35 · rounded loss remains 16 while raw coverage grows · no native host boundary.",
+    },
+    {
+        id: "motion-54",
+        date: "2026-08-12",
+        title: "Loop final keyframe",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 54,
+        caseIds: ["transitions/repeat-loop-final"],
+        lossBefore: 16,
+        lossAfter: 16,
+        note: "I3/F5/M1/R0/C0 · immutable bd151a1 package · repeat 1 + loop runs two forward iterations and settles at x 20 through the upstream repeat generator · focused loop/reverse + hover regression 15/15 · full suite 36/36 · rounded loss remains 16 while raw coverage grows · no native host boundary.",
     },
     {
         id: "lynx-3457",

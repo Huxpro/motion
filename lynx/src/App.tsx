@@ -177,6 +177,7 @@ export function App() {
     const [delayActive, setDelayActive] = useState(false)
     const [negativeDelayActive, setNegativeDelayActive] = useState(false)
     const [reverseActive, setReverseActive] = useState(false)
+    const [loopActive, setLoopActive] = useState(false)
     const [repeatDelayActive, setRepeatDelayActive] = useState(false)
     const [mirrorActive, setMirrorActive] = useState(false)
     const [keyframeTimesActive, setKeyframeTimesActive] = useState(false)
@@ -1216,6 +1217,34 @@ export function App() {
                                     repeatType: "reverse",
                                     ease: "linear",
                                     duration: 0.4,
+                                }}
+                            />
+                        </view>
+                    </view>
+
+                    {/* loop repeat — odd repeat settles at target */}
+                    <view
+                        id="example-repeat-loop-final"
+                        style={card}
+                        bindtap={() => setLoopActive(true)}
+                    >
+                        <view style={info}>
+                            <text style={cardTitle}>Loop — final target</text>
+                            <text style={code}>0 → 20 · repeat: 1 · loop</text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                id="target-repeat-loop-final"
+                                style={{ ...dot, backgroundColor: "#4f93a8" }}
+                                initial={{ x: 0 }}
+                                animate={{ x: loopActive ? [0, 20] : 0 }}
+                                transition={{
+                                    type: "tween",
+                                    duration: 0.1,
+                                    repeatDelay: 0.1,
+                                    repeat: 1,
+                                    repeatType: "loop",
+                                    ease: "linear",
                                 }}
                             />
                         </view>
