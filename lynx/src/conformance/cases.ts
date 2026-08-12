@@ -1346,6 +1346,35 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         },
     },
     {
+        id: "initial/false-propagation",
+        category: "Variants",
+        title: "Inherited initial={false}",
+        summary:
+            "Suppress mount animations for descendants that inherit a parent's animate label.",
+        status: "conformant",
+        api: ["initial={false}", "variants", "inheritance"],
+        upstream: source(
+            "packages/framer-motion/src/context/MotionContext/__tests__/utils.test.ts",
+            "getCurrentTreeVariants preserves initial false for descendants"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the parent publishes initial false in variant context",
+            "the inherited child renders its final animate keyframe on the first frame",
+            "no intermediate hidden target is observed",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            opacity: 1,
+            x: 24,
+        },
+    },
+    {
         id: "variants/propagation",
         category: "Variants",
         title: "Base variant label propagation",
@@ -1795,6 +1824,12 @@ export const INITIAL_FALSE_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "initial/false"
 ) as ConformanceCase
 
+export const INITIAL_FALSE_PROPAGATION_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "initial/false-propagation"
+) as ConformanceCase & {
+    expected: { opacity: number; x: number }
+}
+
 export const VARIANT_PROPAGATION_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "variants/propagation"
 ) as ConformanceCase & {
@@ -2118,6 +2153,16 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         evidence: "dual-renderer",
         contract: "Skip the mount animation and render the final keyframe.",
         exampleId: "initial-false",
+    },
+    {
+        id: "initial-false-propagation",
+        group: "Variants",
+        api: "parent initial={false}",
+        status: "supported",
+        evidence: "dual-renderer",
+        contract:
+            "Suppress mount animations for descendants that inherit the parent's animate label.",
+        exampleId: "initial-false-propagation",
     },
     {
         id: "animate-object",
@@ -2942,6 +2987,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Core mount semantic; isolated Motion-adapter change with no host gap.",
+    },
+    {
+        caseId: "initial/false-propagation",
+        importance: 5,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Core first-frame semantics extend directly through the existing ReactLynx variant context and upstream MotionValue hydration.",
     },
     {
         caseId: "variants/propagation",
@@ -3792,5 +3847,17 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 10,
         lossAfter: WEIGHTED_LOSS,
         note: "I4/F5/M1/R1/C0 · immutable c394dd3 motion/react/react-umd set · inherit={false} publishes an empty variant context so an inherited initial label stops at the boundary · package 148/148 and complete dual-renderer suite 50/50 · parent-driven dynamic orchestration remains scoped to issue #10 · no Full Demo or native claim.",
+    },
+    {
+        id: "lynx-3495",
+        date: "2026-08-12",
+        title: "Inherited initial={false}",
+        kind: "capability",
+        status: "verified",
+        lynxStackPr: 3495,
+        caseIds: ["initial/false-propagation"],
+        lossBefore: 10,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I5/F5/M1/R1/C0 · immutable f6b0e90 motion/react/react-umd set · parent initial={false} reaches inherited variant children so their first frame is the final animate keyframe · package 149/149 and complete dual-renderer suite 51/51 · no Full Demo or native claim.",
     },
 ]

@@ -18,6 +18,7 @@ import {
     HOVER_GESTURE_CASE,
     INSTANT_TRANSITION_CASE,
     INITIAL_FALSE_CASE,
+    INITIAL_FALSE_PROPAGATION_CASE,
     KEYFRAME_TIMES_CASE,
     KEYFRAMES_CASE,
     MOTION_CREATE_CASE,
@@ -273,6 +274,45 @@ test("manifest case: inherit false blocks inherited initial context", async ({
         await expect
             .poll(style, { message: `${renderer} initial isolation` })
             .toEqual(VARIANT_INHERIT_OPT_OUT_CASE.expected)
+    }
+
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: parent initial false reaches a variant child", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "initial-false-propagation" })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=initial-false-propagation"
+        ),
+    ])
+
+    for (const [renderer, page] of [
+        ["Lynx", lynxPage],
+        ["Web", webPage],
+    ] as const) {
+        const target = page.locator("#target-initial-false-propagation")
+        const style = () =>
+            target.evaluate((element) => {
+                const computed = getComputedStyle(element)
+                return {
+                    opacity: Number(computed.opacity),
+                    x: new DOMMatrixReadOnly(computed.transform).m41,
+                }
+            })
+        await expect
+            .poll(style, { message: `${renderer} first frame` })
+            .toEqual(INITIAL_FALSE_PROPAGATION_CASE.expected)
     }
 
     await Promise.all([lynxPage.close(), webPage.close()])
