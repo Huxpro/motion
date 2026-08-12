@@ -178,6 +178,37 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { startY: 0, peakY: -34, endY: 12 },
     },
     {
+        id: "targets/style-motion-value",
+        category: "Targets",
+        title: "Live style MotionValue",
+        summary:
+            "A MotionValue bound through style updates the host directly without a React rerender.",
+        status: "blocked",
+        api: [
+            "useMotionValue",
+            "style={{ x: MotionValue }}",
+            "MotionValue.set",
+        ],
+        upstream: source(
+            "packages/framer-motion/src/value/__tests__/use-motion-value.test.tsx",
+            "can be set manually"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the style starts at the MotionValue initial value",
+            "a main-thread MotionValue.set updates transform directly",
+            "the React render count stays unchanged",
+        ],
+        gap: "Runtime support exists, but the immutable consumer package rejects MotionValue<number> in MotionStyle. Fixed in stacked lynx-stack #3458; exact preview-package validation is pending.",
+        evidence: {
+            gallery: false,
+            packageTest: true,
+            dualRenderer: false,
+            native: false,
+        },
+        expected: { startX: -36, endX: 36, renderCount: 1 },
+    },
+    {
         id: "targets/color-keyframes",
         category: "Targets",
         title: "Color keyframes",
@@ -536,6 +567,12 @@ export const KEYFRAMES_CASE = CONFORMANCE_CASES.find(
     expected: { startY: number; peakY: number; endY: number }
 }
 
+export const STYLE_MOTION_VALUE_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/style-motion-value"
+) as ConformanceCase & {
+    expected: { startX: number; endX: number; renderCount: number }
+}
+
 export const COLOR_KEYFRAMES_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/color-keyframes"
 ) as ConformanceCase & {
@@ -656,6 +693,13 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         title: "Keyframes",
         summary: "Transform keyframes remain live across iterations.",
         api: ["keyframes", "repeat"],
+        evidence: "dual-renderer",
+    },
+    {
+        id: "style-motion-value",
+        title: "Live MotionValue",
+        summary: "A style-bound MotionValue updates without a React rerender.",
+        api: ["useMotionValue", "style={{ x }}", "x.set"],
         evidence: "dual-renderer",
     },
     {
@@ -1039,6 +1083,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 1,
         rationale:
             "Popular upstream primitive with exact ordered-keyframe sampling.",
+    },
+    {
+        caseId: "targets/style-motion-value",
+        importance: 5,
+        platformFit: 4,
+        mts: 2,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Core composition primitive; a main-thread MotionValue updates a bound transform without React rerendering.",
     },
     {
         caseId: "targets/color-keyframes",
@@ -1465,6 +1519,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 23,
         lossAfter: 22,
         note: "I4/F5/M1/R0/C0 · upstream Accepts delay · dual-renderer hold→move→settle 5/5 · full suite 16/16 · native visual start/end and clean console; exact native timing not claimed.",
+    },
+    {
+        id: "lynx-3458",
+        date: "2026-08-12",
+        title: "Typed style MotionValues",
+        kind: "capability",
+        status: "pending",
+        lynxStackPr: 3458,
+        caseIds: ["targets/style-motion-value"],
+        lossBefore: WEIGHTED_LOSS,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I5/F4/M2/R1/C0 · 119/119 package tests · local declaration hypothesis passes dual-renderer 5/5 · immutable preview-package dual/native evidence pending.",
     },
     {
         id: "lynx-3457",
