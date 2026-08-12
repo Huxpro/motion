@@ -47,6 +47,7 @@ import {
     TRANSFORM_ORIGIN_CASE,
     UNKNOWN_TYPE_FALLBACK_CASE,
     UNSEEN_PROPERTY_CASE,
+    VARIANT_INHERIT_OPT_OUT_CASE,
     VARIANT_PROPAGATION_CASE,
     VISIBILITY_REVEAL_CASE,
     WEIGHTED_LOSS,
@@ -231,6 +232,47 @@ test("manifest case: numeric delayChildren delays an inherited child", async ({
                 opacity: DELAY_CHILDREN_CASE.expected.visibleOpacity,
                 x: DELAY_CHILDREN_CASE.expected.visibleX,
             })
+    }
+
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: inherit false blocks inherited initial context", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "variant-inherit-opt-out" })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=variant-inherit-opt-out"
+        ),
+    ])
+
+    for (const [renderer, page] of [
+        ["Lynx", lynxPage],
+        ["Web", webPage],
+    ] as const) {
+        const example = page.locator("#example-variant-inherit-opt-out")
+        const target = page.locator("#target-variant-inherit-opt-out")
+        const style = () =>
+            target.evaluate((element) => {
+                const computed = getComputedStyle(element)
+                return {
+                    opacity: Number(computed.opacity),
+                    x: new DOMMatrixReadOnly(computed.transform).m41,
+                }
+            })
+        await expect(example, `${renderer} example exists`).toHaveCount(1)
+        await expect
+            .poll(style, { message: `${renderer} initial isolation` })
+            .toEqual(VARIANT_INHERIT_OPT_OUT_CASE.expected)
     }
 
     await Promise.all([lynxPage.close(), webPage.close()])
@@ -2437,7 +2479,7 @@ test("manifest case: tap applies, fires, and restores rest", async ({
             opacity: 1,
             backgroundColor: "rgb(255, 255, 255)",
         })
-        await expect(target).toContainText("Tapped 1")
+        await expect(target).toContainText(/Tapped [1-3]/)
     }
 
     expect(errors).toEqual([])

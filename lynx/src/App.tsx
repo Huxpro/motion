@@ -24,6 +24,7 @@ import {
     STYLE_MOTION_VALUE_CASE,
     TRANSITION_FROM_CASE,
     UNSEEN_PROPERTY_CASE,
+    VARIANT_INHERIT_OPT_OUT_CASE,
     VARIANT_PROPAGATION_CASE,
     VISIBILITY_REVEAL_CASE,
 } from "./conformance/cases.js"
@@ -177,6 +178,8 @@ export function App() {
     const complexGradientMode = conformanceMode === "complex-gradient"
     const variantPropagationMode = conformanceMode === "variant-propagation"
     const delayChildrenMode = conformanceMode === "delay-children"
+    const variantInheritOptOutMode =
+        conformanceMode === "variant-inherit-opt-out"
     const liveX = useMotionValue(STYLE_MOTION_VALUE_CASE.expected.startX)
     let styleMotionValueRenders = 0
     styleMotionValueRenders += 1
@@ -353,6 +356,48 @@ export function App() {
                                         }}
                                         transition={{ type: false }}
                                     />
+                                </motion.view>
+                            </view>
+                        </view>
+                    )}
+
+                    {variantInheritOptOutMode && (
+                        <view
+                            id="example-variant-inherit-opt-out"
+                            style={conformanceCard}
+                        >
+                            <view style={info}>
+                                <text style={cardTitle}>Variant boundary</text>
+                                <text style={code}>inherit={"{false}"}</text>
+                            </view>
+                            <view style={demo}>
+                                <motion.view
+                                    initial="hidden"
+                                >
+                                    <motion.view
+                                        inherit={false}
+                                        variants={{}}
+                                    >
+                                        <motion.view
+                                            id="target-variant-inherit-opt-out"
+                                            style={{
+                                                ...dot,
+                                                opacity:
+                                                    VARIANT_INHERIT_OPT_OUT_CASE
+                                                        .expected.opacity,
+                                                x: VARIANT_INHERIT_OPT_OUT_CASE
+                                                    .expected.x,
+                                                backgroundColor: "#d3df63",
+                                            }}
+                                            variants={{
+                                                hidden: {
+                                                    opacity: 0,
+                                                    x: -24,
+                                                },
+                                            }}
+                                            transition={{ type: false }}
+                                        />
+                                    </motion.view>
                                 </motion.view>
                             </view>
                         </view>
