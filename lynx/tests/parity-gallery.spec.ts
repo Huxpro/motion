@@ -10,6 +10,7 @@ import {
     FUNCTION_VARIANTS_CASE,
     GALLERY_EXAMPLES,
     HOVER_GESTURE_CASE,
+    INSTANT_TRANSITION_CASE,
     KEYFRAME_TIMES_CASE,
     KEYFRAMES_CASE,
     MOTION_CREATE_CASE,
@@ -46,7 +47,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(25, { timeout: 15_000 })
+    await expect(animated).toHaveCount(26, { timeout: 15_000 })
 
     const styleOf = (selector: string) =>
         page
@@ -181,6 +182,66 @@ test("manifest case: transition.from overrides the current value", async ({
         await expect
             .poll(async () => Math.round(await x()))
             .toBe(TRANSITION_FROM_CASE.expected.endX)
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: transition type false applies immediately", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const page of [webPage, lynxPage]) {
+        const target = page.locator("#target-instant-transition")
+        const x = () =>
+            target.evaluate(
+                (element) =>
+                    new DOMMatrixReadOnly(getComputedStyle(element).transform)
+                        .m41
+            )
+        await expect.poll(x).toBe(INSTANT_TRANSITION_CASE.expected.startX)
+        await page.locator("#example-instant-transition").click()
+        const samples = await target.evaluate(
+            (element, duration) =>
+                new Promise<number[]>((resolve) => {
+                    const values: number[] = []
+                    const started = performance.now()
+                    const sample = () => {
+                        values.push(
+                            new DOMMatrixReadOnly(
+                                getComputedStyle(element).transform
+                            ).m41
+                        )
+                        performance.now() - started >= duration
+                            ? resolve(values)
+                            : requestAnimationFrame(sample)
+                    }
+                    sample()
+                }),
+            INSTANT_TRANSITION_CASE.expected.sampleMs
+        )
+        expect(
+            samples.find(
+                (value) => value !== INSTANT_TRANSITION_CASE.expected.startX
+            )
+        ).toBe(INSTANT_TRANSITION_CASE.expected.endX)
+        expect(samples.at(-1)).toBe(INSTANT_TRANSITION_CASE.expected.endX)
     }
 
     expect(errors).toEqual([])
