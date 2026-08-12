@@ -178,6 +178,38 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { startY: 0, peakY: -34, endY: 12 },
     },
     {
+        id: "targets/null-keyframe",
+        category: "Targets",
+        title: "Null keyframe hydration",
+        summary:
+            "A leading null keyframe resolves from the MotionValue's current value.",
+        status: "conformant",
+        api: ["animate", "keyframes", "null keyframe"],
+        upstream: source(
+            "packages/framer-motion/src/animation/animate/__tests__/animate.test.tsx",
+            "correctly hydrates keyframes null with current MotionValue"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the first sampled frame continues from the current value instead of a default origin",
+            "the animation settles at the final keyframe",
+            "both renderers expose the same hydration behavior",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            startX: -42,
+            endX: 42,
+            durationMs: 600,
+            firstSampleMs: 90,
+            maximumFirstX: -20,
+        },
+    },
+    {
         id: "transitions/keyframe-times",
         category: "Targets",
         title: "Keyframe times",
@@ -744,6 +776,18 @@ export const KEYFRAMES_CASE = CONFORMANCE_CASES.find(
     expected: { startY: number; peakY: number; endY: number }
 }
 
+export const NULL_KEYFRAME_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/null-keyframe"
+) as ConformanceCase & {
+    expected: {
+        startX: number
+        endX: number
+        durationMs: number
+        firstSampleMs: number
+        maximumFirstX: number
+    }
+}
+
 export const KEYFRAME_TIMES_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "transitions/keyframe-times"
 ) as ConformanceCase & {
@@ -930,6 +974,13 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         evidence: "dual-renderer",
     },
     {
+        id: "null-keyframe",
+        title: "Null keyframe",
+        summary: "Start a keyframe animation from its current live value.",
+        api: ["keyframes", "[null, value]"],
+        evidence: "dual-renderer",
+    },
+    {
         id: "keyframe-times",
         title: "Keyframe times",
         summary: "Custom offsets preserve duplicate-time boundary jumps.",
@@ -1098,6 +1149,15 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         evidence: "dual-renderer",
         contract: "Animate scalar, transform, and color keyframes.",
         exampleId: "keyframes",
+    },
+    {
+        id: "null-keyframe",
+        group: "Targets",
+        api: "animate={{ x: [null, value] }}",
+        status: "supported",
+        evidence: "dual-renderer",
+        contract: "Hydrate a leading null keyframe from the current value.",
+        exampleId: "null-keyframe",
     },
     {
         id: "transition",
@@ -1353,6 +1413,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 1,
         rationale:
             "Popular upstream primitive with exact ordered-keyframe sampling.",
+    },
+    {
+        caseId: "targets/null-keyframe",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Common from-current-value keyframes reuse upstream MotionValue hydration without host adaptation.",
     },
     {
         caseId: "transitions/keyframe-times",
@@ -1934,6 +2004,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 26,
         lossAfter: 25,
         note: "I3/F5/M1/R0/C0 · upstream mirrored-generator semantics · named easeIn outward/return focused + gesture regression 15/15 · full suite 21/21 · no native host boundary.",
+    },
+    {
+        id: "motion-40",
+        date: "2026-08-12",
+        title: "Null keyframe hydration",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 40,
+        caseIds: ["targets/null-keyframe"],
+        lossBefore: 25,
+        lossAfter: 24,
+        note: "I4/F5/M1/R0/C0 · immutable bd151a1 package · upstream current-MotionValue hydration · focused null keyframe + gesture regression 15/15 · full suite 22/22 · no native host boundary.",
     },
     {
         id: "lynx-3457",

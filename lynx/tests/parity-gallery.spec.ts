@@ -15,6 +15,7 @@ import {
     NAMED_EASING_CASE,
     NAMED_VARIANTS_CASE,
     NEGATIVE_DELAY_CASE,
+    NULL_KEYFRAME_CASE,
     PRIORITIZED_GAPS,
     REACTIVE_ANIMATE_CASE,
     REPEAT_INFINITY_CASE,
@@ -42,7 +43,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(21, { timeout: 15_000 })
+    await expect(animated).toHaveCount(22, { timeout: 15_000 })
 
     const styleOf = (selector: string) =>
         page
@@ -91,6 +92,55 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     expect(runtimeErrors).toEqual([])
     expect(consoleErrors).toEqual([])
+})
+
+test("manifest case: a null keyframe hydrates from the current value", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const [renderer, page] of [
+        ["Lynx", lynxPage],
+        ["Web", webPage],
+    ] as const) {
+        const target = page.locator("#target-null-keyframe")
+        const x = () =>
+            target.evaluate(
+                (element) =>
+                    new DOMMatrixReadOnly(getComputedStyle(element).transform)
+                        .m41
+            )
+
+        await expect.poll(x).toBe(NULL_KEYFRAME_CASE.expected.startX)
+        await page.locator("#example-null-keyframe").click()
+        await page.waitForTimeout(NULL_KEYFRAME_CASE.expected.firstSampleMs)
+
+        const firstSample = await x()
+        expect(
+            firstSample,
+            `${renderer} ${NULL_KEYFRAME_CASE.upstream.testName}: ${firstSample}`
+        ).toBeLessThan(NULL_KEYFRAME_CASE.expected.maximumFirstX)
+        await expect
+            .poll(async () => Math.round(await x()))
+            .toBe(NULL_KEYFRAME_CASE.expected.endX)
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
 })
 
 test("manifest case: motion.create forwards and animates on Web and Lynx", async ({
