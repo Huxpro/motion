@@ -2802,6 +2802,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "I4/F4/M1/R0/C2 · immutable bd151a1 package · upstream mixer produces observable cross-representation intermediate colors and settles rgba(0,136,255,1) · focused color + hover regression 15/15 · full suite 33/33 · rounded loss remains 17 while raw coverage grows · no native host boundary.",
     },
     {
+        id: "motion-52",
+        date: "2026-08-12",
+        title: "Unknown type fallback",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 52,
+        caseIds: ["transitions/unknown-type-fallback"],
+        lossBefore: 17,
+        lossAfter: 16,
+        note: "I2/F5/M1/R0/C0 · immutable bd151a1 package · unknown transition types preserve both declarative trees without runtime or console errors; this does not claim custom generator support · focused fallback/zIndex + hover regression 15/15 · full suite 34/34 · no native host boundary.",
+    },
+    {
         id: "lynx-3457",
         date: "2026-08-11",
         title: "initial={false}",
