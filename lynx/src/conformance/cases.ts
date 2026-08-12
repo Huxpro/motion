@@ -2861,6 +2861,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "I2/F5/M1/R0/C0 · immutable bd151a1 package · unknown transition types preserve both declarative trees without runtime or console errors; this does not claim custom generator support · focused fallback/zIndex + hover regression 15/15 · full suite 34/34 · no native host boundary.",
     },
     {
+        id: "motion-53",
+        date: "2026-08-12",
+        title: "Zero-unit normalization",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 53,
+        caseIds: ["targets/zero-unit-normalization"],
+        lossBefore: 16,
+        lossAfter: 16,
+        note: "I3/F5/M1/R0/C1 · immutable bd151a1 package · upstream value-type conversion normalizes borderRadius 0px to numeric target 20/20px · focused zero-unit/fallback + hover regression 15/15 · full suite 35/35 · rounded loss remains 16 while raw coverage grows · no native host boundary.",
+    },
+    {
         id: "lynx-3457",
         date: "2026-08-11",
         title: "initial={false}",
