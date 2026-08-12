@@ -2922,6 +2922,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "I3/F5/M1/R0/C1 · immutable bd151a1 package · upstream value-type conversion normalizes borderRadius 0px to numeric target 20/20px · focused zero-unit/fallback + hover regression 15/15 · full suite 35/35 · rounded loss remains 16 while raw coverage grows · no native host boundary.",
     },
     {
+        id: "motion-54",
+        date: "2026-08-12",
+        title: "Loop final keyframe",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 54,
+        caseIds: ["transitions/repeat-loop-final"],
+        lossBefore: 16,
+        lossAfter: 16,
+        note: "I3/F5/M1/R0/C0 · immutable bd151a1 package · repeat 1 + loop runs two forward iterations and settles at x 20 through the upstream repeat generator · focused loop/reverse + hover regression 15/15 · full suite 36/36 · rounded loss remains 16 while raw coverage grows · no native host boundary.",
+    },
+    {
         id: "lynx-3457",
         date: "2026-08-11",
         title: "initial={false}",
