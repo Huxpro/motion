@@ -2232,6 +2232,22 @@ test("evidence portal exposes examples, API inventory, and conformance metrics",
         GALLERY_EXAMPLES.length
     )
     await expect(page.locator("iframe")).toHaveCount(2)
+    await expect
+        .poll(async () => {
+            const heights = await page
+                .locator("iframe")
+                .evaluateAll((frames) =>
+                    frames.map((frame) => frame.getBoundingClientRect().height)
+                )
+            return heights[0] > 4000 && heights[0] === heights[1]
+        })
+        .toBe(true)
+    const embeddedSources = await page
+        .locator("iframe")
+        .evaluateAll((frames) =>
+            frames.map((frame) => frame.getAttribute("src"))
+        )
+    expect(embeddedSources.every((src) => src?.includes("embed=1"))).toBe(true)
 })
 
 test("evidence portal keeps every view usable at mobile width", async ({
@@ -2242,6 +2258,25 @@ test("evidence portal keeps every view usable at mobile width", async ({
     for (const view of ["overview", "examples", "api", "conformance"]) {
         await page.goto(`http://localhost:4173/?view=${view}`)
         await expect(page.locator("main")).toBeVisible()
+        if (view === "examples") {
+            const frames = await page.locator("iframe").evaluateAll((items) =>
+                items.map((item) => {
+                    const box = item.getBoundingClientRect()
+                    return {
+                        top: box.top,
+                        bottom: box.bottom,
+                        width: box.width,
+                        height: box.height,
+                    }
+                })
+            )
+            expect(frames).toHaveLength(2)
+            expect(frames[0].width).toBeGreaterThan(300)
+            expect(frames[0].width).toBe(frames[1].width)
+            expect(frames[0].height).toBeLessThanOrEqual(320)
+            expect(frames[0].height).toBe(frames[1].height)
+            expect(frames[1].top).toBeGreaterThan(frames[0].bottom)
+        }
         const undersizedText = await page.evaluate(() =>
             Array.from(document.querySelectorAll("body *"))
                 .filter((element) => {

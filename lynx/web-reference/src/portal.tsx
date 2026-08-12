@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import type { CSSProperties } from "react"
 import {
     API_METRICS,
     ATOMIC_CAPABILITIES,
@@ -25,6 +26,14 @@ const STATUS_LABEL: Record<SupportStatus, string> = {
     supported: "Supported",
     partial: "Partial",
     blocked: "Blocked",
+}
+
+const COMPARE_CHANNEL = "motion-lynx-compare"
+const GALLERY_FALLBACK_HEIGHT = 710 + GALLERY_EXAMPLES.length * 118
+
+function embeddedUrl(url: string) {
+    const separator = url.includes("?") ? "&" : "?"
+    return `${url}${separator}embed=1&height=${GALLERY_FALLBACK_HEIGHT}`
 }
 
 function currentView(): View {
@@ -630,9 +639,65 @@ function Overview() {
 }
 
 function Examples() {
-    const lynxUrl = import.meta.env.DEV
+    const webFrame = useRef<HTMLIFrameElement>(null)
+    const lynxFrame = useRef<HTMLIFrameElement>(null)
+    const [galleryHeight, setGalleryHeight] = useState(GALLERY_FALLBACK_HEIGHT)
+    const lynxBaseUrl = import.meta.env.DEV
         ? "http://localhost:3000/__web_preview?casename=main.web.bundle"
         : "./lynx/index.html"
+    const webUrl = embeddedUrl("?mode=baseline")
+    const lynxUrl = embeddedUrl(lynxBaseUrl)
+
+    useEffect(() => {
+        const relayScroll = (event: MessageEvent) => {
+            const message = event.data
+            if (!message || message.channel !== COMPARE_CHANNEL) return
+
+            const webWindow = webFrame.current?.contentWindow
+            const lynxWindow = lynxFrame.current?.contentWindow
+            if (
+                event.source === webWindow &&
+                message.type === "measure" &&
+                typeof message.height === "number"
+            ) {
+                const height = Math.ceil(
+                    Math.min(10_000, Math.max(900, message.height))
+                )
+                setGalleryHeight(height)
+                lynxWindow?.postMessage(
+                    { channel: COMPARE_CHANNEL, type: "resize", height },
+                    "*"
+                )
+                return
+            }
+
+            if (
+                message.type !== "scroll" ||
+                typeof message.progress !== "number"
+            ) {
+                return
+            }
+
+            const target =
+                event.source === webWindow
+                    ? lynxWindow
+                    : event.source === lynxWindow
+                    ? webWindow
+                    : null
+
+            target?.postMessage(
+                {
+                    channel: COMPARE_CHANNEL,
+                    type: "sync",
+                    progress: Math.min(1, Math.max(0, message.progress)),
+                },
+                "*"
+            )
+        }
+
+        window.addEventListener("message", relayScroll)
+        return () => window.removeEventListener("message", relayScroll)
+    }, [])
 
     return (
         <main className="page examples-page" id="main-content">
@@ -641,14 +706,19 @@ function Examples() {
                     <h1>Compare Web and Lynx.</h1>
                 </div>
                 <p>
-                    Use both panes. Web runs the locked upstream baseline; Lynx
-                    runs the #3436 adapter through Lynx for Web.
+                    Scroll the page to compare aligned rows. On narrow screens,
+                    both panes stay visible and their positions are linked.
                 </p>
             </header>
 
             <section
                 className="comparison-grid"
                 aria-label="Web and Lynx live examples"
+                style={
+                    {
+                        "--gallery-content-height": `${galleryHeight}px`,
+                    } as CSSProperties
+                }
             >
                 <article className="runtime-frame">
                     <header>
@@ -662,7 +732,11 @@ function Examples() {
                             Open ↗
                         </a>
                     </header>
-                    <iframe title="Web Motion reference" src="?mode=baseline" />
+                    <iframe
+                        ref={webFrame}
+                        title="Web Motion reference"
+                        src={webUrl}
+                    />
                 </article>
                 <article className="runtime-frame runtime-frame-lynx">
                     <header>
@@ -672,7 +746,21 @@ function Examples() {
                             Open ↗
                         </a>
                     </header>
-                    <iframe title="ReactLynx Motion preview" src={lynxUrl} />
+                    <iframe
+                        ref={lynxFrame}
+                        title="ReactLynx Motion preview"
+                        src={lynxUrl}
+                        onLoad={() =>
+                            lynxFrame.current?.contentWindow?.postMessage(
+                                {
+                                    channel: COMPARE_CHANNEL,
+                                    type: "resize",
+                                    height: galleryHeight,
+                                },
+                                "*"
+                            )
+                        }
+                    />
                 </article>
             </section>
 

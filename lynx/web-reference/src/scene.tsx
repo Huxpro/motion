@@ -36,19 +36,22 @@ import {
  * identical.
  */
 
+const query = new URLSearchParams(window.location.search)
+const isEmbedded = query.get("embed") === "1"
+
 const page: CSSProperties = {
     display: "flex",
     flexDirection: "column",
     width: "100vw",
-    height: "100vh",
+    height: isEmbedded ? "auto" : "100vh",
     backgroundColor: "#0b0b14",
     margin: 0,
     boxSizing: "border-box",
 }
 const scroll: CSSProperties = {
     width: "100%",
-    height: "100%",
-    overflowY: "auto",
+    height: isEmbedded ? "auto" : "100%",
+    overflowY: isEmbedded ? "visible" : "auto",
 }
 const inner: CSSProperties = {
     display: "flex",
