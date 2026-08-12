@@ -1327,6 +1327,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "I3/F5/M1/R0/C0 · immutable bd151a1 package · dual-renderer 1→1.35→1 sampling · no new native host boundary.",
     },
     {
+        id: "motion-28",
+        date: "2026-08-12",
+        title: "Verified evidence inventory sync",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 28,
+        caseIds: ["gestures/hover"],
+        lossBefore: 25,
+        lossAfter: 25,
+        note: "Reconciles atomic/API evidence with merged exact cases; hover supported at its documented scope; no new semantic claim.",
+    },
+    {
         id: "lynx-3457",
         date: "2026-08-11",
         title: "initial={false}",
