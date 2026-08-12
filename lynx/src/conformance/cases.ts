@@ -334,6 +334,31 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { target: 100 },
     },
     {
+        id: "transitions/unknown-type-fallback",
+        category: "Transitions",
+        title: "Unknown type fallback",
+        summary:
+            "An unknown animation type falls back safely without crashing the declarative tree.",
+        status: "conformant",
+        api: ["transition.type", "fallback"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "doesn't error when provided unknown animation type"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "an unknown transition type does not throw a runtime error",
+            "the declarative target remains mounted and visible",
+            "both renderers preserve the tree",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+    },
+    {
         id: "targets/keyframes",
         category: "Targets",
         title: "Value keyframes",
@@ -1110,6 +1135,10 @@ export const Z_INDEX_DISCRETE_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/z-index-discrete"
 ) as ConformanceCase & { expected: { target: number } }
 
+export const UNKNOWN_TYPE_FALLBACK_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "transitions/unknown-type-fallback"
+) as ConformanceCase
+
 export const KEYFRAMES_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/keyframes"
 ) as ConformanceCase & {
@@ -1355,6 +1384,13 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         title: "Discrete zIndex",
         summary: "zIndex applies directly instead of interpolating.",
         api: ["animate", "zIndex"],
+        evidence: "dual-renderer",
+    },
+    {
+        id: "unknown-type-fallback",
+        title: "Unknown type fallback",
+        summary: "Unknown transition types do not crash the tree.",
+        api: ["transition.type", "fallback"],
         evidence: "dual-renderer",
     },
     {
@@ -1969,6 +2005,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 1,
         rationale:
             "Layering is common but narrower than transform/opacity; upstream property classification already applies zIndex discretely on immutable Lynx.",
+    },
+    {
+        caseId: "transitions/unknown-type-fallback",
+        importance: 2,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "A narrow resilience contract: upstream generator fallback preserves the declarative tree without claiming custom type support.",
     },
     {
         caseId: "targets/keyframes",
@@ -2754,6 +2800,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 17,
         lossAfter: 17,
         note: "I4/F4/M1/R0/C2 · immutable bd151a1 package · upstream mixer produces observable cross-representation intermediate colors and settles rgba(0,136,255,1) · focused color + hover regression 15/15 · full suite 33/33 · rounded loss remains 17 while raw coverage grows · no native host boundary.",
+    },
+    {
+        id: "motion-52",
+        date: "2026-08-12",
+        title: "Unknown type fallback",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 52,
+        caseIds: ["transitions/unknown-type-fallback"],
+        lossBefore: 17,
+        lossAfter: 16,
+        note: "I2/F5/M1/R0/C0 · immutable bd151a1 package · unknown transition types preserve both declarative trees without runtime or console errors; this does not claim custom generator support · focused fallback/zIndex + hover regression 15/15 · full suite 34/34 · no native host boundary.",
     },
     {
         id: "lynx-3457",

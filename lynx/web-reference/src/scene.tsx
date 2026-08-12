@@ -621,6 +621,22 @@ export function App() {
                         </div>
                     </div>
 
+                    {/* unknown animation types fall back without crashing */}
+                    <div id="example-unknown-animation-type" style={card}>
+                        <div style={info}>
+                            <span style={cardTitle}>Unknown animation type</span>
+                            <span style={code}>type: "test" · resilient fallback</span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                id="target-unknown-animation-type"
+                                style={{ ...dot, backgroundColor: "#6e9b71" }}
+                                animate={{ x: 20 }}
+                                transition={{ type: "test" } as any}
+                            />
+                        </div>
+                    </div>
+
                     {/* transition type false applies the target immediately */}
                     <div
                         id="example-instant-transition"
