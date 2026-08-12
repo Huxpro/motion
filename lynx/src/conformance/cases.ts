@@ -359,6 +359,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         },
     },
     {
+        id: "targets/zero-unit-normalization",
+        category: "Targets",
+        title: "Zero-unit normalization",
+        summary:
+            "A zero-valued CSS unit normalizes to an animatable numeric target.",
+        status: "conformant",
+        api: ["animate", "borderRadius", "value types"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "converts unseen zero unit types to number"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "borderRadius starts from a 0px style value",
+            "the numeric target is normalized to the compatible pixel type",
+            "both renderers settle at 20px",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { targetPx: 20 },
+    },
+    {
         id: "targets/keyframes",
         category: "Targets",
         title: "Value keyframes",
@@ -1139,6 +1165,10 @@ export const UNKNOWN_TYPE_FALLBACK_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "transitions/unknown-type-fallback"
 ) as ConformanceCase
 
+export const ZERO_UNIT_NORMALIZATION_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/zero-unit-normalization"
+) as ConformanceCase & { expected: { targetPx: number } }
+
 export const KEYFRAMES_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/keyframes"
 ) as ConformanceCase & {
@@ -1391,6 +1421,13 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         title: "Unknown type fallback",
         summary: "Unknown transition types do not crash the tree.",
         api: ["transition.type", "fallback"],
+        evidence: "dual-renderer",
+    },
+    {
+        id: "zero-unit-normalization",
+        title: "Zero-unit normalization",
+        summary: "Normalize 0px to a compatible numeric target.",
+        api: ["borderRadius", "value types"],
         evidence: "dual-renderer",
     },
     {
@@ -2015,6 +2052,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "A narrow resilience contract: upstream generator fallback preserves the declarative tree without claiming custom type support.",
+    },
+    {
+        caseId: "targets/zero-unit-normalization",
+        importance: 3,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 1,
+        rationale:
+            "A common CSS value-type edge directly reuses upstream normalization and settles through Lynx style serialization.",
     },
     {
         caseId: "targets/keyframes",
