@@ -33,6 +33,10 @@ npm run build:evidence
 starts both the locked upstream Web reference and Lynx-for-Web, then uses
 headless Chromium to verify manifest-backed semantic assertions as well as the
 legacy live/infinite animation, variants, lifecycle, and gesture checks.
+The current dependency gate is the immutable `d4d34c7` preview set published
+by validation-only [lynx-stack#3491](https://github.com/lynx-family/lynx-stack/pull/3491);
+the complete suite passes 47/47. Capability ownership remains with the atomic
+#3483–#3490 stack rather than the validation rollup.
 
 The Web reference in `web-reference/` is pinned to the same upstream Motion
 major as the lynx-stack preview package.
@@ -46,11 +50,11 @@ repository-level config can publish the local output; the established
 cross-origin isolation headers required by Lynx for Web. Every PR preview
 exposes four shareable views:
 
--   `/?view=overview` — current verdict and evidence ladder;
--   `/?view=examples` — live, side-by-side Web and ReactLynx galleries;
--   `/?view=api` — filterable atomic API support/boundary matrix; and
--   `/?view=conformance` — upstream source paths, test names, acceptance
-    criteria, and coverage status.
+- `/?view=overview` — current verdict and evidence ladder;
+- `/?view=examples` — live, side-by-side Web and ReactLynx galleries;
+- `/?view=api` — filterable atomic API support/boundary matrix; and
+- `/?view=conformance` — upstream source paths, test names, acceptance
+  criteria, and coverage status.
 
 The portal, Gallery, and Playwright checks consume
 [`src/conformance/cases.ts`](./src/conformance/cases.ts). Counts and percentages
@@ -60,13 +64,14 @@ contract.
 
 ## Implemented declarative subset
 
--   `initial`, `animate`, `style`, and `transition`
--   scalar targets, keyframes, repeat/reverse, colors, and transform aliases
--   live `MotionValue` styles
--   string/array/function variants, `custom`, and target-local transitions
--   `whileTap` plus tap callbacks
--   `whileHover` plus hover callbacks on mouse-capable clients
--   `onAnimationStart` / `onAnimationComplete` for base `animate` targets
+- `initial`, `animate`, `style`, and `transition`
+- scalar targets, keyframes, repeat/reverse, colors, and transform aliases
+- live `MotionValue` styles
+- string/array/function variants, `custom`, and target-local transitions
+- `whileTap` plus tap callbacks
+- `whileHover` plus hover callbacks on mouse-capable clients
+- `onAnimationStart` / `onAnimationComplete` for base `animate` and
+  `whileTap` target/restoration lifecycles
 
 The authoring shape is intentionally the same for those examples, apart from
 ReactLynx host element names (`motion.view`/`text` instead of
@@ -78,16 +83,16 @@ compatibility.
 The source-backed roadmap and reproduced blockers live in
 [Huxpro/motion#3](https://github.com/Huxpro/motion/issues/3). They cover
 focus/in-view/drag, layout and presence, consumer main-thread ref/handler
-composition, gesture lifecycle delivery, animation controls, and propagated or
-orchestrated variants.
+composition, remaining gesture lifecycles, animation controls, and propagated
+or orchestrated variants.
 
 The main long-term reuse boundary is:
 
--   upstream `motion` / `motion-dom` own animation generators, MotionValues,
-    interpolation, transitions, and style effects;
--   Lynx code owns host elements, dual-thread worklets/events, focus/intersection
-    and gesture primitives, layout measurement, and component-tree
-    orchestration.
+- upstream `motion` / `motion-dom` own animation generators, MotionValues,
+  interpolation, transitions, and style effects;
+- Lynx code owns host elements, dual-thread worklets/events, focus/intersection
+  and gesture primitives, layout measurement, and component-tree
+  orchestration.
 
 See `docs/web-mts-crossmodule-bug.md` for the historical runtime failures that
 made the original local fallback necessary and how the lynx-stack work now

@@ -21,6 +21,7 @@ split by behavior contract rather than by implementation file.
     ├── C. whileTap + tap callback/event bridge
     │   └── D. whileHover + tap/hover priority
     ├── E. base animation lifecycle callbacks
+    │   └── G. whileTap target/restoration lifecycle
     └── F. initial={false} mount semantics
 ```
 
@@ -54,8 +55,10 @@ harness and link back to the preview package for that PR.
 
 ### E. Lifecycle
 
-- `onAnimationStart` and `onAnimationComplete` for base `animate` only.
-- Gesture lifecycle remains an explicit blocker.
+- `onAnimationStart` and `onAnimationComplete` for base `animate`.
+- G adds `whileTap` target/restoration definitions, multi-property completion
+  aggregation, and interrupted-animation suppression without claiming hover,
+  focus, drag, or presence lifecycle coverage.
 
 ### F. `initial={false}`
 
@@ -92,3 +95,26 @@ or review unit:
 This keeps the implementation review concerned with runtime correctness while
 the harness review is concerned with upstream provenance and observable
 conformance.
+
+## Current completion stack
+
+The next verified stack is based on the previous Motion PR head and keeps each
+behavior independently reviewable:
+
+```text
+#3483 upstream MotionValue hydration
+└── #3484 hover lifecycle ownership
+    └── #3485 gesture transitionEnd values
+        └── #3486 gesture rest transition ownership
+            └── #3487 transitionEnd-only gestures
+                └── #3488 transitionEnd-only base animate
+                    └── #3489 values removed from animate
+                        └── #3490 initial transform origin
+```
+
+Feature-base PRs do not trigger the repository's `pkg.pr.new` workflow. Draft
+#3491 is therefore a validation-only rollup against `main`; it must not be
+merged. Its immutable `d4d34c7` motion/react/react-umd package set passes the
+Hux evidence build and all 47 headless Web/Lynx tests. The manifest records the
+capability PR that owns each contract, while #3491 records only the immutable
+validation gate.

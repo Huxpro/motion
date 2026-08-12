@@ -29,6 +29,7 @@ export interface ConformanceCase {
     }
     expected?: Record<string, number>
     expectedDefinition?: string
+    expectedDefinitions?: Record<string, string>
 }
 
 export interface AtomicCapability {
@@ -175,6 +176,153 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
             native: false,
         },
         expected: { x: 20, startY: 0, endY: 30 },
+    },
+    {
+        id: "targets/transition-end-subsequent",
+        category: "Targets",
+        title: "transitionEnd-only target",
+        summary:
+            "A later target containing only transitionEnd applies after its empty animation phase.",
+        status: "conformant",
+        api: ["animate", "transitionEnd", "onAnimationComplete"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "uses transitionEnd on subsequent renders"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the transitionEnd-only update applies its final opacity",
+            "start and completion lifecycle fire once",
+            "no stale transitionEnd overwrites a newer generation",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { opacity: 0.4 },
+    },
+    {
+        id: "targets/removed-animate-original-initial",
+        category: "Targets",
+        title: "Removed target restores original initial",
+        summary:
+            "Removing a value from animate restores the value originally declared by initial.",
+        status: "conformant",
+        api: ["initial", "animate", "dynamic target shape"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "when value is removed from animate, animates back to value originally defined in initial prop"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: ["opacity restores from 1 to the original initial value"],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { opacity: 0 },
+    },
+    {
+        id: "targets/removed-animate-current-initial",
+        category: "Targets",
+        title: "Removed target uses current initial",
+        summary:
+            "Removing a value from animate uses the initial value supplied by that render.",
+        status: "conformant",
+        api: ["initial", "animate", "dynamic target shape"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "when value is removed from animate, animates back to value currently defined in initial prop"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: ["opacity restores from 1 to the current initial value"],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { opacity: 0.5 },
+    },
+    {
+        id: "targets/removed-animate-and-initial",
+        category: "Targets",
+        title: "Removed target retains current value",
+        summary:
+            "Removing a value from both animate and initial retains its live value without restarting it.",
+        status: "conformant",
+        api: ["initial", "animate", "MotionValue ownership"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "when value is removed from both animate and initial, perform no animation"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the last x value remains visible",
+            "the stopped animation object is not serialized into later gesture snapshots",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { x: 24 },
+    },
+    {
+        id: "targets/transform-origin",
+        category: "Targets",
+        title: "Transform-origin aliases",
+        summary:
+            "originX, originY, and originZ compose a typed transformOrigin on the first frame and later updates.",
+        status: "conformant",
+        api: ["originX", "originY", "originZ", "transformOrigin"],
+        upstream: source(
+            "packages/framer-motion/src/render/html/utils/__tests__/build-styles.test.ts",
+            "Builds transformOrigin with correct default value types"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "numeric originX/originY values resolve as percentages",
+            "the first initial snapshot includes transformOrigin",
+            "a plain ReactLynx transformOrigin control follows the same host path",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { start: 0, end: 1 },
+    },
+    {
+        id: "targets/complex-gradient",
+        category: "Targets",
+        title: "Complex gradient interpolation",
+        summary:
+            "A gradient angle produces intermediate frames through upstream complex-value mixing.",
+        status: "conformant",
+        api: ["backgroundImage", "complex value", "transition"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "Correctly animates complex value types on first rerender"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "both renderers start at 120deg",
+            "an intermediate angle is observable",
+            "both renderers settle at 0deg",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { startDeg: 120, endDeg: 0, sampleMs: 140 },
     },
     {
         id: "targets/display-reveal",
@@ -1092,6 +1240,63 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { restScale: 1, hoverScale: 1.08 },
     },
     {
+        id: "gestures/transition-end-only",
+        category: "Gestures",
+        title: "transitionEnd-only tap target",
+        summary:
+            "A gesture target containing only transitionEnd applies while pressed and restores the base target on release.",
+        status: "conformant",
+        api: ["whileTap", "transitionEnd", "onAnimationStart"],
+        upstream: source(
+            "packages/framer-motion/src/render/utils/__tests__/animation-state.test.ts",
+            "Swap between value in target and transitionEnd, target"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "press applies the transitionEnd value",
+            "gesture lifecycle reports the pressed definition",
+            "release restores the lower-priority base target",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { restOpacity: 1, pressedOpacity: 0.4 },
+    },
+    {
+        id: "lifecycle/tap-animation",
+        category: "Lifecycle",
+        title: "Tap animation lifecycle",
+        summary:
+            "Press and release report the active and restored variant definitions in order.",
+        status: "conformant",
+        api: ["whileTap", "onAnimationStart", "onAnimationComplete"],
+        upstream: source(
+            "packages/framer-motion/src/gestures/__tests__/press.test.tsx",
+            "press gesture variant applies and unapplies"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "press start and completion report the pressed definition",
+            "release start and completion report the restored definition",
+            "interrupted press targets do not report stale completion",
+            "no runtime or snapshot serialization errors",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expectedDefinitions: {
+            pressed: "pressed",
+            rest: "rest",
+            hover: "hover",
+        },
+    },
+    {
         id: "lifecycle/base-animate",
         category: "Lifecycle",
         title: "Base animation lifecycle",
@@ -1205,6 +1410,32 @@ export const UNSEEN_PROPERTY_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/unseen-property"
 ) as ConformanceCase & {
     expected: { x: number; startY: number; endY: number }
+}
+
+export const TRANSITION_END_SUBSEQUENT_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/transition-end-subsequent"
+) as ConformanceCase & { expected: { opacity: number } }
+
+export const REMOVED_ANIMATE_ORIGINAL_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/removed-animate-original-initial"
+) as ConformanceCase & { expected: { opacity: number } }
+
+export const REMOVED_ANIMATE_CURRENT_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/removed-animate-current-initial"
+) as ConformanceCase & { expected: { opacity: number } }
+
+export const REMOVED_ANIMATE_RETAIN_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/removed-animate-and-initial"
+) as ConformanceCase & { expected: { x: number } }
+
+export const TRANSFORM_ORIGIN_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/transform-origin"
+) as ConformanceCase & { expected: { start: number; end: number } }
+
+export const COMPLEX_GRADIENT_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/complex-gradient"
+) as ConformanceCase & {
+    expected: { startDeg: number; endDeg: number; sampleMs: number }
 }
 
 export const DISPLAY_REVEAL_CASE = CONFORMANCE_CASES.find(
@@ -1419,6 +1650,12 @@ export const HOVER_GESTURE_CASE = CONFORMANCE_CASES.find(
     expected: { restScale: number; hoverScale: number }
 }
 
+export const GESTURE_TRANSITION_END_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "gestures/transition-end-only"
+) as ConformanceCase & {
+    expected: { restOpacity: number; pressedOpacity: number }
+}
+
 export const NAMED_VARIANTS_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "variants/named"
 ) as ConformanceCase & {
@@ -1445,6 +1682,12 @@ export const FUNCTION_VARIANTS_CASE = CONFORMANCE_CASES.find(
 export const ANIMATION_LIFECYCLE_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "lifecycle/base-animate"
 ) as ConformanceCase & { expectedDefinition: string }
+
+export const TAP_ANIMATION_LIFECYCLE_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "lifecycle/tap-animation"
+) as ConformanceCase & {
+    expectedDefinitions: { pressed: string; rest: string; hover: string }
+}
 
 export const INITIAL_FALSE_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "initial/false"
@@ -2006,10 +2249,9 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         id: "animation-lifecycle",
         group: "Lifecycle",
         api: "onAnimationStart / onAnimationComplete",
-        status: "partial",
+        status: "supported",
         evidence: "dual-renderer",
-        contract: "Report base animate target lifecycle.",
-        boundary: "Gesture animation lifecycle is not delivered yet.",
+        contract: "Report base and tap animation target lifecycle.",
         exampleId: "function-variant",
     },
     {
@@ -2111,6 +2353,66 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Common dynamic target shape is created through upstream MotionValues with no platform-specific path.",
+    },
+    {
+        caseId: "targets/transition-end-subsequent",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Common exit/cleanup primitive now preserves lifecycle and generation ownership without a host-specific animation engine.",
+    },
+    {
+        caseId: "targets/removed-animate-original-initial",
+        importance: 4,
+        platformFit: 5,
+        mts: 2,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Dynamic target ownership is resolved in the adapter while retaining upstream MotionValues.",
+    },
+    {
+        caseId: "targets/removed-animate-current-initial",
+        importance: 4,
+        platformFit: 5,
+        mts: 2,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "The latest declarative initial value can be restored without a ReactLynx or host change.",
+    },
+    {
+        caseId: "targets/removed-animate-and-initial",
+        importance: 4,
+        platformFit: 5,
+        mts: 2,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "A fresh upstream MotionValue snapshot retains the scalar while keeping animation internals out of cross-thread serialization.",
+    },
+    {
+        caseId: "targets/transform-origin",
+        importance: 3,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 1,
+        rationale:
+            "Transform-origin aliases only require first-snapshot style composition; later updates already use upstream motion-dom.",
+    },
+    {
+        caseId: "targets/complex-gradient",
+        importance: 4,
+        platformFit: 4,
+        mts: 1,
+        reactLynx: 0,
+        css: 2,
+        rationale:
+            "Complex-value interpolation already reuses the upstream mixer; evidence confirms the Lynx style path preserves intermediate gradients.",
     },
     {
         caseId: "targets/display-reveal",
@@ -2450,6 +2752,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         issue: "https://github.com/Huxpro/motion/issues/23",
     },
     {
+        caseId: "gestures/transition-end-only",
+        importance: 4,
+        platformFit: 5,
+        mts: 2,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Gesture priority can reuse the same upstream target semantics once empty animation phases retain lifecycle ownership.",
+    },
+    {
         caseId: "lifecycle/base-animate",
         importance: 4,
         platformFit: 4,
@@ -2458,6 +2770,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Callback order and definitions are verified across Web, Lynx, and native Explorer.",
+    },
+    {
+        caseId: "lifecycle/tap-animation",
+        importance: 4,
+        platformFit: 4,
+        mts: 2,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Common gesture telemetry reuses upstream MotionValue animations with a narrow main-thread lifecycle bridge.",
     },
     {
         caseId: "initial/false",
@@ -2798,6 +3120,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "I5/F4/M2/R3/C0 · #3458 supplies typed style MotionValues; immutable 72c4fe0 adds #3478's opt-in, one-way background set bridge · focused dual-renderer 5/5 and full suite 40/40 · x moves -36→36 while React render count stays 1 · synchronous get/subscription parity remains issue #62 · native Sandbox host cannot load the current bundle, so no exact-preview native claim.",
     },
     {
+        id: "lynx-3479",
+        date: "2026-08-12",
+        title: "Tap animation lifecycle",
+        kind: "capability",
+        status: "verified",
+        lynxStackPr: 3479,
+        caseIds: ["lifecycle/tap-animation"],
+        lossBefore: 12,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F4/M2/R1/C0 · immutable e784419 full package set · press reports pressed lifecycle and release restores the active lower-priority definition across multi-property targets; package tests also cover the rest fallback and stale-completion suppression · ReactLynx snapshot excludes the circular active-animation edge while direct MotionValue animation access remains available.",
+    },
+    {
         id: "motion-33",
         date: "2026-08-12",
         title: "Negative transition delay",
@@ -3120,5 +3454,125 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 19,
         lossAfter: WEIGHTED_LOSS,
         note: "I5/F5/M1/R0/C0 · #3457 is already an ancestor of immutable full-stack 48fc271 · package 119/119 · first frame renders the final keyframe with zero mount starts, then a later update animates once in both renderers · native Sandbox host cannot load the current bundle, so no exact-preview native claim.",
+    },
+    {
+        id: "lynx-3483",
+        date: "2026-08-12",
+        title: "Upstream MotionValue hydration",
+        kind: "architecture",
+        status: "stacked",
+        lynxStackPr: 3483,
+        caseIds: [],
+        lossBefore: 12,
+        lossAfter: 12,
+        note: "Moves hydration and animation ownership onto upstream MotionValue primitives; architectural reuse improves without adding a separate conformance claim.",
+    },
+    {
+        id: "lynx-3484",
+        date: "2026-08-12",
+        title: "Hover lifecycle ownership",
+        kind: "regression",
+        status: "stacked",
+        lynxStackPr: 3484,
+        caseIds: ["gestures/hover", "lifecycle/tap-animation"],
+        lossBefore: 12,
+        lossAfter: 12,
+        note: "Preserves gesture priority and suppresses stale restoration completion; this protects accepted contracts without moving loss.",
+    },
+    {
+        id: "lynx-3485",
+        date: "2026-08-12",
+        title: "Gesture transitionEnd values",
+        kind: "capability",
+        status: "verified",
+        lynxStackPr: 3485,
+        caseIds: ["gestures/transition-end-only"],
+        lossBefore: 12,
+        lossAfter: 11,
+        note: "I4/F5/M2/R1/C0 · immutable d4d34c7 · transitionEnd-only press applies 0.4, reports lifecycle, and restores 1 · package coverage plus complete dual-renderer suite 47/47 · no new native claim.",
+    },
+    {
+        id: "lynx-3486",
+        date: "2026-08-12",
+        title: "Gesture rest transition ownership",
+        kind: "regression",
+        status: "verified",
+        lynxStackPr: 3486,
+        caseIds: ["gestures/tap", "gestures/hover"],
+        lossBefore: 11,
+        lossAfter: 11,
+        note: "Uses the active lower-priority target transition when gestures restore; immutable d4d34c7 retains exact tap/hover restoration in the complete 47/47 suite.",
+    },
+    {
+        id: "lynx-3487",
+        date: "2026-08-12",
+        title: "transitionEnd-only gesture lifecycle",
+        kind: "regression",
+        status: "verified",
+        lynxStackPr: 3487,
+        caseIds: ["gestures/transition-end-only"],
+        lossBefore: 11,
+        lossAfter: 11,
+        note: "Empty animation phases keep generation and lifecycle ownership, including stale-release suppression; immutable d4d34c7 complete suite 47/47.",
+    },
+    {
+        id: "lynx-3488",
+        date: "2026-08-12",
+        title: "Base transitionEnd-only target",
+        kind: "capability",
+        status: "verified",
+        lynxStackPr: 3488,
+        caseIds: ["targets/transition-end-subsequent"],
+        lossBefore: 11,
+        lossAfter: 11,
+        note: "I4/F5/M1/R0/C0 · immutable d4d34c7 · a subsequent transitionEnd-only target applies opacity 0.4 with start→complete lifecycle and generation protection · complete suite 47/47.",
+    },
+    {
+        id: "lynx-3489",
+        date: "2026-08-12",
+        title: "Removed animate ownership",
+        kind: "capability",
+        status: "verified",
+        lynxStackPr: 3489,
+        caseIds: [
+            "targets/removed-animate-original-initial",
+            "targets/removed-animate-current-initial",
+            "targets/removed-animate-and-initial",
+        ],
+        lossBefore: 11,
+        lossAfter: 10,
+        note: "I4/F5/M2/R0/C0 · immutable d4d34c7 · three upstream ownership contracts restore original initial, use current initial, or retain the live scalar · fresh upstream MotionValue snapshots avoid serializing animation objects · package 140/140 and complete dual-renderer suite 47/47.",
+    },
+    {
+        id: "lynx-3490",
+        date: "2026-08-12",
+        title: "Initial transform origin",
+        kind: "capability",
+        status: "verified",
+        lynxStackPr: 3490,
+        caseIds: ["targets/transform-origin"],
+        lossBefore: 10,
+        lossAfter: 10,
+        note: "I3/F5/M1/R0/C1 · immutable d4d34c7 · numeric origin aliases render as percentages on the first snapshot and update through upstream motion-dom; plain ReactLynx control confirms no host blocker · package 142/142 and complete suite 47/47.",
+    },
+    {
+        id: "lynx-3491",
+        date: "2026-08-12",
+        title: "Immutable stack validation",
+        kind: "evidence",
+        status: "verified",
+        lynxStackPr: 3491,
+        caseIds: [
+            "gestures/transition-end-only",
+            "targets/transition-end-subsequent",
+            "targets/removed-animate-original-initial",
+            "targets/removed-animate-current-initial",
+            "targets/removed-animate-and-initial",
+            "targets/transform-origin",
+            "targets/complex-gradient",
+        ],
+        lossBefore: 10,
+        lossAfter: WEIGHTED_LOSS,
+        note: "Validation-only draft publishes exact motion/react/react-umd packages at d4d34c7 because feature-base PRs do not trigger pkg.pr.new · full Hux evidence build and headless Web/Lynx suite pass 47/47 · complex gradient I4/F4/M1/R0/C2 was already supported and adds source-linked evidence without a Lynx source patch · no Full Demo or native claim.",
     },
 ]
