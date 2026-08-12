@@ -2550,6 +2550,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "I4/F5/M1/R0/C1 · immutable bd151a1 package · visibility switches from hidden to visible before opacity entrance completes · focused visibility + gesture regression 15/15 · full suite 29/29 · rounded loss remains 19 while raw coverage grows · no native host boundary.",
     },
     {
+        id: "motion-48",
+        date: "2026-08-12",
+        title: "Equal keyframe no-op",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 48,
+        caseIds: ["targets/no-op-keyframes"],
+        lossBefore: 19,
+        lossAfter: 18,
+        note: "I4/F5/M1/R0/C0 · immutable bd151a1 package · equal opacity and transform keyframe arrays remain idle · focused scalar/keyframe no-op + hover regression 15/15 · full suite 30/30 · no native host boundary.",
+    },
+    {
         id: "lynx-3457",
         date: "2026-08-11",
         title: "initial={false}",
