@@ -309,6 +309,31 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { sampleMs: 0 },
     },
     {
+        id: "targets/z-index-discrete",
+        category: "Targets",
+        title: "Discrete zIndex",
+        summary: "zIndex applies at its target value without numeric interpolation.",
+        status: "conformant",
+        api: ["animate", "zIndex"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "doesn't animate zIndex"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "zIndex applies its target value on the first observable frame",
+            "a long transition does not cause numeric zIndex interpolation",
+            "both renderers expose z-index 100",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { target: 100 },
+    },
+    {
         id: "targets/keyframes",
         category: "Targets",
         title: "Value keyframes",
@@ -1047,6 +1072,10 @@ export const SPRING_VELOCITY_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "transitions/spring-velocity"
 ) as ConformanceCase & { expected: { sampleMs: number } }
 
+export const Z_INDEX_DISCRETE_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/z-index-discrete"
+) as ConformanceCase & { expected: { target: number } }
+
 export const KEYFRAMES_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/keyframes"
 ) as ConformanceCase & {
@@ -1271,6 +1300,13 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         title: "Spring velocity lifecycle",
         summary: "Non-zero velocity starts a spring for an equal target.",
         api: ["transition.type", "transition.velocity"],
+        evidence: "dual-renderer",
+    },
+    {
+        id: "z-index-discrete",
+        title: "Discrete zIndex",
+        summary: "zIndex applies directly instead of interpolating.",
+        api: ["animate", "zIndex"],
         evidence: "dual-renderer",
     },
     {
@@ -1868,6 +1904,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Spring physics and lifecycle semantics directly reuse the upstream MotionValue generator on immutable Lynx.",
+    },
+    {
+        caseId: "targets/z-index-discrete",
+        importance: 3,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 1,
+        rationale:
+            "Layering is common but narrower than transform/opacity; upstream property classification already applies zIndex discretely on immutable Lynx.",
     },
     {
         caseId: "targets/keyframes",

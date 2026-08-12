@@ -607,6 +607,22 @@ export function App() {
                         </view>
                     </view>
 
+                    {/* zIndex is applied discretely rather than interpolated */}
+                    <view id="example-z-index" style={card}>
+                        <view style={info}>
+                            <text style={cardTitle}>Discrete zIndex</text>
+                            <text style={code}>animate: 100 · no interpolation</text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                id="target-z-index"
+                                style={{ ...dot, backgroundColor: "#5e8fc7" }}
+                                animate={{ zIndex: 100 }}
+                                transition={{ duration: 2 }}
+                            />
+                        </view>
+                    </view>
+
                     {/* transition type false applies the target immediately */}
                     <view
                         id="example-instant-transition"
