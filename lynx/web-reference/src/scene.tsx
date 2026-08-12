@@ -7,6 +7,7 @@ import {
     KEYFRAME_TIMES_CASE,
     KEYFRAMES_CASE,
     MOTION_CREATE_CASE,
+    NAMED_EASING_CASE,
     NAMED_VARIANTS_CASE,
     NEGATIVE_DELAY_CASE,
     REACTIVE_ANIMATE_CASE,
@@ -160,6 +161,7 @@ export function App() {
     const [reverseActive, setReverseActive] = useState(false)
     const [repeatDelayActive, setRepeatDelayActive] = useState(false)
     const [keyframeTimesActive, setKeyframeTimesActive] = useState(false)
+    const [namedEasingActive, setNamedEasingActive] = useState(false)
     const [namedActive, setNamedActive] = useState(false)
     const [arrayActive, setArrayActive] = useState(false)
     const [keyframesActive, setKeyframesActive] = useState(false)
@@ -574,6 +576,60 @@ export function App() {
                                             .durationMs / 1000,
                                     ease: "linear",
                                     times: [0, 0, 1, 1],
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* named easing against a simultaneous linear control */}
+                    <div
+                        id="example-named-easing"
+                        style={card}
+                        onClick={() => setNamedEasingActive(true)}
+                    >
+                        <div style={info}>
+                            <span style={cardTitle}>Named easing</span>
+                            <span style={code}>
+                                {namedEasingActive
+                                    ? "easeInOut vs linear"
+                                    : "tap to compare curves"}
+                            </span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                id="target-named-easing"
+                                style={{ ...small, backgroundColor: "#9b72f2" }}
+                                initial={{
+                                    x: NAMED_EASING_CASE.expected.startX,
+                                }}
+                                animate={{
+                                    x: namedEasingActive
+                                        ? NAMED_EASING_CASE.expected.endX
+                                        : NAMED_EASING_CASE.expected.startX,
+                                }}
+                                transition={{
+                                    duration:
+                                        NAMED_EASING_CASE.expected.durationMs /
+                                        1000,
+                                    ease: "easeInOut",
+                                }}
+                            />
+                            <motion.div
+                                id="target-linear-easing-control"
+                                style={{ ...small, backgroundColor: "#a4a4b8" }}
+                                initial={{
+                                    x: NAMED_EASING_CASE.expected.startX,
+                                }}
+                                animate={{
+                                    x: namedEasingActive
+                                        ? NAMED_EASING_CASE.expected.endX
+                                        : NAMED_EASING_CASE.expected.startX,
+                                }}
+                                transition={{
+                                    duration:
+                                        NAMED_EASING_CASE.expected.durationMs /
+                                        1000,
+                                    ease: "linear",
                                 }}
                             />
                         </div>

@@ -210,6 +210,37 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         },
     },
     {
+        id: "transitions/named-easing",
+        category: "Targets",
+        title: "Named easing",
+        summary:
+            "A named easeInOut curve changes intermediate sampling while preserving endpoints.",
+        status: "conformant",
+        api: ["transition.ease", 'ease="easeInOut"'],
+        upstream: source(
+            "packages/motion-utils/src/easing/utils/__tests__/map.test.ts",
+            "Maps easing to lookup"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the named curve lags a simultaneous linear tween during its first half",
+            "both curves preserve the same start and final values",
+            "both renderers expose the same named-easing relationship",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            startX: -42,
+            endX: 42,
+            durationMs: 800,
+            minimumLinearLead: 6,
+        },
+    },
+    {
         id: "targets/style-motion-value",
         category: "Targets",
         title: "Live style MotionValue",
@@ -667,6 +698,17 @@ export const KEYFRAME_TIMES_CASE = CONFORMANCE_CASES.find(
     }
 }
 
+export const NAMED_EASING_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "transitions/named-easing"
+) as ConformanceCase & {
+    expected: {
+        startX: number
+        endX: number
+        durationMs: number
+        minimumLinearLead: number
+    }
+}
+
 export const STYLE_MOTION_VALUE_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/style-motion-value"
 ) as ConformanceCase & {
@@ -822,6 +864,13 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         title: "Keyframe times",
         summary: "Custom offsets preserve duplicate-time boundary jumps.",
         api: ["transition.times"],
+        evidence: "dual-renderer",
+    },
+    {
+        id: "named-easing",
+        title: "Named easing",
+        summary: "Compare easeInOut sampling with a simultaneous linear tween.",
+        api: ["transition.ease", "easeInOut"],
         evidence: "dual-renderer",
     },
     {
@@ -1236,6 +1285,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Useful keyframe orchestration option reuses upstream offset sampling without host-specific adaptation.",
+    },
+    {
+        caseId: "transitions/named-easing",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Common transition shaping maps directly to upstream easing functions and needs no host-specific adaptation.",
     },
     {
         caseId: "targets/style-motion-value",
@@ -1740,6 +1799,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 25,
         lossAfter: 24,
         note: "I3/F5/M1/R0/C0 · upstream duplicate-offset semantics · focused times + gesture regression 15/15 · full suite 19/19 · no native host boundary.",
+    },
+    {
+        id: "motion-36",
+        date: "2026-08-12",
+        title: "Named easing",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 36,
+        caseIds: ["transitions/named-easing"],
+        lossBefore: 24,
+        lossAfter: 23,
+        note: "I4/F5/M1/R0/C0 · upstream easing lookup · simultaneous easeInOut/linear focused + gesture regression 15/15 · full suite 20/20 · no native host boundary.",
     },
     {
         id: "lynx-3457",

@@ -12,6 +12,7 @@ import {
     KEYFRAME_TIMES_CASE,
     KEYFRAMES_CASE,
     MOTION_CREATE_CASE,
+    NAMED_EASING_CASE,
     NAMED_VARIANTS_CASE,
     NEGATIVE_DELAY_CASE,
     PRIORITIZED_GAPS,
@@ -40,7 +41,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(18, { timeout: 15_000 })
+    await expect(animated).toHaveCount(20, { timeout: 15_000 })
 
     const styleOf = (selector: string) =>
         page
@@ -392,6 +393,95 @@ test("manifest case: keyframe times preserve duplicate boundary jumps", async ({
             KEYFRAME_TIMES_CASE.expected.endX,
             0
         )
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: named easing changes intermediate sampling", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const page of [lynxPage, webPage]) {
+        const named = page.locator("#target-named-easing")
+        const linear = page.locator("#target-linear-easing-control")
+        const translateX = (target: typeof named) =>
+            target.evaluate((element) =>
+                Number(
+                    new DOMMatrixReadOnly(
+                        getComputedStyle(element).transform
+                    ).m41.toFixed(2)
+                )
+            )
+
+        await expect
+            .poll(() => translateX(named))
+            .toBe(NAMED_EASING_CASE.expected.startX)
+        await expect
+            .poll(() => translateX(linear))
+            .toBe(NAMED_EASING_CASE.expected.startX)
+        await named.scrollIntoViewIfNeeded()
+        await page.locator("#example-named-easing").click()
+
+        const lead = await page
+            .locator("#target-named-easing, #target-linear-easing-control")
+            .evaluateAll(
+                (elements, duration) =>
+                    new Promise<number>((resolve) => {
+                        const namedElement = elements.find(
+                            (element) => element.id === "target-named-easing"
+                        )!
+                        const linearElement = elements.find(
+                            (element) =>
+                                element.id === "target-linear-easing-control"
+                        )!
+                        const startedAt = performance.now()
+                        let maximumLead = Number.NEGATIVE_INFINITY
+                        const sample = () => {
+                            const namedX = new DOMMatrixReadOnly(
+                                getComputedStyle(namedElement).transform
+                            ).m41
+                            const linearX = new DOMMatrixReadOnly(
+                                getComputedStyle(linearElement).transform
+                            ).m41
+                            maximumLead = Math.max(
+                                maximumLead,
+                                linearX - namedX
+                            )
+                            performance.now() - startedAt >= duration * 0.48
+                                ? resolve(maximumLead)
+                                : requestAnimationFrame(sample)
+                        }
+                        sample()
+                    }),
+                NAMED_EASING_CASE.expected.durationMs
+            )
+        expect(
+            lead,
+            `${NAMED_EASING_CASE.upstream.testName}: linear lead=${lead}`
+        ).toBeGreaterThanOrEqual(NAMED_EASING_CASE.expected.minimumLinearLead)
+        await expect
+            .poll(() => translateX(named))
+            .toBeCloseTo(NAMED_EASING_CASE.expected.endX, 0)
+        await expect
+            .poll(() => translateX(linear))
+            .toBeCloseTo(NAMED_EASING_CASE.expected.endX, 0)
     }
 
     expect(errors).toEqual([])
