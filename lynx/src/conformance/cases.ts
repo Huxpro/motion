@@ -242,6 +242,38 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         },
     },
     {
+        id: "transitions/default-fallback",
+        category: "Targets",
+        title: "Default transition fallback",
+        summary:
+            "The default transition is selected when no property-specific transition exists.",
+        status: "conformant",
+        api: ["transition.default"],
+        upstream: source(
+            "packages/framer-motion/src/animation/__tests__/get-value-transition.test.ts",
+            "falls back to default key"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the default delay overrides an immediate top-level transition",
+            "the value remains at its start during the default delay",
+            "the animation settles at the final value in both renderers",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            startX: -40,
+            endX: 40,
+            delayMs: 450,
+            durationMs: 200,
+            holdSampleMs: 250,
+        },
+    },
+    {
         id: "transitions/named-easing",
         category: "Targets",
         title: "Named easing",
@@ -800,6 +832,18 @@ export const KEYFRAME_TIMES_CASE = CONFORMANCE_CASES.find(
     }
 }
 
+export const DEFAULT_TRANSITION_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "transitions/default-fallback"
+) as ConformanceCase & {
+    expected: {
+        startX: number
+        endX: number
+        delayMs: number
+        durationMs: number
+        holdSampleMs: number
+    }
+}
+
 export const NAMED_EASING_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "transitions/named-easing"
 ) as ConformanceCase & {
@@ -988,6 +1032,14 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         evidence: "dual-renderer",
     },
     {
+        id: "default-transition",
+        title: "Default transition",
+        summary:
+            "Use transition.default when no property-specific override exists.",
+        api: ["transition.default"],
+        evidence: "dual-renderer",
+    },
+    {
         id: "named-easing",
         title: "Named easing",
         summary: "Compare easeInOut sampling with a simultaneous linear tween.",
@@ -1166,6 +1218,16 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         status: "supported",
         evidence: "dual-renderer",
         contract: "Reuse upstream tween/spring transition options.",
+    },
+    {
+        id: "transition-default",
+        group: "Targets",
+        api: "transition.default",
+        status: "supported",
+        evidence: "dual-renderer",
+        contract:
+            "Use default options when no value-specific transition exists.",
+        exampleId: "default-transition",
     },
     {
         id: "repeat",
@@ -1433,6 +1495,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Useful keyframe orchestration option reuses upstream offset sampling without host-specific adaptation.",
+    },
+    {
+        caseId: "transitions/default-fallback",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Common transition routing fallback reuses upstream getValueTransition without host adaptation.",
     },
     {
         caseId: "transitions/named-easing",
@@ -2016,6 +2088,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 25,
         lossAfter: 24,
         note: "I4/F5/M1/R0/C0 · immutable bd151a1 package · upstream current-MotionValue hydration · focused null keyframe + gesture regression 15/15 · full suite 22/22 · no native host boundary.",
+    },
+    {
+        id: "motion-41",
+        date: "2026-08-12",
+        title: "Default transition fallback",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 41,
+        caseIds: ["transitions/default-fallback"],
+        lossBefore: 24,
+        lossAfter: 23,
+        note: "I4/F5/M1/R0/C0 · immutable bd151a1 package · upstream default-key routing · focused fallback + gesture regression 15/15 · full suite 23/23 · no native host boundary; property-specific override remains #3459.",
     },
     {
         id: "lynx-3457",

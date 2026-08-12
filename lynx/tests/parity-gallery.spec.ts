@@ -6,6 +6,7 @@ import {
     CONVERGENCE_HISTORY,
     CONFORMANCE_METRICS,
     DELAY_CASE,
+    DEFAULT_TRANSITION_CASE,
     FUNCTION_VARIANTS_CASE,
     GALLERY_EXAMPLES,
     HOVER_GESTURE_CASE,
@@ -43,7 +44,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(22, { timeout: 15_000 })
+    await expect(animated).toHaveCount(23, { timeout: 15_000 })
 
     const styleOf = (selector: string) =>
         page
@@ -92,6 +93,44 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     expect(runtimeErrors).toEqual([])
     expect(consoleErrors).toEqual([])
+})
+
+test("manifest case: transition.default wins over top-level options", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const target = page.locator("#target-default-transition")
+        const x = () =>
+            target.evaluate(
+                (element) =>
+                    new DOMMatrixReadOnly(getComputedStyle(element).transform)
+                        .m41
+            )
+
+        await expect.poll(x).toBe(DEFAULT_TRANSITION_CASE.expected.startX)
+        await page.locator("#example-default-transition").click()
+        await page.waitForTimeout(DEFAULT_TRANSITION_CASE.expected.holdSampleMs)
+        expect(
+            await x(),
+            `${renderer} ${DEFAULT_TRANSITION_CASE.upstream.testName}`
+        ).toBe(DEFAULT_TRANSITION_CASE.expected.startX)
+        await expect
+            .poll(async () => Math.round(await x()))
+            .toBe(DEFAULT_TRANSITION_CASE.expected.endX)
+    }
+
+    await Promise.all([lynxPage.close(), webPage.close()])
 })
 
 test("manifest case: a null keyframe hydrates from the current value", async ({

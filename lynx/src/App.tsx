@@ -3,6 +3,7 @@ import type { IntrinsicElements } from "@lynx-js/types"
 import { useState } from "@lynx-js/react"
 import {
     DELAY_CASE,
+    DEFAULT_TRANSITION_CASE,
     FUNCTION_VARIANTS_CASE,
     KEYFRAME_TIMES_CASE,
     KEYFRAMES_CASE,
@@ -155,6 +156,8 @@ export function App() {
     const [tapCount, setTapCount] = useState(0)
     const [hoverCount, setHoverCount] = useState(0)
     const [gestureStatus, setGestureStatus] = useState("resting")
+    const [defaultTransitionActive, setDefaultTransitionActive] =
+        useState(false)
     const [nullKeyframeActive, setNullKeyframeActive] = useState(false)
     const [reactiveActive, setReactiveActive] = useState(false)
     const [springActive, setSpringActive] = useState(false)
@@ -496,6 +499,47 @@ export function App() {
                                         NULL_KEYFRAME_CASE.expected.durationMs /
                                         1000,
                                     ease: "linear",
+                                }}
+                            />
+                        </view>
+                    </view>
+
+                    {/* transition.default overrides top-level fallback */}
+                    <view
+                        id="example-default-transition"
+                        style={card}
+                        bindtap={() => setDefaultTransitionActive(true)}
+                    >
+                        <view style={info}>
+                            <text style={cardTitle}>Default transition</text>
+                            <text style={code}>
+                                default delay · top-level ignored
+                            </text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                id="target-default-transition"
+                                style={{ ...dot, backgroundColor: "#75b95b" }}
+                                initial={{
+                                    x: DEFAULT_TRANSITION_CASE.expected.startX,
+                                }}
+                                animate={{
+                                    x: defaultTransitionActive
+                                        ? DEFAULT_TRANSITION_CASE.expected.endX
+                                        : DEFAULT_TRANSITION_CASE.expected
+                                              .startX,
+                                }}
+                                transition={{
+                                    duration: 0.01,
+                                    default: {
+                                        delay:
+                                            DEFAULT_TRANSITION_CASE.expected
+                                                .delayMs / 1000,
+                                        duration:
+                                            DEFAULT_TRANSITION_CASE.expected
+                                                .durationMs / 1000,
+                                        ease: "linear",
+                                    },
                                 }}
                             />
                         </view>

@@ -3,6 +3,7 @@ import { CSSProperties, forwardRef, useState } from "react"
 import type { ComponentPropsWithoutRef } from "react"
 import {
     DELAY_CASE,
+    DEFAULT_TRANSITION_CASE,
     FUNCTION_VARIANTS_CASE,
     KEYFRAME_TIMES_CASE,
     KEYFRAMES_CASE,
@@ -156,6 +157,8 @@ export function App() {
     const [tapCount, setTapCount] = useState(0)
     const [hoverCount, setHoverCount] = useState(0)
     const [gestureStatus, setGestureStatus] = useState("resting")
+    const [defaultTransitionActive, setDefaultTransitionActive] =
+        useState(false)
     const [nullKeyframeActive, setNullKeyframeActive] = useState(false)
     const [reactiveActive, setReactiveActive] = useState(false)
     const [springActive, setSpringActive] = useState(false)
@@ -492,6 +495,47 @@ export function App() {
                                         NULL_KEYFRAME_CASE.expected.durationMs /
                                         1000,
                                     ease: "linear",
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* transition.default overrides top-level fallback */}
+                    <div
+                        id="example-default-transition"
+                        style={card}
+                        onClick={() => setDefaultTransitionActive(true)}
+                    >
+                        <div style={info}>
+                            <span style={cardTitle}>Default transition</span>
+                            <span style={code}>
+                                default delay · top-level ignored
+                            </span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                id="target-default-transition"
+                                style={{ ...dot, backgroundColor: "#75b95b" }}
+                                initial={{
+                                    x: DEFAULT_TRANSITION_CASE.expected.startX,
+                                }}
+                                animate={{
+                                    x: defaultTransitionActive
+                                        ? DEFAULT_TRANSITION_CASE.expected.endX
+                                        : DEFAULT_TRANSITION_CASE.expected
+                                              .startX,
+                                }}
+                                transition={{
+                                    duration: 0.01,
+                                    default: {
+                                        delay:
+                                            DEFAULT_TRANSITION_CASE.expected
+                                                .delayMs / 1000,
+                                        duration:
+                                            DEFAULT_TRANSITION_CASE.expected
+                                                .durationMs / 1000,
+                                        ease: "linear",
+                                    },
                                 }}
                             />
                         </div>
