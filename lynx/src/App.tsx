@@ -10,6 +10,7 @@ import {
     NAMED_EASING_CASE,
     NAMED_VARIANTS_CASE,
     NEGATIVE_DELAY_CASE,
+    NULL_KEYFRAME_CASE,
     REACTIVE_ANIMATE_CASE,
     REPEAT_REVERSE_CASE,
     REPEAT_DELAY_CASE,
@@ -154,6 +155,7 @@ export function App() {
     const [tapCount, setTapCount] = useState(0)
     const [hoverCount, setHoverCount] = useState(0)
     const [gestureStatus, setGestureStatus] = useState("resting")
+    const [nullKeyframeActive, setNullKeyframeActive] = useState(false)
     const [reactiveActive, setReactiveActive] = useState(false)
     const [springActive, setSpringActive] = useState(false)
     const [delayActive, setDelayActive] = useState(false)
@@ -459,6 +461,43 @@ export function App() {
                                         : "Press"}
                                 </text>
                             </motion.view>
+                        </view>
+                    </view>
+
+                    {/* null keyframe hydrates from the current MotionValue */}
+                    <view
+                        id="example-null-keyframe"
+                        style={card}
+                        bindtap={() => setNullKeyframeActive(true)}
+                    >
+                        <view style={info}>
+                            <text style={cardTitle}>Null keyframe</text>
+                            <text style={code}>
+                                [null, end] · current value
+                            </text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                id="target-null-keyframe"
+                                style={{ ...dot, backgroundColor: "#e074b8" }}
+                                initial={{
+                                    x: NULL_KEYFRAME_CASE.expected.startX,
+                                }}
+                                animate={{
+                                    x: nullKeyframeActive
+                                        ? [
+                                              null,
+                                              NULL_KEYFRAME_CASE.expected.endX,
+                                          ]
+                                        : NULL_KEYFRAME_CASE.expected.startX,
+                                }}
+                                transition={{
+                                    duration:
+                                        NULL_KEYFRAME_CASE.expected.durationMs /
+                                        1000,
+                                    ease: "linear",
+                                }}
+                            />
                         </view>
                     </view>
 
