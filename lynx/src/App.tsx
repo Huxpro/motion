@@ -2,6 +2,7 @@ import type { CSSProperties } from "@lynx-js/types"
 import type { IntrinsicElements } from "@lynx-js/types"
 import { useState } from "@lynx-js/react"
 import {
+    DELAY_CASE,
     FUNCTION_VARIANTS_CASE,
     KEYFRAMES_CASE,
     MOTION_CREATE_CASE,
@@ -150,6 +151,7 @@ export function App() {
     const [gestureStatus, setGestureStatus] = useState("resting")
     const [reactiveActive, setReactiveActive] = useState(false)
     const [springActive, setSpringActive] = useState(false)
+    const [delayActive, setDelayActive] = useState(false)
     const [reverseActive, setReverseActive] = useState(false)
     const [namedActive, setNamedActive] = useState(false)
     const [arrayActive, setArrayActive] = useState(false)
@@ -289,6 +291,41 @@ export function App() {
                                     stiffness: 140,
                                     damping: 10,
                                     mass: 1,
+                                }}
+                            />
+                        </view>
+                    </view>
+
+                    {/* positive transition delay */}
+                    <view
+                        id="example-transition-delay"
+                        style={card}
+                        bindtap={() => setDelayActive(true)}
+                    >
+                        <view style={info}>
+                            <text style={cardTitle}>
+                                Delay — hold, then move
+                            </text>
+                            <text style={code}>
+                                {delayActive
+                                    ? "delay: 0.4 · running"
+                                    : "tap to verify delayed start"}
+                            </text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                id="target-transition-delay"
+                                style={{ ...dot, backgroundColor: "#21b8a6" }}
+                                initial={{ x: DELAY_CASE.expected.startX }}
+                                animate={{
+                                    x: delayActive
+                                        ? DELAY_CASE.expected.endX
+                                        : DELAY_CASE.expected.startX,
+                                }}
+                                transition={{
+                                    delay: DELAY_CASE.expected.delayMs / 1000,
+                                    duration: 0.4,
+                                    ease: "linear",
                                 }}
                             />
                         </view>

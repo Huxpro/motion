@@ -2,6 +2,7 @@ import { motion } from "framer-motion"
 import { CSSProperties, forwardRef, useState } from "react"
 import type { ComponentPropsWithoutRef } from "react"
 import {
+    DELAY_CASE,
     FUNCTION_VARIANTS_CASE,
     KEYFRAMES_CASE,
     MOTION_CREATE_CASE,
@@ -151,6 +152,7 @@ export function App() {
     const [gestureStatus, setGestureStatus] = useState("resting")
     const [reactiveActive, setReactiveActive] = useState(false)
     const [springActive, setSpringActive] = useState(false)
+    const [delayActive, setDelayActive] = useState(false)
     const [reverseActive, setReverseActive] = useState(false)
     const [namedActive, setNamedActive] = useState(false)
     const [arrayActive, setArrayActive] = useState(false)
@@ -285,6 +287,41 @@ export function App() {
                                     stiffness: 140,
                                     damping: 10,
                                     mass: 1,
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* positive transition delay */}
+                    <div
+                        id="example-transition-delay"
+                        style={card}
+                        onClick={() => setDelayActive(true)}
+                    >
+                        <div style={info}>
+                            <span style={cardTitle}>
+                                Delay — hold, then move
+                            </span>
+                            <span style={code}>
+                                {delayActive
+                                    ? "delay: 0.4 · running"
+                                    : "tap to verify delayed start"}
+                            </span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                id="target-transition-delay"
+                                style={{ ...dot, backgroundColor: "#21b8a6" }}
+                                initial={{ x: DELAY_CASE.expected.startX }}
+                                animate={{
+                                    x: delayActive
+                                        ? DELAY_CASE.expected.endX
+                                        : DELAY_CASE.expected.startX,
+                                }}
+                                transition={{
+                                    delay: DELAY_CASE.expected.delayMs / 1000,
+                                    duration: 0.4,
+                                    ease: "linear",
                                 }}
                             />
                         </div>
