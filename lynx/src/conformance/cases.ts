@@ -1,10 +1,7 @@
 export type ConformanceStatus = "conformant" | "partial" | "blocked"
 export type SupportStatus = "supported" | "partial" | "blocked"
 export type EvidenceLevel =
-    | "dual-renderer"
-    | "lynx-e2e"
-    | "package-test"
-    | "planned"
+    "dual-renderer" | "lynx-e2e" | "package-test" | "planned"
 
 export interface UpstreamSource {
     repository: "motiondivision/motion"
@@ -78,10 +75,11 @@ export interface ConvergenceRecord {
     id: string
     date: string
     title: string
-    kind: "capability" | "architecture" | "evidence"
+    kind: "capability" | "architecture" | "evidence" | "regression"
     status: "merged" | "verified" | "stacked" | "pending"
     lynxStackPr?: number
     motionPr?: number
+    issue?: number
     caseIds: readonly string[]
     lossBefore: number
     lossAfter: number
@@ -98,8 +96,8 @@ const source = (path: string, testName: string): UpstreamSource => ({
 
 /**
  * One entry represents one reviewable upstream behavior, not one visual demo.
- * `partial` means that the Lynx behavior is executable but the isolated
- * Web/Lynx semantic comparison is still missing or narrower than upstream.
+ * `partial` means that the behavior is executable on at least one Lynx target,
+ * but evidence is narrower than upstream or exposes a platform divergence.
  */
 export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
     {
@@ -312,7 +310,8 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         id: "targets/z-index-discrete",
         category: "Targets",
         title: "Discrete zIndex",
-        summary: "zIndex applies at its target value without numeric interpolation.",
+        summary:
+            "zIndex applies at its target value without numeric interpolation.",
         status: "conformant",
         api: ["animate", "zIndex"],
         upstream: source(
@@ -385,11 +384,36 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { targetPx: 20 },
     },
     {
+        id: "targets/css-custom-property",
+        category: "Targets",
+        title: "CSS custom property target",
+        summary:
+            "A previously unseen CSS custom property reaches its target through upstream motion-dom.",
+        status: "partial",
+        api: ["animate", "CSS custom properties", "MotionStyle"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "animates previously unseen CSS variables"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "typed --* keys build without an any cast in the Lynx consumer",
+            "Web and Lynx-for-Web settle at --motion-color: #000 and consume it as a black background",
+            "Android native keeps both the plain ReactLynx control and Motion target transparent",
+        ],
+        gap: "lynx-stack #3466 restores the motion-dom setProperty contract and types, but native ReactLynx drops static --* declarations and var() consumption before Motion runs; tracked in issue #57.",
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: true,
+        },
+    },
+    {
         id: "transitions/repeat-loop-final",
         category: "Transitions",
         title: "Loop final keyframe",
-        summary:
-            "An odd finite loop repeat settles at the animation target.",
+        summary: "An odd finite loop repeat settles at the animation target.",
         status: "conformant",
         api: ["repeat", "repeatType", "repeatDelay", "keyframes"],
         upstream: source(
@@ -1221,6 +1245,10 @@ export const ZERO_UNIT_NORMALIZATION_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/zero-unit-normalization"
 ) as ConformanceCase & { expected: { targetPx: number } }
 
+export const CSS_CUSTOM_PROPERTY_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/css-custom-property"
+) as ConformanceCase
+
 export const REPEAT_LOOP_FINAL_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "transitions/repeat-loop-final"
 ) as ConformanceCase & {
@@ -1489,6 +1517,14 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         evidence: "dual-renderer",
     },
     {
+        id: "css-variable",
+        title: "CSS custom property",
+        summary:
+            "Animate a typed design token on Web/Lynx-for-Web while exposing the native host gap.",
+        api: ["animate", "--*", "var()"],
+        evidence: "dual-renderer",
+    },
+    {
         id: "repeat-loop-final",
         title: "Loop final keyframe",
         summary: "An odd finite loop settles at its target.",
@@ -1729,6 +1765,18 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         contract:
             "Create MotionValues for properties introduced by later targets.",
         exampleId: "unseen-property",
+    },
+    {
+        id: "css-custom-properties",
+        group: "Targets",
+        api: "style/animate {{ '--*': value }}",
+        status: "partial",
+        evidence: "dual-renderer",
+        contract:
+            "Animate typed CSS custom properties through motion-dom setProperty.",
+        boundary:
+            "Web and Lynx-for-Web conform on immutable 9aff526; native ReactLynx drops the same static custom property and var() control before Motion runs (issue #57).",
+        exampleId: "css-variable",
     },
     {
         id: "animate-noop",
@@ -2140,6 +2188,17 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "A common CSS value-type edge directly reuses upstream normalization and settles through Lynx style serialization.",
     },
     {
+        caseId: "targets/css-custom-property",
+        importance: 3,
+        platformFit: 2,
+        mts: 1,
+        reactLynx: 4,
+        css: 4,
+        rationale:
+            "Design-token composition is useful and the Motion adapter is small, but plain native ReactLynx drops --* declarations and var() consumption before animation.",
+        issue: "https://github.com/Huxpro/motion/issues/57",
+    },
+    {
         caseId: "transitions/repeat-loop-final",
         importance: 3,
         platformFit: 5,
@@ -2433,6 +2492,8 @@ const priorityByCase = new Map(
 )
 const lossWeight: Record<ConformanceStatus, number> = {
     conformant: 0,
+    // Partial also covers an evidenced platform divergence, even when both web
+    // renderers conform. It must retain loss until the native boundary closes.
     partial: 0.5,
     blocked: 1,
 }
@@ -2992,6 +3053,35 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 16,
         lossAfter: 18,
         note: "I4/F2/M5/R4/C0 · issue #55 · Web x/y 30/30; immutable Lynx-for-Web 30/0 across 5 repeats; Android native DOM transform is translateX(30px) only · known scope expands tracked 38→39 and blocked 5→6, so loss rises honestly rather than hiding the public API gap.",
+    },
+    {
+        id: "lynx-3466-issue-57",
+        date: "2026-08-12",
+        title: "CSS custom property target",
+        kind: "architecture",
+        status: "verified",
+        lynxStackPr: 3466,
+        motionPr: 59,
+        caseIds: ["targets/css-custom-property"],
+        lossBefore: 18,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I3/F2/M1/R4/C4 · immutable 9aff526 full package set · typed MotionStyle + upstream motion-dom setProperty · Web/Lynx-for-Web variable and consumed background pass 5/5 · Android static ReactLynx control and Motion target both compute transparent · issue #57 · tracked 39→40 and partial 0→1, so rounded loss rises 18→19 as native scope becomes explicit.",
+    },
+    {
+        id: "issue-58-stack-regression",
+        date: "2026-08-12",
+        title: "Full-stack lifecycle regression",
+        kind: "regression",
+        status: "verified",
+        issue: 58,
+        caseIds: [
+            "targets/no-op",
+            "targets/no-op-keyframes",
+            "lifecycle/base-animate",
+        ],
+        lossBefore: WEIGHTED_LOSS,
+        lossAfter: WEIGHTED_LOSS,
+        note: "immutable 9aff526 · CSS custom property focused case passes, but the full headless suite is 33/37: both no-op statuses and declarative onAnimationComplete remain active/missing on Lynx-for-Web · previous bd151a1 suite was 36/36 · issue #58 · metrics stay unchanged until the regression is fixed and revalidated.",
     },
     {
         id: "lynx-3457",

@@ -481,8 +481,8 @@ export function App() {
                                     {tapCount
                                         ? `Tapped ${tapCount}`
                                         : hoverCount
-                                        ? `Hovered ${hoverCount}`
-                                        : "Press"}
+                                          ? `Hovered ${hoverCount}`
+                                          : "Press"}
                                 </text>
                             </motion.view>
                         </view>
@@ -567,7 +567,11 @@ export function App() {
                                 initial={{ opacity: 1, x: 0 }}
                                 animate={{ opacity: [1, 1], x: [0, 0] }}
                                 transition={{
-                                    opacity: { duration: 2, type: "tween", velocity: 100 },
+                                    opacity: {
+                                        duration: 2,
+                                        type: "tween",
+                                        velocity: 100,
+                                    },
                                     x: { type: "spring", velocity: 0 },
                                 }}
                                 onAnimationStart={() =>
@@ -614,7 +618,9 @@ export function App() {
                     <view id="example-z-index" style={card}>
                         <view style={info}>
                             <text style={cardTitle}>Discrete zIndex</text>
-                            <text style={code}>animate: 100 · no interpolation</text>
+                            <text style={code}>
+                                animate: 100 · no interpolation
+                            </text>
                         </view>
                         <view style={demo}>
                             <motion.view
@@ -629,8 +635,12 @@ export function App() {
                     {/* unknown animation types fall back without crashing */}
                     <view id="example-unknown-animation-type" style={card}>
                         <view style={info}>
-                            <text style={cardTitle}>Unknown animation type</text>
-                            <text style={code}>type: "test" · resilient fallback</text>
+                            <text style={cardTitle}>
+                                Unknown animation type
+                            </text>
+                            <text style={code}>
+                                type: "test" · resilient fallback
+                            </text>
                         </view>
                         <view style={demo}>
                             <motion.view
@@ -645,7 +655,9 @@ export function App() {
                     {/* zero-valued units normalize to an animatable number */}
                     <view id="example-zero-unit" style={card}>
                         <view style={info}>
-                            <text style={cardTitle}>Zero-unit normalization</text>
+                            <text style={cardTitle}>
+                                Zero-unit normalization
+                            </text>
                             <text style={code}>borderRadius: 0px → 20</text>
                         </view>
                         <view style={demo}>
@@ -658,6 +670,38 @@ export function App() {
                                 }}
                                 animate={{ borderRadius: 20 }}
                                 transition={{ duration: 0.01 }}
+                            />
+                        </view>
+                    </view>
+
+                    {/* CSS custom properties pass through the style path */}
+                    <view id="example-css-variable" style={card}>
+                        <view style={info}>
+                            <text style={cardTitle}>
+                                CSS variable · partial
+                            </text>
+                            <text style={code}>Web #000 · native gap #57</text>
+                        </view>
+                        <view style={demo}>
+                            <view
+                                id="target-css-variable-static-control"
+                                style={
+                                    {
+                                        ...dot,
+                                        backgroundColor: "var(--static-color)",
+                                        "--static-color": "#000",
+                                    } as any
+                                }
+                            />
+                            <motion.view
+                                id="target-css-variable"
+                                style={{
+                                    ...dot,
+                                    backgroundColor: "var(--motion-color)",
+                                    "--motion-color": "#fff",
+                                }}
+                                animate={{ "--motion-color": "#000" }}
+                                transition={{ type: false }}
                             />
                         </view>
                     </view>
@@ -765,7 +809,9 @@ export function App() {
                     >
                         <view style={info}>
                             <text style={cardTitle}>Reveal, then fade in</text>
-                            <text style={code}>visibility: hidden → visible</text>
+                            <text style={code}>
+                                visibility: hidden → visible
+                            </text>
                         </view>
                         <view style={demo}>
                             <motion.view
@@ -1290,15 +1336,16 @@ export function App() {
                     >
                         <view style={info}>
                             <text style={cardTitle}>HSLA to RGBA</text>
-                            <text style={code}>cross-representation color mix</text>
+                            <text style={code}>
+                                cross-representation color mix
+                            </text>
                         </view>
                         <view style={demo}>
                             <motion.view
                                 id="target-color-representation"
                                 style={{ ...dot, width: "112px" }}
                                 initial={{
-                                    backgroundColor:
-                                        "hsla(345, 100%, 60%, 1)",
+                                    backgroundColor: "hsla(345, 100%, 60%, 1)",
                                 }}
                                 animate={{
                                     backgroundColor: colorRepresentationActive
