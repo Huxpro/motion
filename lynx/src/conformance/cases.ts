@@ -2744,6 +2744,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "I3/F5/M1/R0/C1 · immutable bd151a1 package · zIndex applies target 100 immediately despite a long transition · focused zIndex/spring + hover regression 15/15 · full suite 32/32 · rounded loss remains 17 while raw coverage grows · no native host boundary.",
     },
     {
+        id: "motion-51",
+        date: "2026-08-12",
+        title: "HSLA to RGBA",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 51,
+        caseIds: ["targets/color-hsla-rgba"],
+        lossBefore: 17,
+        lossAfter: 17,
+        note: "I4/F4/M1/R0/C2 · immutable bd151a1 package · upstream mixer produces observable cross-representation intermediate colors and settles rgba(0,136,255,1) · focused color + hover regression 15/15 · full suite 33/33 · rounded loss remains 17 while raw coverage grows · no native host boundary.",
+    },
+    {
         id: "lynx-3457",
         date: "2026-08-11",
         title: "initial={false}",
