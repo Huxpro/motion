@@ -4,6 +4,7 @@ import {
     API_METRICS,
     COLOR_HSLA_RGBA_CASE,
     COLOR_KEYFRAMES_CASE,
+    CSS_CUSTOM_PROPERTY_CASE,
     CONVERGENCE_HISTORY,
     CONFORMANCE_METRICS,
     DELAY_CASE,
@@ -57,7 +58,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(36, { timeout: 15_000 })
+    await expect(animated).toHaveCount(37, { timeout: 15_000 })
 
     const styleOf = (selector: string) =>
         page
@@ -341,9 +342,11 @@ test("manifest case: display none switches to block before entrance", async ({
             target,
             `${renderer} should reveal before opacity entrance completes`
         ).toHaveCSS("display", "block")
-        const opacity = Number(await target.evaluate((element) =>
-            getComputedStyle(element).opacity
-        ))
+        const opacity = Number(
+            await target.evaluate(
+                (element) => getComputedStyle(element).opacity
+            )
+        )
         expect(opacity).toBeGreaterThan(0)
         expect(opacity).toBeLessThan(1)
         await expect(target).toHaveCSS("opacity", "1", {
@@ -385,9 +388,11 @@ test("manifest case: visibility hidden switches to visible before entrance", asy
             target,
             `${renderer} should reveal before opacity entrance completes`
         ).toHaveCSS("visibility", "visible")
-        const opacity = Number(await target.evaluate((element) =>
-            getComputedStyle(element).opacity
-        ))
+        const opacity = Number(
+            await target.evaluate(
+                (element) => getComputedStyle(element).opacity
+            )
+        )
         expect(opacity).toBeGreaterThan(0)
         expect(opacity).toBeLessThan(1)
         await expect(target).toHaveCSS("opacity", "1", {
@@ -505,7 +510,9 @@ test("manifest case: spring velocity animates an equal target", async ({
     await Promise.all([lynxPage.close(), webPage.close()])
 })
 
-test("manifest case: zIndex applies without interpolation", async ({ browser }) => {
+test("manifest case: zIndex applies without interpolation", async ({
+    browser,
+}) => {
     const lynxPage = await browser.newPage()
     const webPage = await browser.newPage()
     const errors: string[] = []
@@ -536,7 +543,9 @@ test("manifest case: zIndex applies without interpolation", async ({ browser }) 
     await Promise.all([lynxPage.close(), webPage.close()])
 })
 
-test("manifest case: unknown animation type does not crash", async ({ browser }) => {
+test("manifest case: unknown animation type does not crash", async ({
+    browser,
+}) => {
     const lynxPage = await browser.newPage()
     const webPage = await browser.newPage()
     const errors: string[] = []
@@ -567,6 +576,57 @@ test("manifest case: unknown animation type does not crash", async ({ browser })
     await Promise.all([lynxPage.close(), webPage.close()])
 })
 
+test("manifest case: CSS custom property reaches its Web target", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const target = page.locator("#target-css-variable")
+        const staticControl = page.locator(
+            "#target-css-variable-static-control"
+        )
+        await expect(target).toBeVisible()
+        await expect(staticControl).toHaveCSS(
+            "background-color",
+            "rgb(0, 0, 0)"
+        )
+        await expect
+            .poll(
+                () =>
+                    target.evaluate((element) =>
+                        getComputedStyle(element)
+                            .getPropertyValue("--motion-color")
+                            .trim()
+                    ),
+                { message: `${renderer} CSS custom property` }
+            )
+            .toBe("#000")
+        await expect(target).toHaveCSS("background-color", "rgb(0, 0, 0)")
+    }
+
+    expect(errors).toEqual([])
+    expect(CSS_CUSTOM_PROPERTY_CASE.status).toBe("partial")
+    expect(CSS_CUSTOM_PROPERTY_CASE.evidence.native).toBe(true)
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
 test("manifest case: zero unit normalizes to an animatable number", async ({
     browser,
 }) => {
@@ -594,9 +654,13 @@ test("manifest case: zero unit normalizes to an animatable number", async ({
         await expect(
             target,
             `${renderer} ${ZERO_UNIT_NORMALIZATION_CASE.upstream.testName}`
-        ).toHaveCSS("border-radius", `${ZERO_UNIT_NORMALIZATION_CASE.expected.targetPx}px`, {
-            timeout: 1000,
-        })
+        ).toHaveCSS(
+            "border-radius",
+            `${ZERO_UNIT_NORMALIZATION_CASE.expected.targetPx}px`,
+            {
+                timeout: 1000,
+            }
+        )
     }
 
     expect(errors).toEqual([])
@@ -1149,12 +1213,18 @@ test("manifest case: HSLA animates to RGBA", async ({ browser }) => {
                 .slice(0, 3)
                 .map(Number)
         )
-        expect(intermediate, `${renderer} should interpolate color`).not.toEqual([
+        expect(
+            intermediate,
+            `${renderer} should interpolate color`
+        ).not.toEqual([
             COLOR_HSLA_RGBA_CASE.expected.startRed,
             COLOR_HSLA_RGBA_CASE.expected.startGreen,
             COLOR_HSLA_RGBA_CASE.expected.startBlue,
         ])
-        expect(intermediate, `${renderer} should not jump to target`).not.toEqual([
+        expect(
+            intermediate,
+            `${renderer} should not jump to target`
+        ).not.toEqual([
             COLOR_HSLA_RGBA_CASE.expected.endRed,
             COLOR_HSLA_RGBA_CASE.expected.endGreen,
             COLOR_HSLA_RGBA_CASE.expected.endBlue,
@@ -1162,7 +1232,11 @@ test("manifest case: HSLA animates to RGBA", async ({ browser }) => {
         await expect
             .poll(() =>
                 target.evaluate((element) =>
-                    (getComputedStyle(element).backgroundColor.match(/\d+/g) ?? [])
+                    (
+                        getComputedStyle(element).backgroundColor.match(
+                            /\d+/g
+                        ) ?? []
+                    )
                         .slice(0, 3)
                         .map(Number)
                 )
@@ -1570,8 +1644,9 @@ test("manifest case: loop repeat with odd count settles at target", async ({
         await target.scrollIntoViewIfNeeded()
         await page.locator("#example-repeat-loop-final").click()
         await page.waitForTimeout(REPEAT_LOOP_FINAL_CASE.expected.settleMs)
-        const x = await target.evaluate((element) =>
-            new DOMMatrixReadOnly(getComputedStyle(element).transform).m41
+        const x = await target.evaluate(
+            (element) =>
+                new DOMMatrixReadOnly(getComputedStyle(element).transform).m41
         )
         expect(
             x,

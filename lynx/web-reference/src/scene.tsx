@@ -309,6 +309,16 @@ export function App() {
                             </span>
                         </div>
                         <div style={demo}>
+                            <div
+                                id="target-css-variable-static-control"
+                                style={
+                                    {
+                                        ...dot,
+                                        backgroundColor: "var(--static-color)",
+                                        "--static-color": "#000",
+                                    } as any
+                                }
+                            />
                             <motion.div
                                 id="target-spring"
                                 style={{ ...dot, backgroundColor: "#f06f44" }}
@@ -477,8 +487,8 @@ export function App() {
                                     {tapCount
                                         ? `Tapped ${tapCount}`
                                         : hoverCount
-                                        ? `Hovered ${hoverCount}`
-                                        : "Press"}
+                                          ? `Hovered ${hoverCount}`
+                                          : "Press"}
                                 </span>
                             </motion.div>
                         </div>
@@ -563,7 +573,11 @@ export function App() {
                                 initial={{ opacity: 1, x: 0 }}
                                 animate={{ opacity: [1, 1], x: [0, 0] }}
                                 transition={{
-                                    opacity: { duration: 2, type: "tween", velocity: 100 },
+                                    opacity: {
+                                        duration: 2,
+                                        type: "tween",
+                                        velocity: 100,
+                                    },
                                     x: { type: "spring", velocity: 0 },
                                 }}
                                 onAnimationStart={() =>
@@ -610,7 +624,9 @@ export function App() {
                     <div id="example-z-index" style={card}>
                         <div style={info}>
                             <span style={cardTitle}>Discrete zIndex</span>
-                            <span style={code}>animate: 100 · no interpolation</span>
+                            <span style={code}>
+                                animate: 100 · no interpolation
+                            </span>
                         </div>
                         <div style={demo}>
                             <motion.div
@@ -625,8 +641,12 @@ export function App() {
                     {/* unknown animation types fall back without crashing */}
                     <div id="example-unknown-animation-type" style={card}>
                         <div style={info}>
-                            <span style={cardTitle}>Unknown animation type</span>
-                            <span style={code}>type: "test" · resilient fallback</span>
+                            <span style={cardTitle}>
+                                Unknown animation type
+                            </span>
+                            <span style={code}>
+                                type: "test" · resilient fallback
+                            </span>
                         </div>
                         <div style={demo}>
                             <motion.div
@@ -641,7 +661,9 @@ export function App() {
                     {/* zero-valued units normalize to an animatable number */}
                     <div id="example-zero-unit" style={card}>
                         <div style={info}>
-                            <span style={cardTitle}>Zero-unit normalization</span>
+                            <span style={cardTitle}>
+                                Zero-unit normalization
+                            </span>
                             <span style={code}>borderRadius: 0px → 20</span>
                         </div>
                         <div style={demo}>
@@ -654,6 +676,30 @@ export function App() {
                                 }}
                                 animate={{ borderRadius: 20 }}
                                 transition={{ duration: 0.01 }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* CSS custom properties pass through the style path */}
+                    <div id="example-css-variable" style={card}>
+                        <div style={info}>
+                            <span style={cardTitle}>
+                                CSS variable · partial
+                            </span>
+                            <span style={code}>Web #000 · native gap #57</span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                id="target-css-variable"
+                                style={
+                                    {
+                                        ...dot,
+                                        backgroundColor: "var(--motion-color)",
+                                        "--motion-color": "#fff",
+                                    } as any
+                                }
+                                animate={{ "--motion-color": "#000" } as any}
+                                transition={{ type: false }}
                             />
                         </div>
                     </div>
@@ -1287,15 +1333,16 @@ export function App() {
                     >
                         <div style={info}>
                             <span style={cardTitle}>HSLA to RGBA</span>
-                            <span style={code}>cross-representation color mix</span>
+                            <span style={code}>
+                                cross-representation color mix
+                            </span>
                         </div>
                         <div style={demo}>
                             <motion.div
                                 id="target-color-representation"
                                 style={{ ...dot, width: "112px" }}
                                 initial={{
-                                    backgroundColor:
-                                        "hsla(345, 100%, 60%, 1)",
+                                    backgroundColor: "hsla(345, 100%, 60%, 1)",
                                 }}
                                 animate={{
                                     backgroundColor: colorRepresentationActive

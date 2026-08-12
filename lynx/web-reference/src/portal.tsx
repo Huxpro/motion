@@ -129,12 +129,16 @@ function recordLabel(record: (typeof CONVERGENCE_HISTORY)[number]) {
     const labels = []
     if (record.lynxStackPr) labels.push(`L#${record.lynxStackPr}`)
     if (record.motionPr) labels.push(`M#${record.motionPr}`)
+    if (record.issue) labels.push(`I#${record.issue}`)
     return labels.join(" / ")
 }
 
 function recordHref(record: (typeof CONVERGENCE_HISTORY)[number]) {
     if (record.lynxStackPr) {
         return `https://github.com/lynx-family/lynx-stack/pull/${record.lynxStackPr}`
+    }
+    if (record.issue) {
+        return `https://github.com/Huxpro/motion/issues/${record.issue}`
     }
     return `https://github.com/Huxpro/motion/pull/${record.motionPr}`
 }
@@ -904,8 +908,8 @@ function Conformance() {
                                 {item.evidence.dualRenderer
                                     ? "Web ↔ Lynx"
                                     : item.evidence.gallery
-                                    ? "Gallery evidence"
-                                    : "Not executable"}
+                                      ? "Gallery evidence"
+                                      : "Not executable"}
                             </span>
                             <span>
                                 {item.evidence.native
