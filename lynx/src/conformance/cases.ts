@@ -363,6 +363,37 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { startScale: 1, peakScale: 1.35 },
     },
     {
+        id: "transitions/repeat-delay",
+        category: "Targets",
+        title: "Repeat delay",
+        summary:
+            "A repeated tween holds its endpoint for repeatDelay before the next iteration begins.",
+        status: "conformant",
+        api: ["transition.repeatDelay"],
+        upstream: source(
+            "packages/motion-dom/src/animation/__tests__/JSAnimation.test.ts",
+            "Correctly applies repeatDelay"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the first iteration reaches its endpoint",
+            "the endpoint remains held throughout repeatDelay",
+            "the next iteration restarts only after the hold",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            startScale: 1,
+            endScale: 1.35,
+            durationMs: 300,
+            holdMs: 300,
+        },
+    },
+    {
         id: "variants/named",
         category: "Variants",
         title: "Named variants",
@@ -637,6 +668,17 @@ export const REPEAT_REVERSE_CASE = CONFORMANCE_CASES.find(
     expected: { startScale: number; peakScale: number }
 }
 
+export const REPEAT_DELAY_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "transitions/repeat-delay"
+) as ConformanceCase & {
+    expected: {
+        startScale: number
+        endScale: number
+        durationMs: number
+        holdMs: number
+    }
+}
+
 export const TAP_GESTURE_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "gestures/tap"
 ) as ConformanceCase & {
@@ -764,6 +806,13 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         title: "Reverse",
         summary: "Reverse repeat preserves scale endpoints.",
         api: ["repeatType: reverse"],
+        evidence: "dual-renderer",
+    },
+    {
+        id: "repeat-delay",
+        title: "Repeat delay",
+        summary: "A repeated tween pauses at its endpoint between iterations.",
+        api: ["repeatDelay"],
         evidence: "dual-renderer",
     },
     {
@@ -1199,6 +1248,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "Finite repeat direction is implemented by the upstream animation sampler with no host-specific adaptation.",
     },
     {
+        caseId: "transitions/repeat-delay",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Common loop-rhythm option reuses upstream endpoint hold sampling without host-specific adaptation.",
+    },
+    {
         caseId: "variants/named",
         importance: 5,
         platformFit: 5,
@@ -1596,6 +1655,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 27,
         lossAfter: 26,
         note: "I3/F5/M1/R0/C0 · upstream negative delay as elapsed · dual-renderer first-change skip and early settle 5/5 · full suite 17/17 · no native timing claim.",
+    },
+    {
+        id: "motion-34",
+        date: "2026-08-12",
+        title: "Repeat delay",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 34,
+        caseIds: ["transitions/repeat-delay"],
+        lossBefore: 26,
+        lossAfter: 25,
+        note: "I4/F5/M1/R0/C0 · upstream endpoint hold semantics · full-timeline dual-renderer hold→restart→settle 5/5 · full suite 18/18 · no native timing claim.",
     },
     {
         id: "lynx-3457",
