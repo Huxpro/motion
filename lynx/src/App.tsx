@@ -313,16 +313,6 @@ export function App() {
                             </text>
                         </view>
                         <view style={demo}>
-                            <view
-                                id="target-css-variable-static-control"
-                                style={
-                                    {
-                                        ...dot,
-                                        backgroundColor: "var(--static-color)",
-                                        "--static-color": "#000",
-                                    } as any
-                                }
-                            />
                             <motion.view
                                 id="target-spring"
                                 style={{ ...dot, backgroundColor: "#f06f44" }}
@@ -693,6 +683,16 @@ export function App() {
                             <text style={code}>Web #000 · native gap #57</text>
                         </view>
                         <view style={demo}>
+                            <view
+                                id="target-css-variable-static-control"
+                                style={
+                                    {
+                                        ...dot,
+                                        backgroundColor: "var(--static-color)",
+                                        "--static-color": "#000",
+                                    } as any
+                                }
+                            />
                             <motion.view
                                 id="target-css-variable"
                                 style={{
