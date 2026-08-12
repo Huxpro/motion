@@ -16,6 +16,7 @@ import {
     GALLERY_EXAMPLES,
     GESTURE_TRANSITION_END_CASE,
     HOVER_GESTURE_CASE,
+    INHERITED_VARIANT_LIFECYCLE_CASE,
     INSTANT_TRANSITION_CASE,
     INITIAL_FALSE_CASE,
     INITIAL_FALSE_PROPAGATION_CASE,
@@ -315,6 +316,43 @@ test("manifest case: parent initial false reaches a variant child", async ({
             .toEqual(INITIAL_FALSE_PROPAGATION_CASE.expected)
     }
 
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: inherited child reports variant lifecycle", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+    }
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({
+                conformanceMode: "inherited-variant-lifecycle",
+            })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=inherited-variant-lifecycle"
+        ),
+    ])
+
+    for (const [renderer, page] of [
+        ["Lynx", lynxPage],
+        ["Web", webPage],
+    ] as const) {
+        const status = page.locator("#status-inherited-variant-lifecycle")
+        await expect(status, `${renderer} lifecycle`).toHaveText(
+            `start:${INHERITED_VARIANT_LIFECYCLE_CASE.expectedDefinitions.start}|complete:${INHERITED_VARIANT_LIFECYCLE_CASE.expectedDefinitions.complete}`
+        )
+    }
+    expect(errors).toEqual([])
     await Promise.all([lynxPage.close(), webPage.close()])
 })
 

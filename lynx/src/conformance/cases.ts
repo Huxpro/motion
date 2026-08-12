@@ -1323,6 +1323,35 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expectedDefinition: "visible",
     },
     {
+        id: "lifecycle/inherited-variant-child",
+        category: "Lifecycle",
+        title: "Inherited variant child lifecycle",
+        summary:
+            "A child that inherits a parent variant label reports that label at start and completion.",
+        status: "conformant",
+        api: ["variants", "onAnimationStart", "onAnimationComplete"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "child onAnimationComplete triggers from parent animations"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the inherited child reports start:visible",
+            "the inherited child reports complete:visible",
+            "start is observed before completion in both renderers",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expectedDefinitions: {
+            start: "visible",
+            complete: "visible",
+        },
+    },
+    {
         id: "initial/false",
         category: "Targets",
         title: "initial={false}",
@@ -1813,6 +1842,12 @@ export const FUNCTION_VARIANTS_CASE = CONFORMANCE_CASES.find(
 export const ANIMATION_LIFECYCLE_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "lifecycle/base-animate"
 ) as ConformanceCase & { expectedDefinition: string }
+
+export const INHERITED_VARIANT_LIFECYCLE_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "lifecycle/inherited-variant-child"
+) as ConformanceCase & {
+    expectedDefinitions: { start: string; complete: string }
+}
 
 export const TAP_ANIMATION_LIFECYCLE_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "lifecycle/tap-animation"
@@ -2452,6 +2487,16 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         exampleId: "function-variant",
     },
     {
+        id: "inherited-variant-lifecycle",
+        group: "Lifecycle",
+        api: "inherited variant lifecycle",
+        status: "supported",
+        evidence: "dual-renderer",
+        contract:
+            "Report the inherited variant label at child animation start and completion.",
+        exampleId: "inherited-variant-lifecycle",
+    },
+    {
         id: "animation-controls",
         group: "Lifecycle",
         api: "AnimationControls",
@@ -2967,6 +3012,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Callback order and definitions are verified across Web, Lynx, and native Explorer.",
+    },
+    {
+        caseId: "lifecycle/inherited-variant-child",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Common component telemetry already flows through the inherited definition and existing lifecycle bridge without a new host boundary.",
     },
     {
         caseId: "lifecycle/tap-animation",
@@ -3859,5 +3914,17 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 10,
         lossAfter: WEIGHTED_LOSS,
         note: "I5/F5/M1/R1/C0 · immutable f6b0e90 motion/react/react-umd set · parent initial={false} reaches inherited variant children so their first frame is the final animate keyframe · package 149/149 and complete dual-renderer suite 51/51 · no Full Demo or native claim.",
+    },
+    {
+        id: "motion-72",
+        date: "2026-08-12",
+        title: "Inherited variant child lifecycle evidence",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 72,
+        caseIds: ["lifecycle/inherited-variant-child"],
+        lossBefore: 9,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F5/M1/R1/C0 · immutable f6b0e90 motion/react/react-umd set · existing runtime reports the inherited visible definition at child start and completion with no lynx-stack source diff · complete dual-renderer suite 52/52 · loss stays 9 after expanding the measured surface · no Full Demo or native claim.",
     },
 ]
