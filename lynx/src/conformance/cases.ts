@@ -257,6 +257,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { settleMs: 100 },
     },
     {
+        id: "targets/no-op-keyframes",
+        category: "Targets",
+        title: "Equal keyframe no-op",
+        summary:
+            "Equal keyframe arrays return to idle without starting a long animation.",
+        status: "conformant",
+        api: ["animate", "keyframes", "onAnimationStart"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "doesn't animate no-op keyframes"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "equal opacity and transform keyframe arrays do not remain active",
+            "velocity and spring options do not force equal keyframes to run",
+            "both renderers report idle after two frames",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { settleMs: 100 },
+    },
+    {
         id: "targets/keyframes",
         category: "Targets",
         title: "Value keyframes",
@@ -987,6 +1013,10 @@ export const NO_OP_TARGET_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/no-op"
 ) as ConformanceCase & { expected: { settleMs: number } }
 
+export const NO_OP_KEYFRAMES_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/no-op-keyframes"
+) as ConformanceCase & { expected: { settleMs: number } }
+
 export const KEYFRAMES_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/keyframes"
 ) as ConformanceCase & {
@@ -1197,6 +1227,13 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         title: "Equal target no-op",
         summary: "Equal targets return to idle without a long animation.",
         api: ["animate", "onAnimationComplete"],
+        evidence: "dual-renderer",
+    },
+    {
+        id: "noop-keyframes",
+        title: "Equal keyframe no-op",
+        summary: "Equal keyframe arrays remain idle instead of running.",
+        api: ["animate", "keyframes", "onAnimationStart"],
         evidence: "dual-renderer",
     },
     {
@@ -1774,6 +1811,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Common lifecycle and efficiency invariant is handled by the upstream MotionValue animation.",
+    },
+    {
+        caseId: "targets/no-op-keyframes",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Core keyframe lifecycle invariant is already handled by the upstream MotionValue animation on immutable Lynx.",
     },
     {
         caseId: "targets/keyframes",
@@ -2501,6 +2548,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 19,
         lossAfter: 19,
         note: "I4/F5/M1/R0/C1 · immutable bd151a1 package · visibility switches from hidden to visible before opacity entrance completes · focused visibility + gesture regression 15/15 · full suite 29/29 · rounded loss remains 19 while raw coverage grows · no native host boundary.",
+    },
+    {
+        id: "motion-48",
+        date: "2026-08-12",
+        title: "Equal keyframe no-op",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 48,
+        caseIds: ["targets/no-op-keyframes"],
+        lossBefore: 19,
+        lossAfter: 18,
+        note: "I4/F5/M1/R0/C0 · immutable bd151a1 package · equal opacity and transform keyframe arrays remain idle · focused scalar/keyframe no-op + hover regression 15/15 · full suite 30/30 · no native host boundary.",
     },
     {
         id: "lynx-3457",
