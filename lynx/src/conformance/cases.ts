@@ -452,6 +452,38 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { startScale: 1, peakScale: 1.35 },
     },
     {
+        id: "transitions/repeat-mirror",
+        category: "Targets",
+        title: "Mirror repeat",
+        summary:
+            "A mirror repeat swaps keyframes while preserving the named easing direction on the return generator.",
+        status: "conformant",
+        api: ["transition.repeat", 'repeatType="mirror"'],
+        upstream: source(
+            "packages/motion-dom/src/animation/__tests__/JSAnimation.test.ts",
+            "Correctly applies repeat type 'mirror'"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the outward first quarter remains near the start under easeIn",
+            "the mirrored return first quarter remains near the outward endpoint",
+            "the animation settles back at its starting value",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            startX: -42,
+            endX: 42,
+            durationMs: 500,
+            outwardQuarterMaximum: -20,
+            returnQuarterMinimum: 20,
+        },
+    },
+    {
         id: "transitions/repeat-delay",
         category: "Targets",
         title: "Repeat delay",
@@ -780,6 +812,18 @@ export const REPEAT_REVERSE_CASE = CONFORMANCE_CASES.find(
     expected: { startScale: number; peakScale: number }
 }
 
+export const REPEAT_MIRROR_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "transitions/repeat-mirror"
+) as ConformanceCase & {
+    expected: {
+        startX: number
+        endX: number
+        durationMs: number
+        outwardQuarterMaximum: number
+        returnQuarterMinimum: number
+    }
+}
+
 export const REPEAT_DELAY_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "transitions/repeat-delay"
 ) as ConformanceCase & {
@@ -932,6 +976,14 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         title: "Reverse",
         summary: "Reverse repeat preserves scale endpoints.",
         api: ["repeatType: reverse"],
+        evidence: "dual-renderer",
+    },
+    {
+        id: "repeat-mirror",
+        title: "Mirror",
+        summary:
+            "Mirror repeat swaps endpoints without reversing its easing curve.",
+        api: ["repeatType: mirror", "easeIn"],
         evidence: "dual-renderer",
     },
     {
@@ -1405,6 +1457,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "Finite repeat direction is implemented by the upstream animation sampler with no host-specific adaptation.",
     },
     {
+        caseId: "transitions/repeat-mirror",
+        importance: 3,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Mirror's distinct easing direction reuses the upstream mirrored generator without host-specific adaptation.",
+    },
+    {
         caseId: "transitions/repeat-delay",
         importance: 4,
         platformFit: 5,
@@ -1860,6 +1922,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 23,
         lossAfter: WEIGHTED_LOSS,
         note: "I3/F2/M5/R4/C0 · Web invokes both per-segment callbacks; Lynx invokes neither and silently settles · architecture blocker issue #37 · no Gallery claim.",
+    },
+    {
+        id: "motion-39",
+        date: "2026-08-12",
+        title: "Mirror repeat",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 39,
+        caseIds: ["transitions/repeat-mirror"],
+        lossBefore: 26,
+        lossAfter: 25,
+        note: "I3/F5/M1/R0/C0 · upstream mirrored-generator semantics · named easeIn outward/return focused + gesture regression 15/15 · full suite 21/21 · no native host boundary.",
     },
     {
         id: "lynx-3457",

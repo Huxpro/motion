@@ -13,6 +13,7 @@ import {
     REACTIVE_ANIMATE_CASE,
     REPEAT_REVERSE_CASE,
     REPEAT_DELAY_CASE,
+    REPEAT_MIRROR_CASE,
     SPRING_CASE,
 } from "./conformance/cases.js"
 import { motion } from "./motion/index.js"
@@ -159,6 +160,7 @@ export function App() {
     const [negativeDelayActive, setNegativeDelayActive] = useState(false)
     const [reverseActive, setReverseActive] = useState(false)
     const [repeatDelayActive, setRepeatDelayActive] = useState(false)
+    const [mirrorActive, setMirrorActive] = useState(false)
     const [keyframeTimesActive, setKeyframeTimesActive] = useState(false)
     const [namedEasingActive, setNamedEasingActive] = useState(false)
     const [namedActive, setNamedActive] = useState(false)
@@ -535,6 +537,44 @@ export function App() {
                                     repeatDelay:
                                         REPEAT_DELAY_CASE.expected.holdMs /
                                         1000,
+                                }}
+                            />
+                        </view>
+                    </view>
+
+                    {/* mirror swaps endpoints without reversing easeIn */}
+                    <view
+                        id="example-repeat-mirror"
+                        style={card}
+                        bindtap={() => setMirrorActive(true)}
+                    >
+                        <view style={info}>
+                            <text style={cardTitle}>Mirror repeat</text>
+                            <text style={code}>
+                                {mirrorActive
+                                    ? "easeIn · mirror · easeIn"
+                                    : "tap to mirror easing"}
+                            </text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                id="target-repeat-mirror"
+                                style={{ ...dot, backgroundColor: "#35b6a0" }}
+                                initial={{
+                                    x: REPEAT_MIRROR_CASE.expected.startX,
+                                }}
+                                animate={{
+                                    x: mirrorActive
+                                        ? REPEAT_MIRROR_CASE.expected.endX
+                                        : REPEAT_MIRROR_CASE.expected.startX,
+                                }}
+                                transition={{
+                                    duration:
+                                        REPEAT_MIRROR_CASE.expected.durationMs /
+                                        1000,
+                                    ease: "easeIn",
+                                    repeat: 1,
+                                    repeatType: "mirror",
                                 }}
                             />
                         </view>
