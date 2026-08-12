@@ -677,6 +677,34 @@ button {
     list-style: none;
 }
 
+.history-heading {
+    margin: 0;
+    padding: 28px 0 18px;
+    border-bottom: 1px solid var(--border);
+    font-size: 1rem;
+}
+
+.history-archive {
+    border-top: 1px solid var(--border);
+}
+
+.history-archive > summary {
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    color: var(--foreground);
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.history-archive > summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
 .convergence-ledger li {
     min-height: 76px;
     display: grid;
@@ -1445,6 +1473,63 @@ button {
     text-underline-offset: 4px;
 }
 
+/* Information architecture: the monitor is a concise decision surface. */
+.monitor-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.priority-monitor {
+    border-bottom: 1px solid var(--border);
+}
+
+.priority-monitor .monitor-section-header {
+    padding-right: 0;
+    padding-left: 0;
+}
+
+.monitor-section-header p {
+    max-width: 680px;
+    margin: 8px 0 0;
+    color: var(--foreground-feint);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.priority-monitor .monitor-section-header > span {
+    color: var(--foreground-feint);
+    font-size: 0.875rem;
+}
+
+.priority-monitor .priority-list {
+    padding: 0;
+}
+
+.priority-monitor .priority-list li {
+    min-height: 80px;
+    grid-template-columns: 44px minmax(0, 1fr) 64px;
+}
+
+.priority-monitor .priority-list strong,
+.priority-monitor .priority-list a {
+    font-size: 1rem;
+}
+
+.conformance-intro > p {
+    max-width: 480px;
+    margin: 0;
+    color: var(--foreground-feint);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.case-evidence {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 12px;
+    padding-top: 4px;
+    border-top: 1px solid var(--border);
+}
+
 @media (prefers-reduced-motion: reduce) {
     html {
         scroll-behavior: auto;
@@ -1490,7 +1575,7 @@ button {
     }
 
     .monitor-metrics {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .monitor-metric:nth-child(3) {
@@ -1498,7 +1583,7 @@ button {
     }
 
     .monitor-metric:nth-child(-n + 3) {
-        border-bottom: 1px solid var(--border);
+        border-bottom: 0;
     }
 
     .monitor-split {
@@ -1631,6 +1716,10 @@ button {
     .monitor-metric:last-child {
         grid-column: auto;
         border-right: 0;
+        border-bottom: 0;
+    }
+
+    .monitor-metric {
         border-bottom: 0;
     }
 
@@ -1788,6 +1877,10 @@ button {
     .case-status {
         grid-column: 1;
         padding: 18px 0;
+    }
+
+    .case-evidence {
+        width: 100%;
     }
 
     .case-title-line {

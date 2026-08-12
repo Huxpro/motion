@@ -15,10 +15,10 @@ import "./portal.css"
 type View = "overview" | "examples" | "api" | "conformance"
 
 const VIEW_LABELS: Record<View, string> = {
-    overview: "Overview",
-    examples: "Examples",
+    overview: "Monitor",
+    examples: "Gallery",
     api: "API",
-    conformance: "Conformance",
+    conformance: "Tests",
 }
 
 const STATUS_LABEL: Record<SupportStatus, string> = {
@@ -49,7 +49,7 @@ function Masthead({ view }: { view: View }) {
             <a
                 className="wordmark"
                 href="?view=overview"
-                aria-label="Motion on Lynx evidence overview"
+                aria-label="Motion on Lynx monitor"
             >
                 <span className="wordmark-motion">Motion</span>
                 <span className="wordmark-cross">/</span>
@@ -65,6 +65,7 @@ function Masthead({ view }: { view: View }) {
                                 : "nav-link"
                         }
                         href={`?view=${item}`}
+                        aria-current={view === item ? "page" : undefined}
                     >
                         {VIEW_LABELS[item]}
                     </a>
@@ -79,27 +80,6 @@ function Masthead({ view }: { view: View }) {
                 Stack #3457
             </a>
         </header>
-    )
-}
-
-function CoverageStrip() {
-    const supportedWidth = `${
-        (API_METRICS.supported / API_METRICS.total) * 100
-    }%`
-    const partialWidth = `${(API_METRICS.partial / API_METRICS.total) * 100}%`
-    const blockedWidth = `${(API_METRICS.blocked / API_METRICS.total) * 100}%`
-    return (
-        <div
-            className="coverage-strip"
-            aria-label="Atomic API support distribution"
-        >
-            <div
-                className="coverage-supported"
-                style={{ width: supportedWidth }}
-            />
-            <div className="coverage-partial" style={{ width: partialWidth }} />
-            <div className="coverage-blocked" style={{ width: blockedWidth }} />
-        </div>
     )
 }
 
@@ -143,13 +123,39 @@ function recordHref(record: (typeof CONVERGENCE_HISTORY)[number]) {
     return `https://github.com/Huxpro/motion/pull/${record.motionPr}`
 }
 
+function ConvergenceRecord({
+    record,
+}: {
+    record: (typeof CONVERGENCE_HISTORY)[number]
+}) {
+    return (
+        <li>
+            <a href={recordHref(record)} target="_blank" rel="noreferrer">
+                {recordLabel(record)}
+            </a>
+            <div>
+                <strong>{record.title}</strong>
+                <p>{record.note}</p>
+            </div>
+            <span className={`record-status status-${record.status}`}>
+                {record.status}
+            </span>
+            <b>
+                {record.lossBefore} → {record.lossAfter}
+                {record.expectedLossAfter !== undefined &&
+                    ` → ${record.expectedLossAfter}?`}
+            </b>
+        </li>
+    )
+}
+
 function LossMonitor() {
     const width = 960
     const height = 268
     const left = 52
     const right = 28
     const top = 24
-    const bottom = 62
+    const bottom = 34
     const expectedSpace = 112
     const plotHeight = height - top - bottom
     const x = (index: number) =>
@@ -165,6 +171,8 @@ function LossMonitor() {
         .find((record) => record.expectedLossAfter !== undefined)
     const pendingIndex = pending ? CONVERGENCE_HISTORY.indexOf(pending) : -1
     const expectedX = width - right
+    const recentRecords = [...CONVERGENCE_HISTORY].slice(-8).reverse()
+    const earlierRecords = [...CONVERGENCE_HISTORY].slice(0, -8).reverse()
 
     return (
         <section className="loss-monitor" aria-labelledby="loss-heading">
@@ -207,28 +215,16 @@ function LossMonitor() {
                     <polyline className="loss-line" points={points} />
                     {CONVERGENCE_HISTORY.map((record, index) => (
                         <g key={record.id}>
+                            <title>
+                                {recordLabel(record)} · {record.title} · loss{" "}
+                                {record.lossAfter}
+                            </title>
                             <circle
                                 className="loss-point"
                                 cx={x(index)}
                                 cy={y(record.lossAfter)}
                                 r="5"
                             />
-                            <text
-                                className="loss-value"
-                                x={x(index)}
-                                y={y(record.lossAfter) - 12}
-                                textAnchor="middle"
-                            >
-                                {record.lossAfter}
-                            </text>
-                            <text
-                                className="loss-pr-label"
-                                x={x(index)}
-                                y={height - 28}
-                                textAnchor="middle"
-                            >
-                                {recordLabel(record)}
-                            </text>
                         </g>
                     ))}
                     {pending?.expectedLossAfter !== undefined && (
@@ -266,33 +262,27 @@ function LossMonitor() {
                     )}
                 </svg>
             </div>
+            <h3 className="history-heading">Recent changes</h3>
             <ol className="convergence-ledger">
-                {CONVERGENCE_HISTORY.map((record) => (
-                    <li key={record.id}>
-                        <a
-                            href={recordHref(record)}
-                            target="_blank"
-                            rel="noreferrer"
-                        >
-                            {recordLabel(record)}
-                        </a>
-                        <div>
-                            <strong>{record.title}</strong>
-                            <p>{record.note}</p>
-                        </div>
-                        <span
-                            className={`record-status status-${record.status}`}
-                        >
-                            {record.status}
-                        </span>
-                        <b>
-                            {record.lossBefore} → {record.lossAfter}
-                            {record.expectedLossAfter !== undefined &&
-                                ` → ${record.expectedLossAfter}?`}
-                        </b>
-                    </li>
+                {recentRecords.map((record) => (
+                    <ConvergenceRecord key={record.id} record={record} />
                 ))}
             </ol>
+            {earlierRecords.length > 0 && (
+                <details className="history-archive">
+                    <summary>
+                        Show {earlierRecords.length} earlier records
+                    </summary>
+                    <ol className="convergence-ledger">
+                        {earlierRecords.map((record) => (
+                            <ConvergenceRecord
+                                key={record.id}
+                                record={record}
+                            />
+                        ))}
+                    </ol>
+                </details>
+            )}
         </section>
     )
 }
@@ -305,40 +295,12 @@ function Overview() {
     const exactPercent = Math.round(
         (CONFORMANCE_METRICS.conformant / CONFORMANCE_METRICS.tracked) * 100
     )
-    const galleryPercent = Math.round(
-        (CONFORMANCE_METRICS.gallery / CONFORMANCE_METRICS.tracked) * 100
-    )
-    const packageTestCount = CONFORMANCE_CASES.filter(
-        (item) => item.evidence.packageTest
-    ).length
-    const packageTestPercent = Math.round(
-        (packageTestCount / CONFORMANCE_METRICS.tracked) * 100
-    )
-    const nativePercent = Math.round(
-        (CONFORMANCE_METRICS.native / CONFORMANCE_METRICS.tracked) * 100
-    )
-    const groups = Array.from(
-        new Set(ATOMIC_CAPABILITIES.map((item) => item.group))
-    ).map((group) => {
-        const items = ATOMIC_CAPABILITIES.filter((item) => item.group === group)
-        return {
-            group,
-            total: items.length,
-            supported: items.filter((item) => item.status === "supported")
-                .length,
-            partial: items.filter((item) => item.status === "partial").length,
-            blocked: items.filter((item) => item.status === "blocked").length,
-        }
-    })
-    const blockers = ATOMIC_CAPABILITIES.filter(
-        (item) => item.status === "blocked"
-    )
 
     return (
         <main className="page overview-page" id="main-content">
             <header className="monitor-header">
                 <div className="monitor-title">
-                    <h1>Motion / Lynx status</h1>
+                    <h1>Motion / Lynx monitor</h1>
                     <p>
                         <a
                             href="https://github.com/lynx-family/lynx-stack/pull/3457"
@@ -355,12 +317,13 @@ function Overview() {
                         >
                             #3455
                         </a>{" "}
-                        · validated runtime remains #3436 · live status in PR
-                        checks
+                        · runtime baseline #3436
                     </p>
                 </div>
                 <div className="monitor-verdict">
-                    <span className="monitor-verdict-label">Compatibility</span>
+                    <span className="monitor-verdict-label">
+                        Current boundary
+                    </span>
                     <strong>Useful subset, not drop-in compatible</strong>
                     <span>Upstream source 12.40.0 · Web baseline 13.0.0</span>
                 </div>
@@ -376,255 +339,57 @@ function Overview() {
                         {API_METRICS.supported + API_METRICS.partial} /{" "}
                         {API_METRICS.total}
                     </strong>
-                    <small>
-                        {implementationPercent}% implemented or partial
-                    </small>
-                    <i style={{ width: `${implementationPercent}%` }} />
+                    <small>{implementationPercent}% supported or partial</small>
                 </a>
                 <a className="monitor-metric" href="?view=conformance">
-                    <span>Exact parity</span>
+                    <span>Exact conformance</span>
                     <strong>
                         {CONFORMANCE_METRICS.conformant} /{" "}
                         {CONFORMANCE_METRICS.tracked}
                     </strong>
-                    <small>{exactPercent}% dual-renderer conformance</small>
-                    <i style={{ width: `${Math.max(3, exactPercent)}%` }} />
-                </a>
-                <a className="monitor-metric" href="?view=conformance">
-                    <span>Package evidence</span>
-                    <strong>
-                        {packageTestCount} / {CONFORMANCE_METRICS.tracked}
-                    </strong>
-                    <small>
-                        {packageTestPercent}% have focused package tests
-                    </small>
-                    <i style={{ width: `${packageTestPercent}%` }} />
-                </a>
-                <a className="monitor-metric" href="?view=examples">
-                    <span>Gallery runnable</span>
-                    <strong>
-                        {CONFORMANCE_METRICS.gallery} /{" "}
-                        {CONFORMANCE_METRICS.tracked}
-                    </strong>
-                    <small>{galleryPercent}% executable in both panes</small>
-                    <i style={{ width: `${galleryPercent}%` }} />
-                </a>
-                <a className="monitor-metric" href="?view=conformance">
-                    <span>Weighted loss</span>
-                    <strong>{WEIGHTED_LOSS}</strong>
-                    <small>importance-adjusted unresolved semantics</small>
-                    <i style={{ width: `${100 - WEIGHTED_LOSS}%` }} />
-                </a>
-                <a className="monitor-metric" href="?view=conformance">
-                    <span>Native evidence</span>
-                    <strong>
-                        {CONFORMANCE_METRICS.native} /{" "}
-                        {CONFORMANCE_METRICS.tracked}
-                    </strong>
-                    <small>{nativePercent}% recorded on a native client</small>
-                    <i style={{ width: `${Math.max(3, nativePercent)}%` }} />
+                    <small>{exactPercent}% of the tracked upstream slice</small>
                 </a>
             </section>
 
-            <section className="monitor-split">
-                <article className="capability-monitor">
-                    <header className="monitor-section-header">
-                        <h2>API progress by area</h2>
-                        <a href="?view=api">Open API inventory →</a>
-                    </header>
-                    <div
-                        className="capability-table"
-                        role="table"
-                        aria-label="Atomic API status by area"
-                    >
-                        <div
-                            className="capability-row capability-row-head"
-                            role="row"
-                        >
-                            <span role="columnheader">Area</span>
-                            <span role="columnheader">Supported</span>
-                            <span role="columnheader">Partial</span>
-                            <span role="columnheader">Blocked</span>
-                            <span role="columnheader">Distribution</span>
-                        </div>
-                        {groups.map((group) => (
-                            <div
-                                className="capability-row"
-                                role="row"
-                                key={group.group}
-                            >
-                                <strong role="cell">{group.group}</strong>
-                                <span role="cell">{group.supported}</span>
-                                <span role="cell">{group.partial}</span>
-                                <span role="cell">{group.blocked}</span>
-                                <div
-                                    className="group-distribution"
-                                    role="cell"
-                                    aria-label={`${group.group}: ${group.supported} supported, ${group.partial} partial, ${group.blocked} blocked`}
-                                >
-                                    <i
-                                        className="group-supported"
-                                        style={{
-                                            width: `${
-                                                (group.supported /
-                                                    group.total) *
-                                                100
-                                            }%`,
-                                        }}
-                                    />
-                                    <i
-                                        className="group-partial"
-                                        style={{
-                                            width: `${
-                                                (group.partial / group.total) *
-                                                100
-                                            }%`,
-                                        }}
-                                    />
-                                    <i
-                                        className="group-blocked"
-                                        style={{
-                                            width: `${
-                                                (group.blocked / group.total) *
-                                                100
-                                            }%`,
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        ))}
+            <section className="priority-monitor">
+                <header className="monitor-section-header">
+                    <div>
+                        <h2>Next gaps</h2>
+                        <p>Ranked by usage value and implementation fit.</p>
                     </div>
-                </article>
-
-                <aside className="blocker-monitor">
-                    <header className="monitor-section-header">
-                        <h2>Ranked next gaps</h2>
-                        <span>{blockers.length} API blockers</span>
-                    </header>
-                    <ol className="priority-list">
-                        {PRIORITIZED_GAPS.slice(0, 5).map((item, index) => (
-                            <li key={item.case.id}>
-                                <span>
-                                    {String(index + 1).padStart(2, "0")}
-                                </span>
-                                <div>
-                                    {item.priority.issue ? (
-                                        <a
-                                            href={item.priority.issue}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                        >
-                                            {item.case.title}
-                                        </a>
-                                    ) : (
-                                        <strong>{item.case.title}</strong>
-                                    )}
-                                    <small>
-                                        I{item.priority.importance} · F
-                                        {item.priority.platformFit} · M
-                                        {item.priority.mts} · R
-                                        {item.priority.reactLynx} · C
-                                        {item.priority.css}
-                                    </small>
-                                </div>
-                                <b>{item.score.toFixed(1)}</b>
-                            </li>
-                        ))}
-                    </ol>
-                </aside>
+                    <span>Priority score</span>
+                </header>
+                <ol className="priority-list">
+                    {PRIORITIZED_GAPS.slice(0, 5).map((item, index) => (
+                        <li key={item.case.id}>
+                            <span>{String(index + 1).padStart(2, "0")}</span>
+                            <div>
+                                {item.priority.issue ? (
+                                    <a
+                                        href={item.priority.issue}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        {item.case.title}
+                                    </a>
+                                ) : (
+                                    <strong>{item.case.title}</strong>
+                                )}
+                                <small>
+                                    Importance {item.priority.importance} ·
+                                    platform fit {item.priority.platformFit} ·
+                                    MTS {item.priority.mts} · ReactLynx{" "}
+                                    {item.priority.reactLynx} · CSS{" "}
+                                    {item.priority.css}
+                                </small>
+                            </div>
+                            <b>{item.score.toFixed(1)}</b>
+                        </li>
+                    ))}
+                </ol>
             </section>
 
             <LossMonitor />
-
-            <section className="test-monitor">
-                <header className="monitor-section-header test-monitor-header">
-                    <h2>
-                        Upstream contract evidence (
-                        {CONFORMANCE_METRICS.tracked})
-                    </h2>
-                    <div className="test-summary">
-                        <span>
-                            <i className="summary-supported" />
-                            {CONFORMANCE_METRICS.conformant} conformant
-                        </span>
-                        <span>
-                            <i className="summary-partial" />
-                            {CONFORMANCE_METRICS.partial} partial
-                        </span>
-                        <span>
-                            <i className="summary-blocked" />
-                            {CONFORMANCE_METRICS.blocked} blocked
-                        </span>
-                    </div>
-                </header>
-                <div className="test-table-scroll">
-                    <div
-                        className="test-table"
-                        role="table"
-                        aria-label="Upstream conformance evidence matrix"
-                    >
-                        <div className="test-row test-row-head" role="row">
-                            <span role="columnheader">
-                                Contract / upstream test
-                            </span>
-                            <span role="columnheader">Package</span>
-                            <span role="columnheader">Gallery</span>
-                            <span role="columnheader">Dual</span>
-                            <span role="columnheader">Native</span>
-                            <span role="columnheader">Result</span>
-                        </div>
-                        {CONFORMANCE_CASES.map((item, index) => (
-                            <div className="test-row" role="row" key={item.id}>
-                                <div className="test-contract" role="cell">
-                                    <span>
-                                        {String(index + 1).padStart(2, "0")} /{" "}
-                                        {item.category}
-                                    </span>
-                                    <strong>{item.title}</strong>
-                                    <small>{item.upstream.testName}</small>
-                                </div>
-                                <EvidenceMark
-                                    available={item.evidence.packageTest}
-                                    label="Package test"
-                                />
-                                <EvidenceMark
-                                    available={item.evidence.gallery}
-                                    label="Gallery"
-                                />
-                                <EvidenceMark
-                                    available={item.evidence.dualRenderer}
-                                    label="Dual renderer"
-                                />
-                                <EvidenceMark
-                                    available={item.evidence.native}
-                                    label="Native evidence"
-                                />
-                                <StatusMark
-                                    status={
-                                        item.status === "conformant"
-                                            ? "supported"
-                                            : item.status
-                                    }
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-                <footer className="test-monitor-footer">
-                    Evidence availability is not a live CI result. Open the{" "}
-                    <a href="?view=conformance">conformance ledger</a> for
-                    source paths, assertions, and gaps.
-                </footer>
-            </section>
-
-            <section className="gallery-showoff">
-                <h2>Gallery ({GALLERY_EXAMPLES.length} live scenarios)</h2>
-                <p>
-                    Compare the supported subset in Web Motion and ReactLynx.
-                    Gallery evidence alone does not imply exact conformance.
-                </p>
-                <a href="?view=examples">Open Web / Lynx Gallery →</a>
-            </section>
         </main>
     )
 }
@@ -638,11 +403,11 @@ function Examples() {
         <main className="page examples-page" id="main-content">
             <header className="page-intro split-intro">
                 <div>
-                    <h1>Compare Web and Lynx.</h1>
+                    <h1>Runtime gallery</h1>
                 </div>
                 <p>
-                    Use both panes. Web runs the locked upstream baseline; Lynx
-                    runs the #3436 adapter through Lynx for Web.
+                    Web runs the locked upstream baseline. Lynx runs the #3436
+                    adapter through Lynx for Web.
                 </p>
             </header>
 
@@ -678,11 +443,7 @@ function Examples() {
 
             <section className="scenario-index">
                 <div className="section-heading compact-heading">
-                    <h2>{GALLERY_EXAMPLES.length} executable combinations</h2>
-                    <p>
-                        These are human-facing compositions. Exact upstream
-                        coverage is tracked separately.
-                    </p>
+                    <h2>Scenarios</h2>
                 </div>
                 <div className="scenario-list">
                     {GALLERY_EXAMPLES.map((example, index) => (
@@ -723,16 +484,7 @@ function ApiMatrix() {
         <main className="page matrix-page" id="main-content">
             <header className="page-intro matrix-intro">
                 <div>
-                    <h1>Supported API surface.</h1>
-                </div>
-                <div className="matrix-summary">
-                    <CoverageStrip />
-                    <p>
-                        {API_METRICS.total} tracked APIs ·{" "}
-                        {API_METRICS.supported} supported ·{" "}
-                        {API_METRICS.partial} partial · {API_METRICS.blocked}{" "}
-                        blocked
-                    </p>
+                    <h1>API support</h1>
                 </div>
             </header>
             <div
@@ -795,66 +547,17 @@ function ApiMatrix() {
 }
 
 function Conformance() {
-    const exact = Math.round(
-        (CONFORMANCE_METRICS.conformant / CONFORMANCE_METRICS.tracked) * 100
-    )
     return (
         <main className="page conformance-page" id="main-content">
             <header className="page-intro conformance-intro">
                 <div>
-                    <h1>Upstream conformance.</h1>
+                    <h1>Conformance suites</h1>
                 </div>
-                <div className="conformance-number">
-                    <strong>{exact}%</strong>
-                    <span>exact dual-renderer conformance</span>
-                </div>
+                <p>
+                    Source-linked declarative contracts selected for Lynx
+                    convergence, not Motion’s entire upstream suite.
+                </p>
             </header>
-
-            <section
-                className="coverage-ledger"
-                aria-label="Conformance coverage metrics"
-            >
-                <div>
-                    <span>Tracked contracts</span>
-                    <strong>{CONFORMANCE_METRICS.tracked}</strong>
-                    <small>100%</small>
-                </div>
-                <div>
-                    <span>Conformant</span>
-                    <strong>{CONFORMANCE_METRICS.conformant}</strong>
-                    <small>{exact}%</small>
-                </div>
-                <div>
-                    <span>Runnable / partial</span>
-                    <strong>{CONFORMANCE_METRICS.partial}</strong>
-                    <small>
-                        {Math.round(
-                            (CONFORMANCE_METRICS.partial /
-                                CONFORMANCE_METRICS.tracked) *
-                                100
-                        )}
-                        %
-                    </small>
-                </div>
-                <div>
-                    <span>Blocked</span>
-                    <strong>{CONFORMANCE_METRICS.blocked}</strong>
-                    <small>
-                        {Math.round(
-                            (CONFORMANCE_METRICS.blocked /
-                                CONFORMANCE_METRICS.tracked) *
-                                100
-                        )}
-                        %
-                    </small>
-                </div>
-            </section>
-
-            <p className="method-note">
-                This denominator is a source-linked declarative slice selected
-                for Lynx convergence. It is deliberately not presented as
-                coverage of Motion’s entire upstream test suite.
-            </p>
 
             <section className="case-list">
                 {CONFORMANCE_CASES.map((item, index) => (
@@ -904,18 +607,24 @@ function Conformance() {
                                         : item.status
                                 }
                             />
-                            <span>
-                                {item.evidence.dualRenderer
-                                    ? "Web ↔ Lynx"
-                                    : item.evidence.gallery
-                                      ? "Gallery evidence"
-                                      : "Not executable"}
-                            </span>
-                            <span>
-                                {item.evidence.native
-                                    ? "Native recorded"
-                                    : "Native pending"}
-                            </span>
+                            <div className="case-evidence">
+                                <EvidenceMark
+                                    available={item.evidence.packageTest}
+                                    label="Package"
+                                />
+                                <EvidenceMark
+                                    available={item.evidence.gallery}
+                                    label="Gallery"
+                                />
+                                <EvidenceMark
+                                    available={item.evidence.dualRenderer}
+                                    label="Web ↔ Lynx"
+                                />
+                                <EvidenceMark
+                                    available={item.evidence.native}
+                                    label="Native"
+                                />
+                            </div>
                         </div>
                     </article>
                 ))}
@@ -937,13 +646,13 @@ export function EvidencePortal() {
             {view === "api" && <ApiMatrix />}
             {view === "conformance" && <Conformance />}
             <footer className="footer">
-                <span>Repository snapshot, not live CI</span>
+                <span>Manifest snapshot · PR checks are authoritative</span>
                 <div>
-                    <a href="https://github.com/Huxpro/motion/blob/agent/lynx-motion-parity/lynx/src/conformance/cases.ts">
+                    <a href="https://github.com/Huxpro/motion/blob/main/lynx/src/conformance/cases.ts">
                         Manifest source
                     </a>
-                    <a href="https://github.com/Huxpro/motion/pull/13/checks">
-                        Live PR checks
+                    <a href="https://github.com/Huxpro/motion/issues/3">
+                        Gap backlog
                     </a>
                 </div>
             </footer>

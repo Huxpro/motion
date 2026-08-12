@@ -2183,21 +2183,13 @@ test("manifest case: animation lifecycle reports start before complete", async (
     await Promise.all([lynxPage.close(), webPage.close()])
 })
 
-test("evidence portal exposes examples, API inventory, and conformance metrics", async ({
-    page,
-}) => {
+test("evidence portal gives each fact one owning view", async ({ page }) => {
     await page.goto("http://localhost:4173/?view=overview")
 
     await expect(
-        page.getByRole("heading", { name: "Motion / Lynx status" })
+        page.getByRole("heading", { name: "Motion / Lynx monitor" })
     ).toBeVisible()
-    await expect(page.locator(".monitor-metric")).toHaveCount(6)
-    await expect(
-        page.locator(".capability-row:not(.capability-row-head)")
-    ).toHaveCount(7)
-    await expect(
-        page.locator(".blocker-monitor .monitor-section-header > span")
-    ).toHaveText(`${API_METRICS.blocked} API blockers`)
+    await expect(page.locator(".monitor-metric")).toHaveCount(2)
     await expect(page.locator(".priority-list li")).toHaveCount(
         Math.min(5, PRIORITIZED_GAPS.length)
     )
@@ -2207,31 +2199,32 @@ test("evidence portal exposes examples, API inventory, and conformance metrics",
     await expect(page.locator(".convergence-ledger li")).toHaveCount(
         CONVERGENCE_HISTORY.length
     )
-    await expect(page.locator(".test-row:not(.test-row-head)")).toHaveCount(
-        CONFORMANCE_METRICS.tracked
-    )
     await expect(
-        page.getByRole("heading", {
-            name: `Upstream contract evidence (${CONFORMANCE_METRICS.tracked})`,
-        })
-    ).toBeVisible()
+        page.locator(".matrix-row, .case-row, .scenario-row")
+    ).toHaveCount(0)
 
     await page.getByRole("link", { name: "API", exact: true }).click()
     await expect(
-        page.getByRole("heading", { name: "Supported API surface." })
+        page.getByRole("heading", { name: "API support" })
     ).toBeVisible()
     await expect(page.locator(".matrix-row")).toHaveCount(API_METRICS.total)
+    await expect(page.locator(".case-row, .scenario-row")).toHaveCount(0)
 
-    await page.getByRole("link", { name: "Conformance" }).click()
+    await page.getByRole("link", { name: "Tests" }).click()
     await expect(page.locator(".case-row")).toHaveCount(
         CONFORMANCE_METRICS.tracked
     )
+    await expect(page.locator(".case-evidence")).toHaveCount(
+        CONFORMANCE_METRICS.tracked
+    )
+    await expect(page.locator(".matrix-row, .scenario-row")).toHaveCount(0)
 
-    await page.getByRole("link", { name: "Examples" }).click()
+    await page.getByRole("link", { name: "Gallery" }).click()
     await expect(page.locator(".scenario-row")).toHaveCount(
         GALLERY_EXAMPLES.length
     )
     await expect(page.locator("iframe")).toHaveCount(2)
+    await expect(page.locator(".matrix-row, .case-row")).toHaveCount(0)
 })
 
 test("evidence portal keeps every view usable at mobile width", async ({

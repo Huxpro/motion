@@ -19,29 +19,31 @@ claiming to reuse private site code:
     and
 -   progressive disclosure for detailed upstream assertions.
 
-The visual system exists to support the review path: run examples, inspect the
-API surface, then audit source-linked conformance. Decorative themes must not
-compete with this sequence. Labels that merely restate a visible heading are
-omitted so the information hierarchy is carried by the content itself.
+The visual system exists to support the review path: monitor convergence, run
+examples, inspect the API surface, then audit source-linked conformance.
+Decorative themes must not compete with this sequence. Labels that merely
+restate a visible heading are omitted so the information hierarchy is carried
+by the content itself.
+
+Each fact has one owning view. The monitor links to the detailed inventories
+instead of reproducing them; Gallery owns executable scenarios, API owns public
+support boundaries, and Tests owns source-linked contracts and evidence.
 
 ## Overview monitor contract
 
 `/?view=overview` is the operational front page for reviewers, not a product
 landing page. It derives every count from the shared conformance manifest and
-keeps four kinds of information visible together:
+keeps only decision-making information visible:
 
--   atomic API progress grouped by capability area;
--   the complete list of currently blocked atomic APIs;
+-   the current compatibility boundary and two top-level progress measures;
 -   the ranked conformance backlog with importance, platform fit, and
     MTS/ReactLynx/CSS effort;
--   weighted loss over time, tied to the PR that changed or preserved it;
--   evidence availability for every tracked upstream contract; and
--   the current conformance result for each contract.
+-   weighted loss over time, tied to the PR that changed or preserved it.
 
-Evidence availability is a repository snapshot, not live CI health. GitHub PR
-checks remain authoritative for the current build and test result. The Gallery
-is an executable showcase and evidence surface, but it is intentionally
-secondary to the progress and test monitor.
+The API inventory and contract evidence ledger are intentionally absent from
+the monitor because their complete forms live on their owning views. Evidence
+availability is a repository snapshot, not live CI health; GitHub PR checks
+remain authoritative for the current build and test result.
 
 ## 1. Can a human execute the capability?
 
