@@ -1381,6 +1381,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         note: "Reconciles atomic/API evidence with merged exact cases; hover supported at its documented scope; no new semantic claim.",
     },
     {
+        id: "motion-29",
+        date: "2026-08-12",
+        title: "Color keyframes parity",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 29,
+        caseIds: ["targets/color-keyframes"],
+        lossBefore: 25,
+        lossAfter: 23,
+        note: "I4/F4/M1/R0/C2 · immutable bd151a1 package · dual-renderer red→green→blue sampling · native frame sequence · clean console.",
+    },
+    {
         id: "lynx-3457",
         date: "2026-08-11",
         title: "initial={false}",
