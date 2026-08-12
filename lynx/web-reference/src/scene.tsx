@@ -1,4 +1,4 @@
-import { motion } from "framer-motion"
+import { motion, useMotionValue } from "framer-motion"
 import { CSSProperties, forwardRef, useState } from "react"
 import type { ComponentPropsWithoutRef } from "react"
 import {
@@ -20,6 +20,7 @@ import {
     REPEAT_DELAY_CASE,
     REPEAT_MIRROR_CASE,
     SPRING_CASE,
+    STYLE_MOTION_VALUE_CASE,
     TRANSITION_FROM_CASE,
     UNSEEN_PROPERTY_CASE,
     VISIBILITY_REVEAL_CASE,
@@ -160,6 +161,9 @@ const ForwardingDiv = forwardRef<
 const MotionForwardingDiv = motion.create(ForwardingDiv)
 
 export function App() {
+    const liveX = useMotionValue(STYLE_MOTION_VALUE_CASE.expected.startX)
+    let styleMotionValueRenders = 0
+    styleMotionValueRenders += 1
     const [tapCount, setTapCount] = useState(0)
     const [hoverCount, setHoverCount] = useState(0)
     const [gestureStatus, setGestureStatus] = useState("resting")
@@ -523,6 +527,41 @@ export function App() {
                                 onAnimationStart={() =>
                                     setInitialFalseStarts((count) => count + 1)
                                 }
+                            />
+                        </div>
+                    </div>
+
+                    <div
+                        id="case-style-motion-value"
+                        style={conformanceCard}
+                    >
+                        <div style={info}>
+                            <span style={badge}>
+                                {STYLE_MOTION_VALUE_CASE.status.toUpperCase()}
+                            </span>
+                            <span style={cardTitle}>
+                                {STYLE_MOTION_VALUE_CASE.title}
+                            </span>
+                            <span id="status-style-motion-value" style={code}>
+                                renders: {styleMotionValueRenders}
+                            </span>
+                            <span style={provenance}>
+                                {`${STYLE_MOTION_VALUE_CASE.upstream.sourceVersion} · ${STYLE_MOTION_VALUE_CASE.upstream.testName}`}
+                            </span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                id="target-style-motion-value"
+                                onClick={() =>
+                                    liveX.set(
+                                        STYLE_MOTION_VALUE_CASE.expected.endX
+                                    )
+                                }
+                                style={{
+                                    ...dot,
+                                    backgroundColor: "#45b7a7",
+                                    x: liveX,
+                                }}
                             />
                         </div>
                     </div>

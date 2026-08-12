@@ -3,7 +3,7 @@
  * implementation. Any missing Motion API must be fixed upstream instead of
  * being hidden behind a second animator in this repository.
  */
-export { motion } from "@lynx-js/motion"
+export { motion, useMotionValue } from "@lynx-js/motion"
 export type {
     MotionProps,
     MotionTarget as Target,

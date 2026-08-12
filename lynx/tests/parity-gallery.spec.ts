@@ -33,6 +33,7 @@ import {
     REPEAT_REVERSE_CASE,
     SPRING_CASE,
     SPRING_VELOCITY_CASE,
+    STYLE_MOTION_VALUE_CASE,
     TAP_GESTURE_CASE,
     TRANSITION_FROM_CASE,
     UNKNOWN_TYPE_FALLBACK_CASE,
@@ -59,7 +60,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(39, { timeout: 15_000 })
+    await expect(animated).toHaveCount(40, { timeout: 15_000 })
 
     const styleOf = (selector: string) =>
         page
@@ -363,6 +364,85 @@ test("manifest case: initial false skips mount and preserves later updates", asy
             page.locator("#status-initial-false"),
             `${renderer} should animate a later target update`
         ).toHaveText("initial={false} · starts:1")
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: a style MotionValue updates without a React rerender", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        await page.reload()
+        const target = page.locator("#target-style-motion-value")
+        const translateX = () =>
+            target.evaluate((element) =>
+                Math.round(
+                    new DOMMatrixReadOnly(getComputedStyle(element).transform)
+                        .m41
+                )
+            )
+
+        await expect(
+            page.locator("#case-style-motion-value"),
+            `${renderer} style MotionValue case should mount`
+        ).toContainText(STYLE_MOTION_VALUE_CASE.upstream.testName)
+        if (renderer === "Lynx") {
+            await expect(target).toHaveAttribute("has-react-ref", "true")
+            await target.evaluate(
+                () =>
+                    new Promise<void>((resolve) =>
+                        requestAnimationFrame(() =>
+                            requestAnimationFrame(() => resolve())
+                        )
+                    )
+            )
+        }
+        await expect
+            .poll(translateX, {
+                message: `${renderer} style-bound MotionValue start`,
+            })
+            .toBe(STYLE_MOTION_VALUE_CASE.expected.startX)
+        await expect(page.locator("#status-style-motion-value")).toHaveText(
+            `renders: ${STYLE_MOTION_VALUE_CASE.expected.renderCount}`
+        )
+        if (renderer === "Lynx") {
+            await target.click({ force: true })
+            expect(errors, "Lynx background MotionValue set errors").toEqual([])
+        } else {
+            await target.click()
+        }
+        await expect(
+            page.locator("#target-style-motion-value"),
+            `${renderer} style-bound MotionValue`
+        ).toBeVisible()
+        await expect
+            .poll(translateX, {
+                message: `${renderer} style-bound MotionValue end`,
+            })
+            .toBe(STYLE_MOTION_VALUE_CASE.expected.endX)
+        await expect(page.locator("#status-style-motion-value")).toHaveText(
+            `renders: ${STYLE_MOTION_VALUE_CASE.expected.renderCount}`
+        )
     }
 
     expect(errors).toEqual([])
