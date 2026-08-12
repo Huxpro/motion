@@ -4,6 +4,7 @@ import type { ComponentPropsWithoutRef } from "react"
 import {
     DELAY_CASE,
     DEFAULT_TRANSITION_CASE,
+    DISPLAY_REVEAL_CASE,
     FUNCTION_VARIANTS_CASE,
     INSTANT_TRANSITION_CASE,
     KEYFRAME_TIMES_CASE,
@@ -160,6 +161,7 @@ export function App() {
     const [tapCount, setTapCount] = useState(0)
     const [hoverCount, setHoverCount] = useState(0)
     const [gestureStatus, setGestureStatus] = useState("resting")
+    const [displayRevealed, setDisplayRevealed] = useState(false)
     const [unseenPropertyActive, setUnseenPropertyActive] = useState(false)
     const [instantActive, setInstantActive] = useState(false)
     const [noOpStatus, setNoOpStatus] = useState("idle")
@@ -264,7 +266,12 @@ export function App() {
                                         : REACTIVE_ANIMATE_CASE.expected.startX,
                                     rotate: reactiveActive ? 12 : -12,
                                 }}
-                                transition={{ duration: 0.4, ease: "linear" }}
+                                transition={{
+                                    duration:
+                                        DISPLAY_REVEAL_CASE.expected
+                                            .durationMs / 1000,
+                                    ease: "linear",
+                                }}
                             >
                                 <span
                                     style={{
@@ -595,6 +602,31 @@ export function App() {
                                           }
                                 }
                                 transition={{ duration: 0.2, ease: "linear" }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* discrete display reveals before the opacity entrance */}
+                    <div
+                        id="example-display-reveal"
+                        style={card}
+                        onClick={() => setDisplayRevealed(true)}
+                    >
+                        <div style={info}>
+                            <span style={cardTitle}>Show, then fade in</span>
+                            <span style={code}>display: none → block</span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                id="target-display-reveal"
+                                style={{ ...dot, backgroundColor: "#55b89e" }}
+                                initial={{ display: "none", opacity: 0 }}
+                                animate={
+                                    displayRevealed
+                                        ? { display: "block", opacity: 1 }
+                                        : { display: "none", opacity: 0 }
+                                }
+                                transition={{ duration: 0.4, ease: "linear" }}
                             />
                         </div>
                     </div>
