@@ -241,6 +241,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         },
     },
     {
+        id: "transitions/easing-function-array",
+        category: "Targets",
+        title: "Easing function array",
+        summary:
+            "A distinct easing callback is invoked for each keyframe segment.",
+        status: "blocked",
+        api: ["transition.ease", "EasingFunction[]"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "keyframes - accepts ease as an array"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the first segment invokes its easing callback",
+            "the second segment invokes its easing callback",
+            "both renderers settle at the final keyframe without runtime errors",
+        ],
+        gap: "Web invokes both callbacks; Lynx invokes neither while silently settling. Arbitrary nested callables need generic MTS/ReactLynx hydration and lifecycle support; tracked in issue #37.",
+        evidence: {
+            gallery: false,
+            packageTest: true,
+            dualRenderer: false,
+            native: false,
+        },
+    },
+    {
         id: "targets/style-motion-value",
         category: "Targets",
         title: "Live style MotionValue",
@@ -1297,6 +1323,17 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "Common transition shaping maps directly to upstream easing functions and needs no host-specific adaptation.",
     },
     {
+        caseId: "transitions/easing-function-array",
+        importance: 3,
+        platformFit: 2,
+        mts: 5,
+        reactLynx: 4,
+        css: 0,
+        rationale:
+            "Useful per-segment customization is blocked on generic nested callable hydration across the background/main boundary.",
+        issue: "https://github.com/Huxpro/motion/issues/37",
+    },
+    {
         caseId: "targets/style-motion-value",
         importance: 5,
         platformFit: 4,
@@ -1811,6 +1848,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 24,
         lossAfter: 23,
         note: "I4/F5/M1/R0/C0 · upstream easing lookup · simultaneous easeInOut/linear focused + gesture regression 15/15 · full suite 20/20 · no native host boundary.",
+    },
+    {
+        id: "motion-38",
+        date: "2026-08-12",
+        title: "Easing function array gap",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 38,
+        caseIds: ["transitions/easing-function-array"],
+        lossBefore: 23,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I3/F2/M5/R4/C0 · Web invokes both per-segment callbacks; Lynx invokes neither and silently settles · architecture blocker issue #37 · no Gallery claim.",
     },
     {
         id: "lynx-3457",
