@@ -5,6 +5,7 @@ import {
     DELAY_CASE,
     DEFAULT_TRANSITION_CASE,
     FUNCTION_VARIANTS_CASE,
+    INSTANT_TRANSITION_CASE,
     KEYFRAME_TIMES_CASE,
     KEYFRAMES_CASE,
     MOTION_CREATE_CASE,
@@ -158,6 +159,7 @@ export function App() {
     const [tapCount, setTapCount] = useState(0)
     const [hoverCount, setHoverCount] = useState(0)
     const [gestureStatus, setGestureStatus] = useState("resting")
+    const [instantActive, setInstantActive] = useState(false)
     const [noOpStatus, setNoOpStatus] = useState("idle")
     const [transitionFromActive, setTransitionFromActive] = useState(false)
     const [defaultTransitionActive, setDefaultTransitionActive] =
@@ -526,6 +528,34 @@ export function App() {
                                 onAnimationComplete={() =>
                                     setNoOpStatus("idle")
                                 }
+                            />
+                        </div>
+                    </div>
+
+                    {/* transition type false applies the target immediately */}
+                    <div
+                        id="example-instant-transition"
+                        style={card}
+                        onClick={() => setInstantActive(true)}
+                    >
+                        <div style={info}>
+                            <span style={cardTitle}>Instant transition</span>
+                            <span style={code}>type: false · no tween</span>
+                        </div>
+                        <div style={demo}>
+                            <motion.div
+                                id="target-instant-transition"
+                                style={{ ...dot, backgroundColor: "#db6e62" }}
+                                initial={{
+                                    x: INSTANT_TRANSITION_CASE.expected.startX,
+                                }}
+                                animate={{
+                                    x: instantActive
+                                        ? INSTANT_TRANSITION_CASE.expected.endX
+                                        : INSTANT_TRANSITION_CASE.expected
+                                              .startX,
+                                }}
+                                transition={{ type: false }}
                             />
                         </div>
                     </div>

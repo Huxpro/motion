@@ -333,6 +333,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         },
     },
     {
+        id: "transitions/instant",
+        category: "Targets",
+        title: "Instant transition",
+        summary:
+            "transition.type false applies the next target without intermediate tween values.",
+        status: "conformant",
+        api: ["transition.type", "type: false"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "uses transition on subsequent renders"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the initial transform remains stable before the update",
+            "the first changed frame is already the final target",
+            "no intermediate tween values appear in either renderer",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { startX: -40, endX: 40, sampleMs: 300 },
+    },
+    {
         id: "transitions/named-easing",
         category: "Targets",
         title: "Named easing",
@@ -920,6 +946,12 @@ export const TRANSITION_FROM_CASE = CONFORMANCE_CASES.find(
     }
 }
 
+export const INSTANT_TRANSITION_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "transitions/instant"
+) as ConformanceCase & {
+    expected: { startX: number; endX: number; sampleMs: number }
+}
+
 export const NAMED_EASING_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "transitions/named-easing"
 ) as ConformanceCase & {
@@ -1130,6 +1162,13 @@ export const GALLERY_EXAMPLES: readonly GalleryExample[] = [
         evidence: "dual-renderer",
     },
     {
+        id: "instant-transition",
+        title: "Instant transition",
+        summary: "Apply a new target without intermediate tween values.",
+        api: ["transition.type", "type: false"],
+        evidence: "dual-renderer",
+    },
+    {
         id: "named-easing",
         title: "Named easing",
         summary: "Compare easeInOut sampling with a simultaneous linear tween.",
@@ -1336,6 +1375,15 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         evidence: "dual-renderer",
         contract: "Override the current value used to start an animation.",
         exampleId: "transition-from",
+    },
+    {
+        id: "transition-instant",
+        group: "Targets",
+        api: "transition={{ type: false }}",
+        status: "supported",
+        evidence: "dual-renderer",
+        contract: "Apply the next target without generating tween frames.",
+        exampleId: "instant-transition",
     },
     {
         id: "repeat",
@@ -1633,6 +1681,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Useful start-value override is consumed directly by the upstream MotionValue animation.",
+    },
+    {
+        caseId: "transitions/instant",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Common state-switch primitive reuses upstream instant MotionValue completion without host adaptation.",
     },
     {
         caseId: "transitions/named-easing",
@@ -2252,6 +2310,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 22,
         lossAfter: 21,
         note: "I4/F5/M1/R0/C0 · immutable bd151a1 package · upstream equal-target idle semantics · focused no-op + gesture regression 15/15 · full suite 25/25 · no native host boundary.",
+    },
+    {
+        id: "motion-44",
+        date: "2026-08-12",
+        title: "Instant transition",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 44,
+        caseIds: ["transitions/instant"],
+        lossBefore: 21,
+        lossAfter: 21,
+        note: "I4/F5/M1/R0/C0 · immutable bd151a1 package · first changed frame is the final target · focused instant + gesture regression 15/15 · full suite 26/26 · rounded loss remains 21 while raw coverage grows · no native host boundary.",
     },
     {
         id: "lynx-3457",
