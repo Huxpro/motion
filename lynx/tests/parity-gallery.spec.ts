@@ -19,6 +19,7 @@ import {
     REACTIVE_ANIMATE_CASE,
     REPEAT_INFINITY_CASE,
     REPEAT_DELAY_CASE,
+    REPEAT_MIRROR_CASE,
     REPEAT_REVERSE_CASE,
     SPRING_CASE,
     TAP_GESTURE_CASE,
@@ -41,7 +42,7 @@ test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
 
     // Playwright CSS locators pierce the open lynx-view shadow root.
     const animated = page.locator('lynx-view [has-react-ref="true"]')
-    await expect(animated).toHaveCount(20, { timeout: 15_000 })
+    await expect(animated).toHaveCount(21, { timeout: 15_000 })
 
     const styleOf = (selector: string) =>
         page
@@ -919,6 +920,89 @@ test("manifest case: repeatDelay holds the endpoint", async ({ browser }) => {
         expect(timeline.at(-1)!.value).toBeCloseTo(
             REPEAT_DELAY_CASE.expected.endScale,
             1
+        )
+    }
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: mirror repeat preserves easing direction", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto("http://localhost:4173/?mode=baseline"),
+    ])
+    for (const page of [lynxPage, webPage]) {
+        const target = page.locator("#target-repeat-mirror")
+        const x = () =>
+            target.evaluate((element) =>
+                Number(
+                    new DOMMatrixReadOnly(
+                        getComputedStyle(element).transform
+                    ).m41.toFixed(2)
+                )
+            )
+        await expect.poll(x).toBe(REPEAT_MIRROR_CASE.expected.startX)
+        await target.scrollIntoViewIfNeeded()
+        await page.locator("#example-repeat-mirror").click()
+        const timeline = await target.evaluate(
+            (element, duration) =>
+                new Promise<Array<{ time: number; value: number }>>(
+                    (resolve) => {
+                        const started = performance.now()
+                        const values: Array<{ time: number; value: number }> =
+                            []
+                        const sample = () => {
+                            values.push({
+                                time: performance.now() - started,
+                                value: new DOMMatrixReadOnly(
+                                    getComputedStyle(element).transform
+                                ).m41,
+                            })
+                            performance.now() - started >= duration
+                                ? resolve(values)
+                                : requestAnimationFrame(sample)
+                        }
+                        sample()
+                    }
+                ),
+            REPEAT_MIRROR_CASE.expected.durationMs * 2 + 100
+        )
+        const closest = (time: number) =>
+            timeline.reduce((best, sample) =>
+                Math.abs(sample.time - time) < Math.abs(best.time - time)
+                    ? sample
+                    : best
+            ).value
+        const outwardQuarter = closest(
+            REPEAT_MIRROR_CASE.expected.durationMs * 0.25
+        )
+        const returnQuarter = closest(
+            REPEAT_MIRROR_CASE.expected.durationMs * 1.25
+        )
+        expect(
+            outwardQuarter,
+            `${REPEAT_MIRROR_CASE.upstream.testName}: outward=${outwardQuarter}`
+        ).toBeLessThanOrEqual(REPEAT_MIRROR_CASE.expected.outwardQuarterMaximum)
+        expect(
+            returnQuarter,
+            `${REPEAT_MIRROR_CASE.upstream.testName}: return=${returnQuarter}`
+        ).toBeGreaterThanOrEqual(
+            REPEAT_MIRROR_CASE.expected.returnQuarterMinimum
+        )
+        expect(timeline.at(-1)!.value).toBeCloseTo(
+            REPEAT_MIRROR_CASE.expected.startX,
+            0
         )
     }
     expect(errors).toEqual([])
