@@ -20,11 +20,12 @@ import {
     REPEAT_DELAY_CASE,
     REPEAT_MIRROR_CASE,
     SPRING_CASE,
+    STYLE_MOTION_VALUE_CASE,
     TRANSITION_FROM_CASE,
     UNSEEN_PROPERTY_CASE,
     VISIBILITY_REVEAL_CASE,
 } from "./conformance/cases.js"
-import { motion } from "./motion/index.js"
+import { motion, useMotionValue } from "./motion/index.js"
 import "./App.css"
 
 /**
@@ -159,6 +160,12 @@ function ForwardingView(props: IntrinsicElements["view"]) {
 const MotionForwardingView = motion.create(ForwardingView)
 
 export function App() {
+    const liveX = useMotionValue(STYLE_MOTION_VALUE_CASE.expected.startX)
+    let styleMotionValueRenders = 0
+    styleMotionValueRenders += 1
+    function moveLiveValue() {
+        liveX.set(STYLE_MOTION_VALUE_CASE.expected.endX)
+    }
     const [tapCount, setTapCount] = useState(0)
     const [hoverCount, setHoverCount] = useState(0)
     const [gestureStatus, setGestureStatus] = useState("resting")
@@ -527,6 +534,37 @@ export function App() {
                                 onAnimationStart={() =>
                                     setInitialFalseStarts((count) => count + 1)
                                 }
+                            />
+                        </view>
+                    </view>
+
+                    <view
+                        id="case-style-motion-value"
+                        style={conformanceCard}
+                    >
+                        <view style={info}>
+                            <text style={badge}>
+                                {STYLE_MOTION_VALUE_CASE.status.toUpperCase()}
+                            </text>
+                            <text style={cardTitle}>
+                                {STYLE_MOTION_VALUE_CASE.title}
+                            </text>
+                            <text id="status-style-motion-value" style={code}>
+                                renders: {styleMotionValueRenders}
+                            </text>
+                            <text style={provenance}>
+                                {`${STYLE_MOTION_VALUE_CASE.upstream.sourceVersion} · ${STYLE_MOTION_VALUE_CASE.upstream.testName}`}
+                            </text>
+                        </view>
+                        <view style={demo}>
+                            <motion.view
+                                id="target-style-motion-value"
+                                bindtap={moveLiveValue}
+                                style={{
+                                    ...dot,
+                                    backgroundColor: "#45b7a7",
+                                    x: liveX,
+                                }}
                             />
                         </view>
                     </view>
