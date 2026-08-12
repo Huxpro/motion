@@ -627,6 +627,7 @@ test("manifest case: tap applies, fires, and restores rest", async ({
 
     for (const page of [lynxPage, webPage]) {
         const target = page.locator("#target-gesture-priority")
+        const lynxTouch = page === lynxPage
         const semanticStyle = () =>
             target.evaluate((element) => {
                 const style = getComputedStyle(element)
@@ -641,12 +642,22 @@ test("manifest case: tap applies, fires, and restores rest", async ({
             scale: TAP_GESTURE_CASE.expected.restScale,
             backgroundColor: "rgb(255, 255, 255)",
         })
+        if (lynxTouch) {
+            await expect(target).toHaveAttribute("has-react-ref", "true")
+            await target.evaluate(
+                () =>
+                    new Promise<void>((resolve) =>
+                        requestAnimationFrame(() =>
+                            requestAnimationFrame(() => resolve())
+                        )
+                    )
+            )
+        }
         await target.scrollIntoViewIfNeeded()
         const box = await target.boundingBox()
         expect(box).not.toBeNull()
         const x = box!.x + box!.width / 2
         const y = box!.y + box!.height / 2
-        const lynxTouch = page === lynxPage
         const cdp = lynxTouch
             ? await page.context().newCDPSession(page)
             : undefined
