@@ -36,6 +36,7 @@ import {
     SPRING_CASE,
     STYLE_MOTION_VALUE_CASE,
     SUSPENSE_INHERITED_CHILD_CASE,
+    SUSPENSE_INITIAL_FRAME_CASE,
     TRANSITION_FROM_CASE,
     UNSEEN_PROPERTY_CASE,
     VARIANT_INHERIT_OPT_OUT_CASE,
@@ -234,6 +235,36 @@ function SuspenseVariantChild({ onStart }: { onStart: () => void }) {
     )
 }
 
+let suspenseInitialFrameChildResolved = false
+let resolveSuspenseInitialFrameChild: (() => void) | undefined
+
+function SuspenseInitialFrameChild() {
+    if (!suspenseInitialFrameChildResolved) {
+        throw new Promise<void>((resolve) => {
+            resolveSuspenseInitialFrameChild = () => {
+                suspenseInitialFrameChildResolved = true
+                resolve()
+            }
+        })
+    }
+
+    return (
+        <motion.div
+            id="target-suspense-initial-frame"
+            style={{ ...dot, backgroundColor: "#ef8db7" }}
+            variants={{
+                hidden: { opacity: 0 },
+                visible: { opacity: 1 },
+            }}
+            transition={{
+                duration:
+                    SUSPENSE_INITIAL_FRAME_CASE.expected.durationSeconds,
+                ease: "linear",
+            }}
+        />
+    )
+}
+
 export function App() {
     const conformanceMode = new URLSearchParams(window.location.search).get(
         "case"
@@ -267,6 +298,8 @@ export function App() {
         conformanceMode === "memoized-inherited-removed-value"
     const suspenseInheritedChildMode =
         conformanceMode === "suspense-inherited-child"
+    const suspenseInitialFrameMode =
+        conformanceMode === "suspense-initial-frame"
     const variantPropagationMode = conformanceMode === "variant-propagation"
     const delayChildrenMode = conformanceMode === "delay-children"
     const variantInheritOptOutMode =
@@ -668,6 +701,39 @@ export function App() {
                                                 )
                                             }
                                         />
+                                    </Suspense>
+                                </motion.div>
+                            </div>
+                        </div>
+                    )}
+
+                    {suspenseInitialFrameMode && (
+                        <div
+                            id="example-suspense-initial-frame"
+                            style={conformanceCard}
+                            onClick={() => resolveSuspenseInitialFrameChild?.()}
+                        >
+                            <div style={info}>
+                                <span style={cardTitle}>
+                                    Suspense initial frame
+                                </span>
+                                <span style={code}>
+                                    {`${SUSPENSE_INITIAL_FRAME_CASE.expected.durationSeconds}s inherited tween`}
+                                </span>
+                            </div>
+                            <div style={demo}>
+                                <motion.div
+                                    initial="hidden"
+                                    animate="visible"
+                                >
+                                    <Suspense
+                                        fallback={
+                                            <span id="fallback-suspense-initial-frame">
+                                                loading
+                                            </span>
+                                        }
+                                    >
+                                        <SuspenseInitialFrameChild />
                                     </Suspense>
                                 </motion.div>
                             </div>

@@ -56,6 +56,7 @@ import {
     SPRING_VELOCITY_CASE,
     STYLE_MOTION_VALUE_CASE,
     SUSPENSE_INHERITED_CHILD_CASE,
+    SUSPENSE_INITIAL_FRAME_CASE,
     TAP_ANIMATION_LIFECYCLE_CASE,
     TAP_GESTURE_CASE,
     TRANSITION_FROM_CASE,
@@ -2439,6 +2440,46 @@ test("manifest case: a child resolving from Suspense animates the inherited vari
             `${renderer} lifecycle`
         ).toHaveText(
             `starts: ${SUSPENSE_INHERITED_CHILD_CASE.expected.startCount}/${SUSPENSE_INHERITED_CHILD_CASE.expected.startCount}`
+        )
+    }
+
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: a child resolving from Suspense samples its inherited initial frame", async ({
+    browser,
+}) => {
+    const webPage = await browser.newPage()
+    const lynxPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "suspense-initial-frame" })
+        )
+    })
+    await webPage.goto(
+        "http://localhost:4173/?mode=baseline&case=suspense-initial-frame"
+    )
+    await lynxPage.goto(`http://localhost:3000${previewUrl}`)
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const card = page.locator("#example-suspense-initial-frame")
+        await expect(
+            page.locator("#fallback-suspense-initial-frame"),
+            `${renderer} fallback`
+        ).toBeVisible()
+        await card.click()
+        const target = page.locator("#target-suspense-initial-frame")
+        await expect(target, `${renderer} child mounted`).toBeVisible()
+        await page.waitForTimeout(32)
+        const opacity = await target.evaluate((element) =>
+            Number(getComputedStyle(element).opacity)
+        )
+        expect(opacity, `${renderer} starts near inherited hidden`).toBeLessThan(
+            SUSPENSE_INITIAL_FRAME_CASE.expected.initialSampleMaxOpacity
         )
     }
 
