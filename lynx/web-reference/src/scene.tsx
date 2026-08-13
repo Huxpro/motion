@@ -197,6 +197,8 @@ export function App() {
     const transformOriginMode = conformanceMode === "transform-origin"
     const complexGradientMode = conformanceMode === "complex-gradient"
     const displayExitMode = conformanceMode === "display-exit"
+    const variantStyleFallbackMode =
+        conformanceMode === "variant-style-fallback"
     const variantPropagationMode = conformanceMode === "variant-propagation"
     const delayChildrenMode = conformanceMode === "delay-children"
     const variantInheritOptOutMode =
@@ -237,6 +239,7 @@ export function App() {
     const [initialFalseStarts, setInitialFalseStarts] = useState(0)
     const [displayRevealed, setDisplayRevealed] = useState(false)
     const [displayExited, setDisplayExited] = useState(false)
+    const [variantStylePhase, setVariantStylePhase] = useState(0)
     const [visibilityRevealed, setVisibilityRevealed] = useState(false)
     const [unseenPropertyActive, setUnseenPropertyActive] = useState(false)
     const [instantActive, setInstantActive] = useState(false)
@@ -302,6 +305,62 @@ export function App() {
                     <span style={{ ...cardTitle, marginBottom: 10 }}>
                         Conformance cases
                     </span>
+
+                    {variantStyleFallbackMode && (
+                        <div
+                            id="example-variant-style-fallback"
+                            style={conformanceCard}
+                            onClick={() =>
+                                setVariantStylePhase((phase) =>
+                                    Math.min(phase + 1, 5)
+                                )
+                            }
+                        >
+                            <div style={info}>
+                                <span style={cardTitle}>
+                                    Variant style ownership
+                                </span>
+                                <span style={code}>
+                                    {`phase ${variantStylePhase}`}
+                                </span>
+                            </div>
+                            <div style={demo}>
+                                <motion.div
+                                    id="target-variant-style-fallback"
+                                    style={{
+                                        ...dot,
+                                        opacity:
+                                            variantStylePhase === 3
+                                                ? 0.5
+                                                : variantStylePhase === 5
+                                                  ? 0.75
+                                                  : variantStylePhase >= 4
+                                                    ? 0.5
+                                                    : 0,
+                                        rotate:
+                                            variantStylePhase === 3
+                                                ? 0.5
+                                                : variantStylePhase === 5
+                                                  ? 0.75
+                                                  : variantStylePhase >= 4
+                                                    ? 0.5
+                                                    : 0,
+                                        backgroundColor: "#d3df63",
+                                    }}
+                                    animate={
+                                        variantStylePhase === 1 ||
+                                        variantStylePhase >= 4
+                                            ? "active"
+                                            : undefined
+                                    }
+                                    variants={{
+                                        active: { opacity: 1, rotate: 1 },
+                                    }}
+                                    transition={{ type: false }}
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     {displayExitMode && (
                         <div

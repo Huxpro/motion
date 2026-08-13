@@ -1,5 +1,6 @@
 import type { CSSProperties } from "@lynx-js/types"
 import type { IntrinsicElements } from "@lynx-js/types"
+import type { MotionStyle } from "@lynx-js/motion"
 import { useState } from "@lynx-js/react"
 import {
     ARRAY_VARIANT_DEFINITION_PARITY_CASE,
@@ -194,6 +195,8 @@ export function App() {
     const transformOriginMode = conformanceMode === "transform-origin"
     const complexGradientMode = conformanceMode === "complex-gradient"
     const displayExitMode = conformanceMode === "display-exit"
+    const variantStyleFallbackMode =
+        conformanceMode === "variant-style-fallback"
     const variantPropagationMode = conformanceMode === "variant-propagation"
     const delayChildrenMode = conformanceMode === "delay-children"
     const variantInheritOptOutMode =
@@ -237,6 +240,7 @@ export function App() {
     const [initialFalseStarts, setInitialFalseStarts] = useState(0)
     const [displayRevealed, setDisplayRevealed] = useState(false)
     const [displayExited, setDisplayExited] = useState(false)
+    const [variantStylePhase, setVariantStylePhase] = useState(0)
     const [visibilityRevealed, setVisibilityRevealed] = useState(false)
     const [unseenPropertyActive, setUnseenPropertyActive] = useState(false)
     const [instantActive, setInstantActive] = useState(false)
@@ -302,6 +306,64 @@ export function App() {
                     <text style={{ ...cardTitle, marginBottom: "10px" }}>
                         Conformance cases
                     </text>
+
+                    {variantStyleFallbackMode && (
+                        <view
+                            id="example-variant-style-fallback"
+                            style={conformanceCard}
+                            bindtap={() =>
+                                setVariantStylePhase((phase) =>
+                                    Math.min(phase + 1, 5)
+                                )
+                            }
+                        >
+                            <view style={info}>
+                                <text style={cardTitle}>
+                                    Variant style ownership
+                                </text>
+                                <text style={code}>
+                                    {`phase ${variantStylePhase}`}
+                                </text>
+                            </view>
+                            <view style={demo}>
+                                <motion.view
+                                    id="target-variant-style-fallback"
+                                    style={
+                                        {
+                                            ...dot,
+                                            opacity:
+                                                variantStylePhase === 3
+                                                    ? 0.5
+                                                    : variantStylePhase === 5
+                                                      ? 0.75
+                                                      : variantStylePhase >= 4
+                                                        ? 0.5
+                                                        : 0,
+                                            rotate:
+                                                variantStylePhase === 3
+                                                    ? 0.5
+                                                    : variantStylePhase === 5
+                                                      ? 0.75
+                                                      : variantStylePhase >= 4
+                                                        ? 0.5
+                                                        : 0,
+                                            backgroundColor: "#d3df63",
+                                        } as MotionStyle
+                                    }
+                                    animate={
+                                        variantStylePhase === 1 ||
+                                        variantStylePhase >= 4
+                                            ? "active"
+                                            : undefined
+                                    }
+                                    variants={{
+                                        active: { opacity: 1, rotate: 1 },
+                                    }}
+                                    transition={{ type: false }}
+                                />
+                            </view>
+                        </view>
+                    )}
 
                     {displayExitMode && (
                         <view

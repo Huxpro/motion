@@ -61,6 +61,7 @@ import {
     UNSEEN_PROPERTY_CASE,
     VARIANT_INHERIT_OPT_OUT_CASE,
     VARIANT_PROPAGATION_CASE,
+    VARIANT_STYLE_FALLBACK_CASE,
     VISIBILITY_REVEAL_CASE,
     WEIGHTED_LOSS,
     Z_INDEX_DISCRETE_CASE,
@@ -2015,6 +2016,75 @@ test("manifest case: a changed string label resolves its named variant", async (
     }
 
     expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: style regains ownership after a named variant is removed", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "variant-style-fallback" })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=variant-style-fallback"
+        ),
+    ])
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const target = page.locator("#target-variant-style-fallback")
+        const style = () =>
+            target.evaluate((element) => {
+                const computed = getComputedStyle(element)
+                const matrix = new DOMMatrixReadOnly(computed.transform)
+                return {
+                    opacity: Number(computed.opacity),
+                    rotate: Number(
+                        (Math.atan2(matrix.b, matrix.a) * 180 / Math.PI).toFixed(1)
+                    ),
+                }
+            })
+        const card = page.locator("#example-variant-style-fallback")
+        await expect.poll(style).toEqual({
+            opacity: VARIANT_STYLE_FALLBACK_CASE.expected.base,
+            rotate: VARIANT_STYLE_FALLBACK_CASE.expected.base,
+        })
+        await card.click()
+        await expect.poll(style).toEqual({
+            opacity: VARIANT_STYLE_FALLBACK_CASE.expected.active,
+            rotate: VARIANT_STYLE_FALLBACK_CASE.expected.active,
+        })
+        await card.click()
+        await expect.poll(style).toEqual({
+            opacity: VARIANT_STYLE_FALLBACK_CASE.expected.base,
+            rotate: VARIANT_STYLE_FALLBACK_CASE.expected.base,
+        })
+        await card.click()
+        await expect.poll(style, { message: `${renderer} reactive style` }).toEqual({
+            opacity: VARIANT_STYLE_FALLBACK_CASE.expected.reactive,
+            rotate: VARIANT_STYLE_FALLBACK_CASE.expected.reactive,
+        })
+        await card.click()
+        await expect.poll(style, { message: `${renderer} variant re-entry` }).toEqual({
+            opacity: VARIANT_STYLE_FALLBACK_CASE.expected.active,
+            rotate: VARIANT_STYLE_FALLBACK_CASE.expected.active,
+        })
+        await card.click()
+        await expect.poll(style, { message: `${renderer} active ownership` }).toEqual({
+            opacity: VARIANT_STYLE_FALLBACK_CASE.expected.active,
+            rotate: VARIANT_STYLE_FALLBACK_CASE.expected.active,
+        })
+    }
+
     await Promise.all([lynxPage.close(), webPage.close()])
 })
 

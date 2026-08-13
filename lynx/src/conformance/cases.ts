@@ -1272,6 +1272,33 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         },
     },
     {
+        id: "variants/style-fallback-after-removal",
+        category: "Variants",
+        title: "Static style resumes after variant removal",
+        summary:
+            "Removing a named animate variant returns property ownership to style and keeps later style updates reactive.",
+        status: "conformant",
+        api: ["variants", "animate", "style", "reactive updates"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "style is active once value has been removed from animate"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "a named variant temporarily owns opacity and rotate",
+            "removing animate restores the current static style",
+            "later style updates are live after removal",
+            "re-adding animate takes ownership and masks later style updates",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: false,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { base: 0, active: 1, reactive: 0.5, masked: 0.75 },
+    },
+    {
         id: "variants/function-custom",
         category: "Variants",
         title: "Function variant + custom",
@@ -2174,6 +2201,12 @@ export const ARRAY_VARIANT_DEFINITION_PARITY_CASE = CONFORMANCE_CASES.find(
         activeScale: number
         activeOpacity: number
     }
+}
+
+export const VARIANT_STYLE_FALLBACK_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "variants/style-fallback-after-removal"
+) as ConformanceCase & {
+    expected: { base: number; active: number; reactive: number; masked: number }
 }
 
 export const FUNCTION_VARIANTS_CASE = CONFORMANCE_CASES.find(
@@ -3464,6 +3497,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "Common multi-state composition resolves entirely in the portable variant layer and reuses the existing reactive target path.",
     },
     {
+        caseId: "variants/style-fallback-after-removal",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Common conditional-variant ownership reuses the portable removed-target path; ReactLynx only supplies reactive props.",
+    },
+    {
         caseId: "variants/function-custom",
         importance: 3,
         platformFit: 5,
@@ -4641,5 +4684,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 7,
         lossAfter: WEIGHTED_LOSS,
         note: "I4/F5/M1/R0/C1 · immutable 2c805a2 motion/react/react-umd set · display remains block through the opacity exit and switches to none only after completion · package coverage plus complete dual-renderer suite 63/63 · no Full Demo or native claim.",
+    },
+    {
+        id: "motion-84",
+        date: "2026-08-13",
+        title: "Named variant style fallback evidence",
+        kind: "evidence",
+        status: "verified",
+        lynxStackPr: 3489,
+        motionPr: 84,
+        caseIds: ["variants/style-fallback-after-removal"],
+        lossBefore: 7,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F5/M1/R1/C0 · immutable 2c805a2 motion/react/react-umd set · removing a named variant restores static opacity/rotate ownership, later style updates remain reactive, and re-entering the variant masks style changes while active · adjacent package coverage protects object-target removal; exact proof is the complete dual-renderer suite 64/64 · no Full Demo or native claim.",
     },
 ]
