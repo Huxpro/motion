@@ -11,6 +11,7 @@ import {
     DELAY_CASE,
     DELAY_CHILDREN_CASE,
     DEFAULT_TRANSITION_CASE,
+    DEEP_VARIANT_PROPAGATION_CASE,
     DISPLAY_REVEAL_CASE,
     FUNCTION_VARIANTS_CASE,
     GALLERY_EXAMPLES,
@@ -401,6 +402,48 @@ test("manifest case: inherited variant values update reactively", async ({
         await expect
             .poll(x, { message: `${renderer} updated x` })
             .toBe(INHERITED_VARIANT_VALUE_UPDATE_CASE.expected.updatedX)
+    }
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: variant labels propagate through a neutral wrapper", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+    }
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "deep-variant-propagation" })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=deep-variant-propagation"
+        ),
+    ])
+
+    for (const [renderer, page] of [
+        ["Lynx", lynxPage],
+        ["Web", webPage],
+    ] as const) {
+        await expect
+            .poll(
+                () =>
+                    page
+                        .locator("#target-deep-variant-propagation")
+                        .evaluate((element) =>
+                            Number(getComputedStyle(element).opacity)
+                        ),
+                { message: `${renderer} deep inherited target` }
+            )
+            .toBe(DEEP_VARIANT_PROPAGATION_CASE.expected.opacity)
     }
     expect(errors).toEqual([])
     await Promise.all([lynxPage.close(), webPage.close()])

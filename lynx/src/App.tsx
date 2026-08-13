@@ -4,6 +4,7 @@ import { useState } from "@lynx-js/react"
 import {
     DELAY_CASE,
     DELAY_CHILDREN_CASE,
+    DEEP_VARIANT_PROPAGATION_CASE,
     DEFAULT_TRANSITION_CASE,
     DISPLAY_REVEAL_CASE,
     FUNCTION_VARIANTS_CASE,
@@ -188,6 +189,8 @@ export function App() {
         conformanceMode === "inherited-variant-lifecycle"
     const inheritedVariantValueUpdateMode =
         conformanceMode === "inherited-variant-value-update"
+    const deepVariantPropagationMode =
+        conformanceMode === "deep-variant-propagation"
     const liveX = useMotionValue(STYLE_MOTION_VALUE_CASE.expected.startX)
     let styleMotionValueRenders = 0
     styleMotionValueRenders += 1
@@ -533,6 +536,47 @@ export function App() {
                                         }}
                                         transition={{ type: false }}
                                     />
+                                </motion.view>
+                            </view>
+                        </view>
+                    )}
+
+                    {deepVariantPropagationMode && (
+                        <view
+                            id="example-deep-variant-propagation"
+                            style={conformanceCard}
+                        >
+                            <view style={info}>
+                                <text style={cardTitle}>
+                                    Deep variant propagation
+                                </text>
+                                <text style={code}>parent → wrapper → child</text>
+                            </view>
+                            <view style={demo}>
+                                <motion.view
+                                    initial="hidden"
+                                    animate="visible"
+                                    variants={{ hidden: {}, visible: {} }}
+                                    transition={{ type: false }}
+                                >
+                                    <motion.view>
+                                        <motion.view
+                                            id="target-deep-variant-propagation"
+                                            style={{
+                                                ...dot,
+                                                backgroundColor: "#d3df63",
+                                            }}
+                                            variants={{
+                                                hidden: { opacity: 0.2 },
+                                                visible: {
+                                                    opacity:
+                                                        DEEP_VARIANT_PROPAGATION_CASE
+                                                            .expected.opacity,
+                                                },
+                                            }}
+                                            transition={{ type: false }}
+                                        />
+                                    </motion.view>
                                 </motion.view>
                             </view>
                         </view>
