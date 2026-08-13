@@ -54,17 +54,19 @@ repository-level config can publish the local output; the established
 cross-origin isolation headers required by Lynx for Web. Every PR preview
 exposes four shareable views:
 
-- `/?view=overview` — current verdict, metrics, and the weighted-loss chart;
-  every chart point and the latest-steps strip beneath it deep-link into the
-  convergence ledger on the Conformance view;
-- `/?view=examples` — live Web and ReactLynx galleries with synchronized
-  scrolling, mirrored taps, a dual-runtime "run both" trigger per scenario,
-  and an overlay slider layout for small screens;
+- `/?view=overview` — current verdict, metrics, and the weighted-loss chart
+  (a label-free sparkline on small screens); every chart point and the
+  latest-steps strip beneath it deep-link into the convergence ledger;
+- `/?view=examples` — an app-shell comparison: a scenario rail (desktop) or
+  scenario picker (mobile) drives full-height Web and ReactLynx panes with
+  synchronized scrolling, mirrored taps, dual-runtime scenario triggers,
+  and an overlay slider layout that goes edge-to-edge on small screens;
 - `/?view=api` — filterable atomic API support/boundary matrix, with each
   API linked to its Motion.dev documentation page; and
-- `/?view=conformance` — the convergence ledger plus upstream source paths
-  (linked to `motiondivision/motion` at the pinned version), test names,
-  acceptance criteria, and per-case evidence marks.
+- `/?view=conformance` — two sub-views: tracked contracts (upstream source
+  paths linked to `motiondivision/motion` at the pinned version, test
+  names, acceptance criteria, per-case evidence marks) and the convergence
+  history ledger (`?sub=history`).
 
 Every view is available in English and Simplified Chinese via the `lang`
 query parameter (persisted to `localStorage`); the masthead carries the

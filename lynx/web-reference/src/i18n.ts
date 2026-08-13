@@ -200,11 +200,7 @@ const STRINGS = {
     },
     "showoff.cta": { en: "Open Web / Lynx Gallery →", zh: "打开 Web / Lynx 画廊 →" },
 
-    "examples.title": { en: "Compare Web and Lynx.", zh: "对比 Web 与 Lynx。" },
-    "examples.desc": {
-        en: "The Web pane runs the locked upstream baseline; the Lynx pane runs immutable preview 013e20e through Lynx for Web. Scrolling and taps can drive both panes at once.",
-        zh: "Web 栏运行锁定的上游基线；Lynx 栏通过 Lynx for Web 运行不可变预览 013e20e。滚动与点按可同时驱动两栏。",
-    },
+    "examples.title": { en: "Web ⇄ Lynx", zh: "Web ⇄ Lynx" },
     "examples.sectionLabel": {
         en: "Web and Lynx live examples",
         zh: "Web 与 Lynx 实时示例",
@@ -235,15 +231,18 @@ const STRINGS = {
         zh: "拖动对比 · Lynx ⇄ Web",
     },
 
-    "scenarios.title": { en: "{0} executable combinations", zh: "{0} 个可执行组合" },
-    "scenarios.desc": {
-        en: "Human-facing compositions. Exact upstream coverage is tracked in Conformance.",
-        zh: "面向人工审阅的组合场景。精确上游覆盖见一致性页。",
-    },
-    "scenarios.run": { en: "Run both ▶", zh: "双端运行 ▶" },
+    "scenarios.title": { en: "Scenarios · {0}", zh: "场景 · {0}" },
     "scenarios.runLabel": {
         en: "Scroll both panes to {0} and trigger it",
         zh: "滚动双栏到 {0} 并触发",
+    },
+    "scenarios.pickerLabel": {
+        en: "Jump to a scenario and run it in both panes",
+        zh: "跳转场景并在双栏运行",
+    },
+    "scenarios.pickerPlaceholder": {
+        en: "Run a scenario… ({0})",
+        zh: "运行场景…（{0}）",
     },
 
     "api.title": { en: "Supported API surface.", zh: "受支持的 API 面。" },
@@ -273,6 +272,7 @@ const STRINGS = {
         en: "This denominator is a source-linked declarative slice selected for Lynx convergence. It is deliberately not presented as coverage of Motion's entire upstream test suite.",
         zh: "该分母是为 Lynx 收敛选取的、与源码关联的声明式子集，特意不宣称覆盖 Motion 上游全部测试套件。",
     },
+    "conformance.tabContracts": { en: "Tracked contracts", zh: "跟踪契约" },
     "conformance.historyTitle": { en: "Convergence history", zh: "收敛历史" },
     "conformance.historyDesc": {
         en: "Each row records the PR state and weighted loss at that point in time. Current review state is listed on the Overview; the loss chart is unchanged by a topology-only restack.",

@@ -154,11 +154,11 @@ test("tapping a card in the Web pane triggers the same Lynx scenario", async ({
     expect(result.after).toContain("start:visible")
 })
 
-test("scenario run buttons enable once the panes are linked", async ({
+test("scenario rail rows enable once the panes are linked", async ({
     page,
 }) => {
     await openLinkedExamples(page)
-    await expect(page.locator(".scenario-run").first()).toBeEnabled()
+    await expect(page.locator(".scenario-row").first()).toBeEnabled()
 })
 
 test("a mouse click presses the Lynx whileTap card directly", async ({
