@@ -24,6 +24,7 @@ declare module '@lynx-js/types' {
       | "nested-controlled-variants"
       | "initial-false-explicit-child"
       | "array-variant-definition-parity"
+      | "initial-transition-end"
       | "hover-rest-transition"
   }
 }

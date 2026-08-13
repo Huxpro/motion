@@ -115,12 +115,13 @@ behavior independently reviewable:
                                     └── #3494 variant inheritance opt-out
                                         └── #3495 inherited initial=false
                                             └── #3496 explicit child mount ownership
+                                                └── #3497 initial variant transitionEnd
 ```
 
 Feature-base PRs do not trigger the repository's `pkg.pr.new` workflow. Draft
 #3491 is therefore a validation-only rollup against `main`; it must not be
-merged. Its immutable `dfb913f` motion/react/react-umd package set contains the
-stack through #3496 and passes the Hux evidence build. The manifest records the
+merged. Its immutable `2c805a2` motion/react/react-umd package set contains the
+stack through #3497 and passes the Hux evidence build. The manifest records the
 capability PR that owns each contract, while #3491 records only the immutable
 validation gate. Numeric `delayChildren` is deliberately separate from the
 dynamic stagger/`when`/controls boundary tracked in issue #10.
@@ -162,3 +163,7 @@ mount animation and lifecycle, verified from immutable `dfb913f`.
 Hux evidence PR #80 promotes array variant labels from Lynx-only gallery proof
 to the upstream inline-versus-hoisted definition contract. The existing
 `dfb913f` runtime merges labels left to right with no lynx-stack source diff.
+
+Atomic lynx-stack PR #3497 composes an initial named variant's `transitionEnd`
+over its ordinary target on the first frame, matching upstream's discrete
+initial-value contract. Immutable `2c805a2` provides the exact validation gate.

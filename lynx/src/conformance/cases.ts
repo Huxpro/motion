@@ -204,6 +204,31 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { opacity: 0.4 },
     },
     {
+        id: "initial/variant-transition-end",
+        category: "Variants",
+        title: "Initial variant transitionEnd",
+        summary:
+            "An initial named variant applies its discrete transitionEnd values on the first rendered frame.",
+        status: "conformant",
+        api: ["initial", "variants", "transitionEnd"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "applies applyOnEnd if set on initial"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the visible initial label resolves its target and transitionEnd",
+            "transitionEnd overrides the ordinary initial target on the first frame",
+            "both renderers compute display none without starting an animation",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+    },
+    {
         id: "targets/removed-animate-original-initial",
         category: "Targets",
         title: "Removed target restores original initial",
@@ -1807,6 +1832,10 @@ export const UNSEEN_PROPERTY_CASE = CONFORMANCE_CASES.find(
 export const TRANSITION_END_SUBSEQUENT_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/transition-end-subsequent"
 ) as ConformanceCase & { expected: { opacity: number } }
+
+export const INITIAL_VARIANT_TRANSITION_END_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "initial/variant-transition-end"
+) as ConformanceCase
 
 export const REMOVED_ANIMATE_ORIGINAL_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/removed-animate-original-initial"
@@ -3421,6 +3450,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "Core mount semantic; isolated Motion-adapter change with no host gap.",
     },
     {
+        caseId: "initial/variant-transition-end",
+        importance: 3,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Discrete first-frame variant values require only portable target composition before the existing ReactLynx style serialization path.",
+    },
+    {
         caseId: "initial/false-propagation",
         importance: 5,
         platformFit: 5,
@@ -4469,5 +4508,17 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 8,
         lossAfter: WEIGHTED_LOSS,
         note: "I4/F5/M1/R0/C0 · immutable dfb913f motion/react/react-umd set · existing runtime merges array labels left to right and keeps inline and hoisted variant tables equivalent with no lynx-stack source diff · complete dual-renderer suite 60/60 · no Full Demo or native claim.",
+    },
+    {
+        id: "lynx-3497",
+        date: "2026-08-13",
+        title: "Apply initial variant transitionEnd",
+        kind: "capability",
+        status: "verified",
+        lynxStackPr: 3497,
+        caseIds: ["initial/variant-transition-end"],
+        lossBefore: 8,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I3/F5/M1/R1/C0 · immutable 2c805a2 motion/react/react-umd set · an initial named variant now composes transitionEnd over its ordinary target on the first frame · package declarative suite 42/42, focused dual-renderer 1/1, and complete suite 61/61 · no Full Demo or native claim.",
     },
 ]

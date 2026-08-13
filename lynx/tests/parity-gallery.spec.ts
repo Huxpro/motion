@@ -665,6 +665,42 @@ test("manifest case: parent initial false preserves explicit child animation", a
     await Promise.all([lynxPage.close(), webPage.close()])
 })
 
+test("manifest case: an initial variant applies transitionEnd on the first frame", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "initial-transition-end" })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=initial-transition-end"
+        ),
+    ])
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        await expect
+            .poll(
+                () =>
+                    page
+                        .locator("#target-initial-transition-end")
+                        .evaluate((element) => getComputedStyle(element).display),
+                { message: `${renderer} initial transitionEnd` }
+            )
+            .toBe("none")
+    }
+
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
 test("manifest case: transition.default wins over top-level options", async ({
     browser,
 }) => {
