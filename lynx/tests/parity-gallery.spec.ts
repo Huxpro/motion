@@ -16,6 +16,7 @@ import {
     DEFAULT_TRANSITION_CASE,
     DEEP_VARIANT_PROPAGATION_CASE,
     DISPLAY_REVEAL_CASE,
+    DISPLAY_EXIT_CASE,
     EXPLICIT_CHILD_DELAY_ROOT_CASE,
     FUNCTION_VARIANTS_CASE,
     GALLERY_EXAMPLES,
@@ -1437,6 +1438,54 @@ test("manifest case: display none switches to block before entrance", async ({
     }
 
     expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: display stays block until the opacity exit completes", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "display-exit" })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=display-exit"
+        ),
+    ])
+
+    for (const [renderer, page] of [
+        ["Lynx", lynxPage],
+        ["Web", webPage],
+    ] as const) {
+        const target = page.locator("#target-display-exit")
+        await expect(target).toHaveCSS("display", "block")
+        await expect(target).toHaveCSS("opacity", "1")
+        await page.locator("#example-display-exit").click()
+        await page.waitForTimeout(DISPLAY_EXIT_CASE.expected.sampleMs)
+        const intermediate = await target.evaluate((element) => ({
+            display: getComputedStyle(element).display,
+            opacity: Number(getComputedStyle(element).opacity),
+        }))
+        expect(intermediate.display, `${renderer} display during exit`).toBe(
+            "block"
+        )
+        expect(intermediate.opacity, `${renderer} opacity during exit`).toBeGreaterThan(
+            0
+        )
+        expect(intermediate.opacity, `${renderer} opacity during exit`).toBeLessThan(
+            1
+        )
+        await expect(target).toHaveCSS("display", "none", {
+            timeout: DISPLAY_EXIT_CASE.expected.durationMs + 600,
+        })
+    }
+
     await Promise.all([lynxPage.close(), webPage.close()])
 })
 

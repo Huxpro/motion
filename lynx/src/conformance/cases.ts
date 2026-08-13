@@ -376,6 +376,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { durationMs: 400, sampleMs: 120 },
     },
     {
+        id: "targets/display-exit",
+        category: "Targets",
+        title: "Fade out, then hide",
+        summary:
+            "A discrete display none target waits for the opacity exit animation to complete.",
+        status: "conformant",
+        api: ["animate", "display", "opacity", "onAnimationComplete"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "animate display block => none switches to none on animation end"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "display remains block during the opacity exit",
+            "opacity exposes an intermediate exit frame",
+            "display switches to none only after completion in both renderers",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { durationMs: 400, sampleMs: 120 },
+    },
+    {
         id: "targets/visibility-reveal",
         category: "Targets",
         title: "Reveal, then fade in",
@@ -1909,6 +1935,12 @@ export const DISPLAY_REVEAL_CASE = CONFORMANCE_CASES.find(
     expected: { durationMs: number; sampleMs: number }
 }
 
+export const DISPLAY_EXIT_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/display-exit"
+) as ConformanceCase & {
+    expected: { durationMs: number; sampleMs: number }
+}
+
 export const VISIBILITY_REVEAL_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/visibility-reveal"
 ) as ConformanceCase & {
@@ -3105,6 +3137,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 1,
         rationale:
             "Common fade-in visibility pattern already reuses upstream discrete value mixing on immutable Lynx.",
+    },
+    {
+        caseId: "targets/display-exit",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 1,
+        rationale:
+            "Common fade-out hide pattern reuses upstream discrete value mixing and requires no host-specific orchestration.",
     },
     {
         caseId: "targets/visibility-reveal",
@@ -4587,5 +4629,17 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 8,
         lossAfter: WEIGHTED_LOSS,
         note: "I4/F5/M1/R0/C0 · immutable 2c805a2 motion/react/react-umd set · opacity settles while x remains inside its own delay, then both reach their targets · package coverage plus complete dual-renderer suite 62/62 · no Full Demo or native claim.",
+    },
+    {
+        id: "motion-83",
+        date: "2026-08-13",
+        title: "Display exit timing evidence",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 83,
+        caseIds: ["targets/display-exit"],
+        lossBefore: 7,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F5/M1/R0/C1 · immutable 2c805a2 motion/react/react-umd set · display remains block through the opacity exit and switches to none only after completion · package coverage plus complete dual-renderer suite 63/63 · no Full Demo or native claim.",
     },
 ]

@@ -10,6 +10,7 @@ import {
     DEEP_VARIANT_PROPAGATION_CASE,
     DEFAULT_TRANSITION_CASE,
     DISPLAY_REVEAL_CASE,
+    DISPLAY_EXIT_CASE,
     EXPLICIT_CHILD_DELAY_ROOT_CASE,
     FUNCTION_VARIANTS_CASE,
     INHERITED_VARIANT_VALUE_UPDATE_CASE,
@@ -192,6 +193,7 @@ export function App() {
     const removedAnimateValues = conformanceMode === "removed-animate-values"
     const transformOriginMode = conformanceMode === "transform-origin"
     const complexGradientMode = conformanceMode === "complex-gradient"
+    const displayExitMode = conformanceMode === "display-exit"
     const variantPropagationMode = conformanceMode === "variant-propagation"
     const delayChildrenMode = conformanceMode === "delay-children"
     const variantInheritOptOutMode =
@@ -234,6 +236,7 @@ export function App() {
     const [initialFalseActive, setInitialFalseActive] = useState(false)
     const [initialFalseStarts, setInitialFalseStarts] = useState(0)
     const [displayRevealed, setDisplayRevealed] = useState(false)
+    const [displayExited, setDisplayExited] = useState(false)
     const [visibilityRevealed, setVisibilityRevealed] = useState(false)
     const [unseenPropertyActive, setUnseenPropertyActive] = useState(false)
     const [instantActive, setInstantActive] = useState(false)
@@ -299,6 +302,40 @@ export function App() {
                     <text style={{ ...cardTitle, marginBottom: "10px" }}>
                         Conformance cases
                     </text>
+
+                    {displayExitMode && (
+                        <view
+                            id="example-display-exit"
+                            style={conformanceCard}
+                            bindtap={() => setDisplayExited(true)}
+                        >
+                            <view style={info}>
+                                <text style={cardTitle}>Fade out, then hide</text>
+                                <text style={code}>display: block → none</text>
+                            </view>
+                            <view style={demo}>
+                                <motion.view
+                                    id="target-display-exit"
+                                    style={{
+                                        ...dot,
+                                        backgroundColor: "#d3df63",
+                                    }}
+                                    initial={{ display: "block", opacity: 1 }}
+                                    animate={
+                                        displayExited
+                                            ? { display: "none", opacity: 0 }
+                                            : { display: "block", opacity: 1 }
+                                    }
+                                    transition={{
+                                        duration:
+                                            DISPLAY_EXIT_CASE.expected
+                                                .durationMs / 1000,
+                                        ease: "linear",
+                                    }}
+                                />
+                            </view>
+                        </view>
+                    )}
 
                     {propertySpecificTransitionMode && (
                         <view
