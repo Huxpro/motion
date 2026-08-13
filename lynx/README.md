@@ -155,3 +155,6 @@ The main long-term reuse boundary is:
 See `docs/web-mts-crossmodule-bug.md` for the historical runtime failures that
 made the original local fallback necessary and how the lynx-stack work now
 avoids them.
+
+Preview deployments are published by the `motion-lynx` Vercel project from
+the repository-level `vercel.json`.
