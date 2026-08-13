@@ -21,6 +21,7 @@ declare module '@lynx-js/types' {
       | "memoized-inherited-removed-value"
       | "suspense-inherited-child"
       | "suspense-initial-frame"
+      | "suspense-remount-reset"
       | "variant-propagation"
       | "delay-children"
       | "variant-inherit-opt-out"

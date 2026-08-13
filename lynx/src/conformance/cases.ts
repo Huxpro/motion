@@ -1511,6 +1511,36 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { durationSeconds: 10, initialSampleMaxOpacity: 0.5 },
     },
     {
+        id: "targets/suspense-remount-reset",
+        category: "Targets",
+        title: "Suspense remount resets MotionValues",
+        summary:
+            "A component suspended mid-animation restarts from its declarative initial values when it remounts.",
+        status: "conformant",
+        api: ["initial", "animate", "useMotionValue", "Suspense"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "Resets motion values to initial after Suspense remount"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the initial animation reaches an observable intermediate frame",
+            "suspending the child displays the fallback",
+            "after resolution, opacity and scale restart near zero rather than retaining the intermediate frame",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: false,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            durationSeconds: 4,
+            preSuspendMin: 0.05,
+            remountSampleMax: 0.15,
+        },
+    },
+    {
         id: "variants/function-custom",
         category: "Variants",
         title: "Function variant + custom",
@@ -2469,6 +2499,16 @@ export const SUSPENSE_INITIAL_FRAME_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "variants/suspense-initial-frame"
 ) as ConformanceCase & {
     expected: { durationSeconds: number; initialSampleMaxOpacity: number }
+}
+
+export const SUSPENSE_REMOUNT_RESET_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "targets/suspense-remount-reset"
+) as ConformanceCase & {
+    expected: {
+        durationSeconds: number
+        preSuspendMin: number
+        remountSampleMax: number
+    }
 }
 
 export const FUNCTION_VARIANTS_CASE = CONFORMANCE_CASES.find(
@@ -3829,6 +3869,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "Correct lazy-entry animation prevents visual jumps and reuses the same official Suspense plus upstream MotionValue path.",
     },
     {
+        caseId: "targets/suspense-remount-reset",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 2,
+        css: 0,
+        rationale:
+            "Suspending data-driven UI is common; the contract reuses ReactLynx Suspense and upstream MotionValue lifecycle with only remount coordination at the ReactLynx layer.",
+    },
+    {
         caseId: "variants/function-custom",
         importance: 3,
         platformFit: 5,
@@ -5141,5 +5191,17 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 6,
         lossAfter: WEIGHTED_LOSS,
         note: "I4/F5/M1/R1/C0 · immutable ed0c9f2 motion/react/react-umd set · after a real Suspense boundary resolves beneath an already-animated parent, both renderers sample the child's ten-second inherited tween below opacity 0.5 rather than skipping to visible opacity 1 · focused dual-renderer 1/1 and complete suite 72/72 · native remains unavailable and unclaimed after the immediately preceding bounded Sandbox lease timeout · no Full Demo because this strengthens lazy-entry semantics rather than unlocking a broader usage pattern.",
+    },
+    {
+        id: "motion-94",
+        date: "2026-08-13",
+        title: "Suspense remount MotionValue reset evidence",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 94,
+        caseIds: ["targets/suspense-remount-reset"],
+        lossBefore: 6,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F5/M1/R2/C0 · immutable ed0c9f2 motion/react/react-umd set · a child suspended during a four-second opacity/scale tween renders fallback, then both renderers restart below 0.15 after resolution instead of retaining the pre-suspend intermediate frame · focused dual-renderer 1/1 and complete suite 73/73 · the Sandbox lease endpoint timed out after 30 seconds without returning a serial, so native is unavailable and unclaimed · no Full Demo because this closes lifecycle evidence without newly unlocking a broader usage pattern.",
     },
 ]
