@@ -149,3 +149,7 @@ delay/stagger/`when` remains in issue #10.
 Hux evidence PR #77 adds the complementary explicit-child ownership contract:
 an explicit child `animate` prop starts a new delay root instead of inheriting a
 parent's numeric `delayChildren`. No lynx-stack source diff is required.
+
+Hux evidence PR #78 adds the upstream nested-controlled-roots contract. Parent
+and child explicit `animate` props reactively switch their own named variants
+without ownership collisions; no lynx-stack source diff is required.

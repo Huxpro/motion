@@ -30,6 +30,7 @@ import {
     MOTION_CREATE_CASE,
     NAMED_EASING_CASE,
     NAMED_VARIANTS_CASE,
+    NESTED_CONTROLLED_VARIANTS_CASE,
     NEGATIVE_DELAY_CASE,
     NO_OP_TARGET_CASE,
     NO_OP_KEYFRAMES_CASE,
@@ -575,6 +576,48 @@ test("manifest case: explicit child animate resets parent delay", async ({
                 }
             )
             .toBe(EXPLICIT_CHILD_DELAY_ROOT_CASE.expected.visibleOpacity)
+    }
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: nested controlled variants switch independently", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "nested-controlled-variants" })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=nested-controlled-variants"
+        ),
+    ])
+
+    for (const page of [lynxPage, webPage]) {
+        const styles = () =>
+            Promise.all(
+                ["parent", "child"].map((part) =>
+                    page
+                        .locator(`#target-nested-controlled-${part}`)
+                        .evaluate((element) =>
+                            Number(getComputedStyle(element).opacity)
+                        )
+                )
+            )
+        await expect.poll(styles).toEqual([
+            NESTED_CONTROLLED_VARIANTS_CASE.expected.parentHiddenOpacity,
+            NESTED_CONTROLLED_VARIANTS_CASE.expected.childHiddenOpacity,
+        ])
+        await page.locator("#example-nested-controlled-variants").click()
+        await expect.poll(styles).toEqual([
+            NESTED_CONTROLLED_VARIANTS_CASE.expected.parentVisibleOpacity,
+            NESTED_CONTROLLED_VARIANTS_CASE.expected.childVisibleOpacity,
+        ])
     }
     await Promise.all([lynxPage.close(), webPage.close()])
 })
