@@ -140,3 +140,8 @@ variant context already survives intermediate Motion components without an
 Hux evidence PR #75 adds the upstream deep `initial={false}` propagation
 contract against the same immutable package set. It needs no lynx-stack source
 diff: the no-mount-animation context already survives a neutral Motion wrapper.
+
+Hux evidence PR #76 adds the upstream nested numeric `delayChildren` contract
+against the same immutable package set. The matching lynx-stack package test and
+the dual-renderer integration both show descendant delays accumulating; dynamic
+delay/stagger/`when` remains in issue #10.

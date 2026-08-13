@@ -4,6 +4,7 @@ import type { ComponentPropsWithoutRef } from "react"
 import {
     DELAY_CASE,
     DELAY_CHILDREN_CASE,
+    DEEP_DELAY_CHILDREN_CASE,
     DEEP_INITIAL_FALSE_PROPAGATION_CASE,
     DEEP_VARIANT_PROPAGATION_CASE,
     DEFAULT_TRANSITION_CASE,
@@ -197,6 +198,8 @@ export function App() {
         conformanceMode === "deep-variant-propagation"
     const deepInitialFalsePropagationMode =
         conformanceMode === "deep-initial-false-propagation"
+    const deepDelayChildrenMode =
+        conformanceMode === "deep-delay-children"
     const liveX = useMotionValue(STYLE_MOTION_VALUE_CASE.expected.startX)
     let styleMotionValueRenders = 0
     styleMotionValueRenders += 1
@@ -225,6 +228,8 @@ export function App() {
     const [variantPropagationActive, setVariantPropagationActive] =
         useState(false)
     const [delayChildrenActive, setDelayChildrenActive] = useState(false)
+    const [deepDelayChildrenActive, setDeepDelayChildrenActive] =
+        useState(false)
     const [defaultTransitionActive, setDefaultTransitionActive] =
         useState(false)
     const [nullKeyframeActive, setNullKeyframeActive] = useState(false)
@@ -619,6 +624,81 @@ export function App() {
                                                 },
                                             }}
                                             transition={{ duration: 0.4 }}
+                                        />
+                                    </motion.div>
+                                </motion.div>
+                            </div>
+                        </div>
+                    )}
+
+                    {deepDelayChildrenMode && (
+                        <div
+                            id="example-deep-delay-children"
+                            style={conformanceCard}
+                            onClick={() => setDeepDelayChildrenActive(true)}
+                        >
+                            <div style={info}>
+                                <span style={cardTitle}>
+                                    Accumulated child delay
+                                </span>
+                                <span style={code}>
+                                    {`${DEEP_DELAY_CHILDREN_CASE.expected.delayStepMs}ms + ${DEEP_DELAY_CHILDREN_CASE.expected.delayStepMs}ms`}
+                                </span>
+                            </div>
+                            <div style={demo}>
+                                <motion.div
+                                    initial="hidden"
+                                    animate={
+                                        deepDelayChildrenActive
+                                            ? "visible"
+                                            : "hidden"
+                                    }
+                                    variants={{
+                                        hidden: {},
+                                        visible: {
+                                            transition: {
+                                                delayChildren:
+                                                    DEEP_DELAY_CHILDREN_CASE
+                                                        .expected.delayStepMs /
+                                                    1000,
+                                            },
+                                        },
+                                    }}
+                                >
+                                    <motion.div
+                                        variants={{
+                                            hidden: {},
+                                            visible: {
+                                                transition: {
+                                                    delayChildren:
+                                                        DEEP_DELAY_CHILDREN_CASE
+                                                            .expected
+                                                            .delayStepMs / 1000,
+                                                },
+                                            },
+                                        }}
+                                    >
+                                        <motion.div
+                                            id="target-deep-delay-children"
+                                            style={{
+                                                ...dot,
+                                                backgroundColor: "#d3df63",
+                                            }}
+                                            variants={{
+                                                hidden: {
+                                                    opacity:
+                                                        DEEP_DELAY_CHILDREN_CASE
+                                                            .expected
+                                                            .hiddenOpacity,
+                                                },
+                                                visible: {
+                                                    opacity:
+                                                        DEEP_DELAY_CHILDREN_CASE
+                                                            .expected
+                                                            .visibleOpacity,
+                                                },
+                                            }}
+                                            transition={{ type: false }}
                                         />
                                     </motion.div>
                                 </motion.div>

@@ -10,6 +10,7 @@ import {
     CONFORMANCE_METRICS,
     DELAY_CASE,
     DELAY_CHILDREN_CASE,
+    DEEP_DELAY_CHILDREN_CASE,
     DEEP_INITIAL_FALSE_PROPAGATION_CASE,
     DEFAULT_TRANSITION_CASE,
     DEEP_VARIANT_PROPAGATION_CASE,
@@ -488,6 +489,49 @@ test("manifest case: initial false propagates through a neutral wrapper", async 
                 { message: `${renderer} deep first frame` }
             )
             .toEqual(DEEP_INITIAL_FALSE_PROPAGATION_CASE.expected)
+    }
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: delayChildren accumulates through descendants", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "deep-delay-children" })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=deep-delay-children"
+        ),
+    ])
+
+    for (const [renderer, page] of [
+        ["Lynx", lynxPage],
+        ["Web", webPage],
+    ] as const) {
+        const example = page.locator("#example-deep-delay-children")
+        const target = page.locator("#target-deep-delay-children")
+        const opacity = () =>
+            target.evaluate((element) =>
+                Number(getComputedStyle(element).opacity)
+            )
+        await expect
+            .poll(opacity)
+            .toBe(DEEP_DELAY_CHILDREN_CASE.expected.hiddenOpacity)
+        await example.click()
+        await page.waitForTimeout(DEEP_DELAY_CHILDREN_CASE.expected.holdMs)
+        expect(await opacity(), `${renderer} cumulative hold`).toBe(
+            DEEP_DELAY_CHILDREN_CASE.expected.hiddenOpacity
+        )
+        await expect
+            .poll(opacity, { timeout: 1000, message: `${renderer} settles` })
+            .toBe(DEEP_DELAY_CHILDREN_CASE.expected.visibleOpacity)
     }
     await Promise.all([lynxPage.close(), webPage.close()])
 })
