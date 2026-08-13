@@ -449,7 +449,7 @@ button {
 .stack-row-head {
     min-height: 42px;
     color: var(--foreground-feint);
-    font: 700 0.75rem var(--font-mono);
+    font: 700 0.875rem var(--font-mono);
     letter-spacing: 0.04em;
     text-transform: uppercase;
 }
@@ -482,13 +482,13 @@ button {
 
 .stack-layer small {
     color: color-mix(in oklch, var(--foreground-feint) 82%, var(--accent));
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
     line-height: 1.45;
 }
 
 .stack-state,
 .stack-confidence {
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
     font-weight: 700;
     line-height: 1.35;
 }

@@ -4288,7 +4288,7 @@ test("evidence portal exposes examples, API inventory, and conformance metrics",
     ).toBeVisible()
     await expect(page.locator(".monitor-metric")).toHaveCount(6)
     await expect(page.locator(".validation-grid article")).toHaveCount(3)
-    await expect(page.locator(".validation-grid")).toContainText("132 / 132")
+    await expect(page.locator(".validation-grid")).toContainText("134 / 134")
     await expect(page.locator(".validation-grid")).toContainText("5 / 5")
     await expect(page.locator(".validation-grid")).toContainText("SDK 0.0.1")
     await expect(page.locator(".stack-row:not(.stack-row-head)")).toHaveCount(
@@ -4298,7 +4298,7 @@ test("evidence portal exposes examples, API inventory, and conformance metrics",
     await expect(page.locator(".stack-monitor")).toContainText("#3524")
     await expect(page.locator(".stack-state-ready")).toHaveCount(8)
     await expect(page.locator(".stack-state-draft")).toHaveCount(4)
-    await expect(page.locator(".stack-confidence-ok")).toHaveCount(2)
+    await expect(page.locator(".stack-confidence-ok")).toHaveCount(3)
     await expect(page.locator(".stack-confidence-dirty-hacky")).toHaveCount(0)
     await expect(
         page.locator(".capability-row:not(.capability-row-head)")

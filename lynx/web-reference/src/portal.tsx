@@ -661,7 +661,7 @@ function Overview({ lang, t }: { lang: Lang; t: Translate }) {
                             {t("validation.pass")}
                         </span>
                         <strong>{t("validation.package")}</strong>
-                        <b>132 / 132</b>
+                        <b>134 / 134</b>
                         <p>{t("validation.packageNote")}</p>
                     </article>
                     <article>
