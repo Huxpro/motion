@@ -145,3 +145,7 @@ Hux evidence PR #76 adds the upstream nested numeric `delayChildren` contract
 against the same immutable package set. The matching lynx-stack package test and
 the dual-renderer integration both show descendant delays accumulating; dynamic
 delay/stagger/`when` remains in issue #10.
+
+Hux evidence PR #77 adds the complementary explicit-child ownership contract:
+an explicit child `animate` prop starts a new delay root instead of inheriting a
+parent's numeric `delayChildren`. No lynx-stack source diff is required.

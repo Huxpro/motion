@@ -1547,6 +1547,37 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         },
     },
     {
+        id: "variants/explicit-child-delay-root",
+        category: "Variants",
+        title: "Explicit child animate resets delay ownership",
+        summary:
+            "A child with its own animate prop does not inherit its parent's delayChildren window.",
+        status: "conformant",
+        api: ["animate", "variants", "delayChildren", "inheritance"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "doesn't propagate to a component with its own `animate` prop"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the parent owns a one-second child delay",
+            "the explicit child animate prop starts a new ownership root",
+            "the child settles within 500ms of attachment in both renderers",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            parentDelayMs: 1000,
+            independentWindowMs: 500,
+            hiddenOpacity: 0,
+            visibleOpacity: 1,
+        },
+    },
+    {
         id: "variants/orchestration",
         category: "Variants",
         title: "Variant orchestration + controls",
@@ -2008,6 +2039,17 @@ export const DEEP_DELAY_CHILDREN_CASE = CONFORMANCE_CASES.find(
     expected: {
         delayStepMs: number
         holdMs: number
+        hiddenOpacity: number
+        visibleOpacity: number
+    }
+}
+
+export const EXPLICIT_CHILD_DELAY_ROOT_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "variants/explicit-child-delay-root"
+) as ConformanceCase & {
+    expected: {
+        parentDelayMs: number
+        independentWindowMs: number
         hiddenOpacity: number
         visibleOpacity: number
     }
@@ -2559,6 +2601,16 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         contract:
             "Accumulate numeric child delays through inherited variant descendants.",
         exampleId: "deep-delay-children",
+    },
+    {
+        id: "explicit-child-delay-root",
+        group: "Variants",
+        api: "explicit child animate delay ownership",
+        status: "supported",
+        evidence: "dual-renderer",
+        contract:
+            "Start a new delay root when a child declares its own animate prop.",
+        exampleId: "explicit-child-delay-root",
     },
     {
         id: "variant-delay-children",
@@ -3279,6 +3331,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Nested list and component timing composes through ReactLynx context while each child keeps the upstream MotionValue animation path.",
+    },
+    {
+        caseId: "variants/explicit-child-delay-root",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Independent component animation ownership is a common composition rule and reuses the existing context boundary without host adaptation.",
     },
     {
         caseId: "variants/delay-children",
@@ -4191,5 +4253,17 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 8,
         lossAfter: WEIGHTED_LOSS,
         note: "I4/F5/M1/R2/C0 · immutable f6b0e90 motion/react/react-umd set · two 60ms numeric delayChildren values accumulate through inherited descendants, hold the deep child at 80ms, then settle, with no lynx-stack source diff · complete dual-renderer suite 56/56 · dynamic delay, stagger, when, controls, and gesture propagation remain issue #10 · no Full Demo or native claim.",
+    },
+    {
+        id: "motion-77",
+        date: "2026-08-13",
+        title: "Explicit child delay ownership evidence",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 77,
+        caseIds: ["variants/explicit-child-delay-root"],
+        lossBefore: 8,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F5/M1/R1/C0 · immutable f6b0e90 motion/react/react-umd set · a child with explicit animate settles within 500ms despite a one-second parent delayChildren window, establishing a new ownership root with no lynx-stack source diff · complete dual-renderer suite 57/57 · no Full Demo or native claim.",
     },
 ]
