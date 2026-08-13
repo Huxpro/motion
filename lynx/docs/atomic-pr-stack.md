@@ -175,3 +175,9 @@ x remains in its own delay, then both reach their targets on immutable `2c805a2`
 Hux evidence PR #83 adds the reverse discrete-display contract: `display`
 remains `block` during an opacity exit and switches to `none` only after the
 animation completes on immutable `2c805a2`.
+
+Hux evidence PR #84 adds the upstream named-variant style-ownership contract.
+Removing `animate` restores the current static opacity/rotate values, later
+style updates remain reactive, and re-entering the variant masks style changes
+while active on immutable `2c805a2`; lynx-stack #3489 owns the adjacent removed-
+target capability.

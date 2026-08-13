@@ -12,6 +12,7 @@ declare module '@lynx-js/types' {
       | "transform-origin"
       | "complex-gradient"
       | "display-exit"
+      | "variant-style-fallback"
       | "variant-propagation"
       | "delay-children"
       | "variant-inherit-opt-out"
