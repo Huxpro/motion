@@ -17,6 +17,7 @@ import {
     DEEP_VARIANT_PROPAGATION_CASE,
     DISPLAY_REVEAL_CASE,
     DISPLAY_EXIT_CASE,
+    DYNAMIC_INHERITED_CHILD_CASE,
     EXPLICIT_CHILD_DELAY_ROOT_CASE,
     FUNCTION_VARIANTS_CASE,
     GALLERY_EXAMPLES,
@@ -2286,6 +2287,52 @@ test("manifest case: inherited variant removal falls back to child style", async
         await expect
             .poll(opacity, { message: `${renderer} inherited c fallback` })
             .toBe(INHERITED_VARIANT_STYLE_FALLBACK_CASE.expected.styleOpacity)
+    }
+
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: a newly mounted child enters the current inherited variant", async ({
+    browser,
+}) => {
+    const webPage = await browser.newPage()
+    const lynxPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "dynamic-inherited-child" })
+        )
+    })
+    await webPage.goto(
+        "http://localhost:4173/?mode=baseline&case=dynamic-inherited-child"
+    )
+    await lynxPage.goto(`http://localhost:3000${previewUrl}`)
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const target = page.locator("#target-dynamic-inherited-child")
+        await expect(target, `${renderer} child starts unmounted`).toHaveCount(0)
+        await page.locator("#example-dynamic-inherited-child").click()
+        await expect(target, `${renderer} child mounts`).toHaveCount(1)
+        await expect
+            .poll(
+                () =>
+                    target.evaluate((element) => {
+                        const computed = getComputedStyle(element)
+                        return {
+                            opacity: Number(computed.opacity),
+                            x: new DOMMatrixReadOnly(computed.transform).m41,
+                        }
+                    }),
+                { message: `${renderer} new child visible variant` }
+            )
+            .toEqual({
+                opacity:
+                    DYNAMIC_INHERITED_CHILD_CASE.expected.visibleOpacity,
+                x: DYNAMIC_INHERITED_CHILD_CASE.expected.visibleX,
+            })
     }
 
     await Promise.all([lynxPage.close(), webPage.close()])

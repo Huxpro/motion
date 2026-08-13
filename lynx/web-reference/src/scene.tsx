@@ -11,6 +11,7 @@ import {
     DEFAULT_TRANSITION_CASE,
     DISPLAY_REVEAL_CASE,
     DISPLAY_EXIT_CASE,
+    DYNAMIC_INHERITED_CHILD_CASE,
     EXPLICIT_CHILD_DELAY_ROOT_CASE,
     FUNCTION_VARIANTS_CASE,
     INHERITED_VARIANT_VALUE_UPDATE_CASE,
@@ -207,6 +208,8 @@ export function App() {
         conformanceMode === "variant-partial-style-fallback"
     const inheritedVariantStyleFallbackMode =
         conformanceMode === "inherited-variant-style-fallback"
+    const dynamicInheritedChildMode =
+        conformanceMode === "dynamic-inherited-child"
     const variantPropagationMode = conformanceMode === "variant-propagation"
     const delayChildrenMode = conformanceMode === "delay-children"
     const variantInheritOptOutMode =
@@ -251,6 +254,8 @@ export function App() {
     const [variantPartialStylePhase, setVariantPartialStylePhase] = useState(0)
     const [inheritedVariantStylePhase, setInheritedVariantStylePhase] =
         useState(0)
+    const [dynamicInheritedChildCount, setDynamicInheritedChildCount] =
+        useState(1)
     const [visibilityRevealed, setVisibilityRevealed] = useState(false)
     const [unseenPropertyActive, setUnseenPropertyActive] = useState(false)
     const [instantActive, setInstantActive] = useState(false)
@@ -463,6 +468,70 @@ export function App() {
                                         }}
                                         transition={{ type: false }}
                                     />
+                                </motion.div>
+                            </div>
+                        </div>
+                    )}
+
+                    {dynamicInheritedChildMode && (
+                        <div
+                            id="example-dynamic-inherited-child"
+                            style={conformanceCard}
+                            onClick={() => setDynamicInheritedChildCount(2)}
+                        >
+                            <div style={info}>
+                                <span style={cardTitle}>
+                                    Dynamic inherited child
+                                </span>
+                                <span style={code}>
+                                    {`${dynamicInheritedChildCount} item${dynamicInheritedChildCount === 1 ? "" : "s"}`}
+                                </span>
+                            </div>
+                            <div style={demo}>
+                                <motion.div
+                                    initial="hidden"
+                                    animate="visible"
+                                >
+                                    <motion.div>
+                                        {Array.from(
+                                            {
+                                                length: dynamicInheritedChildCount,
+                                            },
+                                            (_, index) => (
+                                                <motion.div
+                                                    id={
+                                                        index === 1
+                                                            ? "target-dynamic-inherited-child"
+                                                            : undefined
+                                                    }
+                                                    key={index}
+                                                    style={{
+                                                        ...dot,
+                                                        backgroundColor:
+                                                            index === 1
+                                                                ? "#d3df63"
+                                                                : "#5f8cff",
+                                                    }}
+                                                    variants={{
+                                                        hidden: {
+                                                            opacity: 0,
+                                                            x: -100,
+                                                        },
+                                                        visible: {
+                                                            opacity:
+                                                                DYNAMIC_INHERITED_CHILD_CASE
+                                                                    .expected
+                                                                    .visibleOpacity,
+                                                            x: DYNAMIC_INHERITED_CHILD_CASE
+                                                                .expected
+                                                                .visibleX,
+                                                        },
+                                                    }}
+                                                    transition={{ type: false }}
+                                                />
+                                            )
+                                        )}
+                                    </motion.div>
                                 </motion.div>
                             </div>
                         </div>

@@ -1402,6 +1402,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { initialOpacity: 0.5, activeOpacity: 1, styleOpacity: 0 },
     },
     {
+        id: "variants/dynamic-inherited-child",
+        category: "Variants",
+        title: "New child enters the inherited animate variant",
+        summary:
+            "A child mounted after its parent settles still enters from the inherited initial label to the current animate label.",
+        status: "conformant",
+        api: ["variants", "initial", "animate", "dynamic children"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "new child items animate from initial to animate"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the second child is absent after the parent has reached visible",
+            "a later render mounts the child inside a neutral Motion wrapper",
+            "the new child resolves inherited hidden and settles at visible opacity 1 and x 100",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: false,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { visibleOpacity: 1, visibleX: 100 },
+    },
+    {
         id: "variants/function-custom",
         category: "Variants",
         title: "Function variant + custom",
@@ -2331,6 +2357,12 @@ export const INHERITED_VARIANT_STYLE_FALLBACK_CASE = CONFORMANCE_CASES.find(
         activeOpacity: number
         styleOpacity: number
     }
+}
+
+export const DYNAMIC_INHERITED_CHILD_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "variants/dynamic-inherited-child"
+) as ConformanceCase & {
+    expected: { visibleOpacity: number; visibleX: number }
 }
 
 export const FUNCTION_VARIANTS_CASE = CONFORMANCE_CASES.find(
@@ -3651,6 +3683,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "Common parent-state composition needs ReactLynx to distinguish inherited removed-key ownership, while animation execution remains upstream MotionValue code.",
     },
     {
+        caseId: "variants/dynamic-inherited-child",
+        importance: 5,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Dynamic list and card insertion is a common Motion pattern that composes through existing ReactLynx context and upstream MotionValue execution.",
+    },
+    {
         caseId: "variants/function-custom",
         importance: 3,
         platformFit: 5,
@@ -4913,5 +4955,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 7,
         lossAfter: WEIGHTED_LOSS,
         note: "I4/F4/M1/R2/C0 · immutable cd567e7 motion/react/react-umd set · before: inherited a→b→c({}) left Lynx at initial opacity 0.5 while Web restored child style opacity 0; after: inherited ownership uses static style only for removed-key fallback while preserving initial values as animation starts · package declarative 43/43, package full 152/152, focused dual-renderer 1/1, and complete suite 68/68 · no Full Demo or native claim.",
+    },
+    {
+        id: "motion-89",
+        date: "2026-08-13",
+        title: "Dynamic inherited child evidence",
+        kind: "evidence",
+        status: "verified",
+        lynxStackPr: 3498,
+        motionPr: 89,
+        caseIds: ["variants/dynamic-inherited-child"],
+        lossBefore: 7,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I5/F5/M1/R1/C0 · immutable cd567e7 motion/react/react-umd set · after the parent settles at visible, a newly mounted child under a neutral Motion wrapper resolves inherited hidden and reaches opacity 1 / x 100 in both renderers · focused dual-renderer 1/1 and complete suite 69/69 · Android Sandbox Playground SDK 0.0.1 created the target session but could not decode the current Rspeedy bundle, so native remains unclaimed · no Full Demo because entry-only insertion does not yet include presence-driven exit.",
     },
 ]

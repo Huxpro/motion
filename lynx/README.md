@@ -35,7 +35,7 @@ headless Chromium to verify manifest-backed semantic assertions as well as the
 legacy live/infinite animation, variants, lifecycle, and gesture checks.
 The current dependency gate is the immutable `cd567e7` preview set published
 by validation-only [lynx-stack#3491](https://github.com/lynx-family/lynx-stack/pull/3491);
-the complete suite passes 68/68 source-linked behaviors. Capability ownership
+the complete suite passes 69/69 source-linked behaviors. Capability ownership
 remains with the atomic #3483–#3498 stack rather than the validation rollup.
 
 The Web reference in `web-reference/` is pinned to the same upstream Motion
