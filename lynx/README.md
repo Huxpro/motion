@@ -48,11 +48,13 @@ major as the lynx-stack preview package.
 ## Evidence portal
 
 `npm run build:evidence` assembles a local static site in `evidence-dist/` and
-refreshes the existing Vercel artifact at `dev/html/motion-lynx-demo/`. The
-repository-level config can publish the local output; the established
-`dev/html/vercel.json` project serves the committed artifact. Both apply the
-cross-origin isolation headers required by Lynx for Web. Every PR preview
-exposes four shareable views:
+refreshes the committed evidence snapshot at `dev/html/motion-lynx-demo/`.
+One Vercel project (`motion-lynx`) deploys previews: the repository-level
+`vercel.json` builds the portal from source on every push and publishes
+`lynx/evidence-dist/` with the cross-origin isolation headers required by
+Lynx for Web. The committed snapshot stays in the repository as reviewable
+evidence but is not deployed separately. Every PR preview exposes four
+shareable views:
 
 - `/?view=overview` — current verdict, metrics, and the weighted-loss chart
   (a label-free sparkline on small screens); every chart point and the

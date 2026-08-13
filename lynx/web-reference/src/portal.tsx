@@ -8,7 +8,6 @@ import {
 import {
     API_METRICS,
     ATOMIC_CAPABILITIES,
-    CANONICAL_STACK,
     CONVERGENCE_HISTORY,
     CONFORMANCE_CASES,
     CONFORMANCE_METRICS,
@@ -448,12 +447,6 @@ function Overview({ lang, t }: { lang: Lang; t: Translate }) {
     const blockers = ATOMIC_CAPABILITIES.filter(
         (item) => item.status === "blocked"
     )
-    const reviewReady = CANONICAL_STACK.filter(
-        (item) => item.assessment === "ready"
-    ).length
-    const iterationCount = CANONICAL_STACK.filter(
-        (item) => item.assessment === "iterate"
-    ).length
 
     return (
         <main className="page overview-page" id="main-content">
@@ -497,77 +490,6 @@ function Overview({ lang, t }: { lang: Lang; t: Translate }) {
                     <span>{t("overview.versions")}</span>
                 </div>
             </header>
-
-            <section
-                className="stack-monitor"
-                aria-labelledby="stack-heading"
-            >
-                <header className="monitor-section-header stack-header">
-                    <div>
-                        <h2 id="stack-heading">{t("stack.title")}</h2>
-                        <p>{t("stack.desc")}</p>
-                    </div>
-                    <span>
-                        {t("stack.summary", reviewReady, iterationCount)}
-                    </span>
-                </header>
-                <div className="stack-table" role="table" aria-label={t("stack.tableLabel")}>
-                    <div className="stack-row stack-row-head" role="row">
-                        <span role="columnheader">{t("stack.pr")}</span>
-                        <span role="columnheader">{t("stack.layer")}</span>
-                        <span role="columnheader">{t("stack.state")}</span>
-                        <span role="columnheader">{t("stack.confidence")}</span>
-                        <span role="columnheader">{t("stack.evidence")}</span>
-                    </div>
-                    {CANONICAL_STACK.map((item) => (
-                        <div className="stack-row" role="row" key={item.pr}>
-                            <a
-                                role="cell"
-                                href={`https://github.com/lynx-family/lynx-stack/pull/${item.pr}`}
-                                target="_blank"
-                                rel="noreferrer"
-                            >
-                                #{item.pr}
-                            </a>
-                            <div className="stack-layer" role="cell">
-                                <strong>{item.title}</strong>
-                                <span>{item.enables}</span>
-                                {(item.supersedes || item.caveat) && (
-                                    <small>
-                                        {item.supersedes?.length
-                                            ? `${t("stack.supersedes")} ${item.supersedes.map((pr) => `#${pr}`).join(", ")}`
-                                            : ""}
-                                        {item.supersedes?.length && item.caveat
-                                            ? " · "
-                                            : ""}
-                                        {item.caveat ?? ""}
-                                    </small>
-                                )}
-                            </div>
-                            <div className="stack-meta">
-                                <span
-                                    role="cell"
-                                    className={`stack-state stack-state-${item.prState}`}
-                                >
-                                    <small>{t("stack.state")}</small>
-                                    {t(`stack.state.${item.prState}`)}
-                                </span>
-                                <span
-                                    role="cell"
-                                    className={`stack-confidence stack-confidence-${item.confidence}`}
-                                >
-                                    <small>{t("stack.confidence")}</small>
-                                    {t(`stack.confidence.${item.confidence}`)}
-                                </span>
-                            </div>
-                            <span className="stack-validation" role="cell">
-                                <small>{t("stack.evidence")}</small>
-                                {item.validation}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-            </section>
 
             <section
                 className="monitor-metrics"
@@ -648,6 +570,8 @@ function Overview({ lang, t }: { lang: Lang; t: Translate }) {
                     <i style={{ width: `${Math.max(3, nativePercent)}%` }} />
                 </a>
             </section>
+
+            <LossMonitor lang={lang} t={t} />
 
             <section
                 className="validation-gates"
@@ -804,8 +728,6 @@ function Overview({ lang, t }: { lang: Lang; t: Translate }) {
                 </aside>
             </section>
 
-            <LossMonitor lang={lang} t={t} />
-
             <section className="gallery-showoff">
                 <h2>{t("showoff.title", GALLERY_EXAMPLES.length)}</h2>
                 <p>{t("showoff.desc")}</p>
@@ -873,6 +795,7 @@ function Examples({ lang, t }: { lang: Lang; t: Translate }) {
     const [reveal, setReveal] = useState(50)
     const [reloadTick, setReloadTick] = useState(0)
     const [activeScenario, setActiveScenario] = useState("")
+    const [configOpen, setConfigOpen] = useState(false)
 
     const syncScrollRef = useRef(syncScroll)
     syncScrollRef.current = syncScroll
@@ -1091,54 +1014,6 @@ function Examples({ lang, t }: { lang: Lang; t: Translate }) {
                 aria-label={t("compare.layoutLabel")}
             >
                 <h1 className="compare-title">{t("examples.title")}</h1>
-                <div className="compare-modes">
-                    <button
-                        className={layout === "split" ? "toggle-active" : ""}
-                        aria-pressed={layout === "split"}
-                        onClick={() => setLayout("split")}
-                    >
-                        {t("compare.sideBySide")}
-                    </button>
-                    <button
-                        className={layout === "overlay" ? "toggle-active" : ""}
-                        aria-pressed={layout === "overlay"}
-                        onClick={() => setLayout("overlay")}
-                    >
-                        {t("compare.overlay")}
-                    </button>
-                </div>
-                <div className="compare-switches">
-                    <button
-                        className={syncScroll ? "toggle-active" : ""}
-                        aria-pressed={syncScroll}
-                        disabled={linkState === "unavailable"}
-                        onClick={() => setSyncScroll((value) => !value)}
-                    >
-                        {t("compare.syncScroll")}
-                    </button>
-                    <button
-                        className={mirrorTaps ? "toggle-active" : ""}
-                        aria-pressed={mirrorTaps}
-                        disabled={linkState === "unavailable"}
-                        onClick={() => setMirrorTaps((value) => !value)}
-                    >
-                        {t("compare.mirrorTaps")}
-                    </button>
-                    <button className="compare-replay" onClick={replayBoth}>
-                        {t("compare.replay")}
-                    </button>
-                </div>
-                <span
-                    className={`compare-status compare-status-${linkState}`}
-                    role="status"
-                >
-                    <i aria-hidden="true" />
-                    {linkState === "linked"
-                        ? t("compare.linked")
-                        : linkState === "connecting"
-                          ? t("compare.connecting")
-                          : t("compare.unavailable")}
-                </span>
                 <select
                     className="scenario-picker"
                     aria-label={t("scenarios.pickerLabel")}
@@ -1161,6 +1036,81 @@ function Examples({ lang, t }: { lang: Lang; t: Translate }) {
                         </option>
                     ))}
                 </select>
+                <button
+                    className={
+                        configOpen ? "config-toggle toggle-active" : "config-toggle"
+                    }
+                    aria-expanded={configOpen}
+                    aria-label={t("compare.config")}
+                    onClick={() => setConfigOpen((value) => !value)}
+                >
+                    ⚙
+                </button>
+                <div
+                    className={
+                        configOpen
+                            ? "compare-config config-open"
+                            : "compare-config"
+                    }
+                >
+                    <div className="compare-modes">
+                        <button
+                            className={
+                                layout === "split" ? "toggle-active" : ""
+                            }
+                            aria-pressed={layout === "split"}
+                            onClick={() => setLayout("split")}
+                        >
+                            {t("compare.sideBySide")}
+                        </button>
+                        <button
+                            className={
+                                layout === "overlay" ? "toggle-active" : ""
+                            }
+                            aria-pressed={layout === "overlay"}
+                            onClick={() => setLayout("overlay")}
+                        >
+                            {t("compare.overlay")}
+                        </button>
+                    </div>
+                    <div className="compare-switches">
+                        <button
+                            className={syncScroll ? "toggle-active" : ""}
+                            aria-pressed={syncScroll}
+                            disabled={linkState === "unavailable"}
+                            onClick={() => setSyncScroll((value) => !value)}
+                        >
+                            {t("compare.syncScroll")}
+                        </button>
+                        <button
+                            className={mirrorTaps ? "toggle-active" : ""}
+                            aria-pressed={mirrorTaps}
+                            disabled={linkState === "unavailable"}
+                            onClick={() => setMirrorTaps((value) => !value)}
+                        >
+                            {t("compare.mirrorTaps")}
+                        </button>
+                        <button
+                            className="compare-replay"
+                            onClick={replayBoth}
+                        >
+                            {t("compare.replay")}
+                        </button>
+                    </div>
+                </div>
+                <span
+                    className={`compare-status compare-status-${linkState}`}
+                    role="status"
+                >
+                    <i aria-hidden="true" />
+                    <em>
+                        {linkState === "linked"
+                            ? t("compare.linked")
+                            : linkState === "connecting"
+                              ? t("compare.connecting")
+                              : t("compare.unavailable")}
+                    </em>
+                </span>
             </div>
 
             <div className="compare-shell">
