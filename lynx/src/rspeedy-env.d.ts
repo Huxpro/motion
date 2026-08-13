@@ -23,6 +23,7 @@ declare module '@lynx-js/types' {
       | "explicit-child-delay-root"
       | "nested-controlled-variants"
       | "initial-false-explicit-child"
+      | "array-variant-definition-parity"
       | "hover-rest-transition"
   }
 }

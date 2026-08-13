@@ -1158,6 +1158,37 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         },
     },
     {
+        id: "variants/array-definition-parity",
+        category: "Variants",
+        title: "Array variants preserve definition parity",
+        summary:
+            "Multiple labels merge left to right with the same result for inline and hoisted variant tables.",
+        status: "conformant",
+        api: ["variants", "animate: string[]", "reactive updates"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "variants work the same whether defined inline or not"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "inline and hoisted variant tables resolve the same array labels",
+            "later labels override shared values from earlier labels",
+            "both definitions reactively settle at x=28, scale=1.12, and opacity=0.8",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            restX: -28,
+            activeX: 28,
+            activeScale: 1.12,
+            activeOpacity: 0.8,
+        },
+    },
+    {
         id: "variants/function-custom",
         category: "Variants",
         title: "Function variant + custom",
@@ -2029,6 +2060,17 @@ export const NAMED_VARIANTS_CASE = CONFORMANCE_CASES.find(
     }
 }
 
+export const ARRAY_VARIANT_DEFINITION_PARITY_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "variants/array-definition-parity"
+) as ConformanceCase & {
+    expected: {
+        restX: number
+        activeX: number
+        activeScale: number
+        activeOpacity: number
+    }
+}
+
 export const FUNCTION_VARIANTS_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "variants/function-custom"
 ) as ConformanceCase & {
@@ -2598,7 +2640,7 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         group: "Variants",
         api: 'animate={["a", "b"]}',
         status: "supported",
-        evidence: "lynx-e2e",
+        evidence: "dual-renderer",
         contract: "Merge local variant labels left to right.",
         exampleId: "array-variants",
     },
@@ -3285,6 +3327,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Common declarative authoring form with exact label and transition evidence.",
+    },
+    {
+        caseId: "variants/array-definition-parity",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Common multi-state composition resolves entirely in the portable variant layer and reuses the existing reactive target path.",
     },
     {
         caseId: "variants/function-custom",
@@ -4405,5 +4457,17 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 8,
         lossAfter: WEIGHTED_LOSS,
         note: "I5/F5/M1/R1/C0 · immutable dfb913f motion/react/react-umd set · inherited initial=false now applies only when the child also inherits the parent animate label, preserving explicit object child mount lifecycle · package declarative suite 41/41, build and Publint pass, focused dual-renderer 3/3, and complete suite 59/59 · no Full Demo or native claim.",
+    },
+    {
+        id: "motion-80",
+        date: "2026-08-13",
+        title: "Array variant definition parity evidence",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 80,
+        caseIds: ["variants/array-definition-parity"],
+        lossBefore: 8,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F5/M1/R0/C0 · immutable dfb913f motion/react/react-umd set · existing runtime merges array labels left to right and keeps inline and hoisted variant tables equivalent with no lynx-stack source diff · complete dual-renderer suite 60/60 · no Full Demo or native claim.",
     },
 ]
