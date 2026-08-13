@@ -16,6 +16,7 @@ declare module '@lynx-js/types' {
       | "display-exit"
       | "variant-style-fallback"
       | "variant-partial-style-fallback"
+      | "inherited-variant-style-fallback"
       | "variant-propagation"
       | "delay-children"
       | "variant-inherit-opt-out"

@@ -205,6 +205,8 @@ export function App() {
         conformanceMode === "variant-style-fallback"
     const variantPartialStyleFallbackMode =
         conformanceMode === "variant-partial-style-fallback"
+    const inheritedVariantStyleFallbackMode =
+        conformanceMode === "inherited-variant-style-fallback"
     const variantPropagationMode = conformanceMode === "variant-propagation"
     const delayChildrenMode = conformanceMode === "delay-children"
     const variantInheritOptOutMode =
@@ -247,6 +249,8 @@ export function App() {
     const [displayExited, setDisplayExited] = useState(false)
     const [variantStylePhase, setVariantStylePhase] = useState(0)
     const [variantPartialStylePhase, setVariantPartialStylePhase] = useState(0)
+    const [inheritedVariantStylePhase, setInheritedVariantStylePhase] =
+        useState(0)
     const [visibilityRevealed, setVisibilityRevealed] = useState(false)
     const [unseenPropertyActive, setUnseenPropertyActive] = useState(false)
     const [instantActive, setInstantActive] = useState(false)
@@ -412,6 +416,54 @@ export function App() {
                                     }}
                                     transition={{ type: false }}
                                 />
+                            </div>
+                        </div>
+                    )}
+
+                    {inheritedVariantStyleFallbackMode && (
+                        <div
+                            id="example-inherited-variant-style-fallback"
+                            style={conformanceCard}
+                            onClick={() =>
+                                setInheritedVariantStylePhase((phase) =>
+                                    Math.min(phase + 1, 2)
+                                )
+                            }
+                        >
+                            <div style={info}>
+                                <span style={cardTitle}>
+                                    Inherited removed-key ownership
+                                </span>
+                                <span style={code}>
+                                    {`phase ${inheritedVariantStylePhase}`}
+                                </span>
+                            </div>
+                            <div style={demo}>
+                                <motion.div
+                                    initial="a"
+                                    animate={
+                                        inheritedVariantStylePhase === 0
+                                            ? "a"
+                                            : inheritedVariantStylePhase === 1
+                                              ? "b"
+                                              : "c"
+                                    }
+                                >
+                                    <motion.div
+                                        id="target-inherited-variant-style-fallback"
+                                        style={{
+                                            ...dot,
+                                            opacity: 0,
+                                            backgroundColor: "#d3df63",
+                                        }}
+                                        variants={{
+                                            a: { opacity: 0.5 },
+                                            b: { opacity: 1 },
+                                            c: {},
+                                        }}
+                                        transition={{ type: false }}
+                                    />
+                                </motion.div>
                             </div>
                         </div>
                     )}

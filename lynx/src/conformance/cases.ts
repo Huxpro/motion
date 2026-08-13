@@ -1376,6 +1376,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { baseOpacity: 0, opaqueOpacity: 1, baseX: 0, movedX: 48 },
     },
     {
+        id: "variants/inherited-style-fallback-after-removal",
+        category: "Variants",
+        title: "Inherited removed key returns to child style",
+        summary:
+            "When a parent variant changes to a label that omits a child key, the child restores that key from its static style.",
+        status: "conformant",
+        api: ["variants", "initial", "animate", "style", "inheritance"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "FRAMER BUG: When a value is removed from an element as the result of a parent variant, fallback to style"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the child resolves inherited initial variant a to opacity 0.5",
+            "parent variant b updates the child to opacity 1",
+            "parent variant c omits opacity and restores child style opacity 0",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { initialOpacity: 0.5, activeOpacity: 1, styleOpacity: 0 },
+    },
+    {
         id: "variants/function-custom",
         category: "Variants",
         title: "Function variant + custom",
@@ -2294,6 +2320,16 @@ export const VARIANT_PARTIAL_STYLE_FALLBACK_CASE = CONFORMANCE_CASES.find(
         opaqueOpacity: number
         baseX: number
         movedX: number
+    }
+}
+
+export const INHERITED_VARIANT_STYLE_FALLBACK_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "variants/inherited-style-fallback-after-removal"
+) as ConformanceCase & {
+    expected: {
+        initialOpacity: number
+        activeOpacity: number
+        styleOpacity: number
     }
 }
 
@@ -3605,6 +3641,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "Common partial-variant switching reuses portable removed-key ownership while ReactLynx only supplies the next label.",
     },
     {
+        caseId: "variants/inherited-style-fallback-after-removal",
+        importance: 4,
+        platformFit: 4,
+        mts: 1,
+        reactLynx: 2,
+        css: 0,
+        rationale:
+            "Common parent-state composition needs ReactLynx to distinguish inherited removed-key ownership, while animation execution remains upstream MotionValue code.",
+    },
+    {
         caseId: "variants/function-custom",
         importance: 3,
         platformFit: 5,
@@ -4854,5 +4900,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 7,
         lossAfter: WEIGHTED_LOSS,
         note: "I4/F5/M1/R1/C1 · immutable 2c805a2 motion/react/react-umd set · Web and Lynx remain display:block at the 120ms intermediate blue→red frame, then settle red and apply display:none only after completion · package coverage plus complete dual-renderer suite 67/67 · no Full Demo or native claim.",
+    },
+    {
+        id: "lynx-3498",
+        date: "2026-08-13",
+        title: "Restore inherited removed keys from child style",
+        kind: "capability",
+        status: "verified",
+        lynxStackPr: 3498,
+        motionPr: 88,
+        caseIds: ["variants/inherited-style-fallback-after-removal"],
+        lossBefore: 7,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F4/M1/R2/C0 · immutable cd567e7 motion/react/react-umd set · before: inherited a→b→c({}) left Lynx at initial opacity 0.5 while Web restored child style opacity 0; after: inherited ownership uses static style only for removed-key fallback while preserving initial values as animation starts · package declarative 43/43, package full 152/152, focused dual-renderer 1/1, and complete suite 68/68 · no Full Demo or native claim.",
     },
 ]
