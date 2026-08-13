@@ -38,6 +38,7 @@ import {
     STYLE_MOTION_VALUE_CASE,
     SUSPENSE_INHERITED_CHILD_CASE,
     SUSPENSE_INITIAL_FRAME_CASE,
+    SUSPENSE_REMOUNT_RESET_CASE,
     TRANSITION_FROM_CASE,
     UNSEEN_PROPERTY_CASE,
     VARIANT_INHERIT_OPT_OUT_CASE,
@@ -265,6 +266,37 @@ function SuspenseInitialFrameChild() {
     )
 }
 
+let triggerSuspenseRemountReset: (() => void) | undefined
+let resolveSuspenseRemountReset: (() => void) | undefined
+
+function SuspenseRemountResetChild() {
+    const [suspended, setSuspended] = useState(false)
+    triggerSuspenseRemountReset = () => setSuspended(true)
+
+    if (suspended) {
+        throw new Promise<void>((resolve) => {
+            resolveSuspenseRemountReset = () => {
+                setSuspended(false)
+                resolve()
+            }
+        })
+    }
+
+    return (
+        <motion.view
+            id="target-suspense-remount-reset"
+            style={{ ...dot, backgroundColor: "#8ca7ff" }}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{
+                duration:
+                    SUSPENSE_REMOUNT_RESET_CASE.expected.durationSeconds,
+                ease: "linear",
+            }}
+        />
+    )
+}
+
 export function App() {
     const conformanceMode = lynx.__globalProps.conformanceMode
     const isolateTapLifecycle =
@@ -298,6 +330,8 @@ export function App() {
         conformanceMode === "suspense-inherited-child"
     const suspenseInitialFrameMode =
         conformanceMode === "suspense-initial-frame"
+    const suspenseRemountResetMode =
+        conformanceMode === "suspense-remount-reset"
     const variantPropagationMode = conformanceMode === "variant-propagation"
     const delayChildrenMode = conformanceMode === "delay-children"
     const variantInheritOptOutMode =
@@ -741,6 +775,42 @@ export function App() {
                                         <SuspenseInitialFrameChild />
                                     </Suspense>
                                 </motion.view>
+                            </view>
+                        </view>
+                    )}
+
+                    {suspenseRemountResetMode && (
+                        <view
+                            id="example-suspense-remount-reset"
+                            style={conformanceCard}
+                            bindtap={() => {
+                                if (resolveSuspenseRemountReset) {
+                                    const resolve = resolveSuspenseRemountReset
+                                    resolveSuspenseRemountReset = undefined
+                                    resolve()
+                                } else {
+                                    triggerSuspenseRemountReset?.()
+                                }
+                            }}
+                        >
+                            <view style={info}>
+                                <text style={cardTitle}>
+                                    Suspense remount reset
+                                </text>
+                                <text style={code}>
+                                    intermediate → fallback → initial
+                                </text>
+                            </view>
+                            <view style={demo}>
+                                <Suspense
+                                    fallback={
+                                        <text id="fallback-suspense-remount-reset">
+                                            loading
+                                        </text>
+                                    }
+                                >
+                                    <SuspenseRemountResetChild />
+                                </Suspense>
                             </view>
                         </view>
                     )}

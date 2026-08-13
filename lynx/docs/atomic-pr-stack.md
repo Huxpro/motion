@@ -237,3 +237,12 @@ jumping directly to opacity 1. It reuses immutable `ed0c9f2` with no lynx-stack
 source diff. Native remains unclaimed after the immediately preceding bounded
 Sandbox lease timeout, and the stronger assertion is still not a distinct Full
 Demo usage pattern.
+
+Hux evidence PR #94 covers upstream's Suspense remount reset contract. A child
+suspended during a long opacity/scale tween first exposes an intermediate
+frame and fallback, then restarts both MotionValues near their declarative
+initial zero after resolution in Web and ReactLynx on immutable `ed0c9f2`.
+The Sandbox lease endpoint timed out after 30 seconds without returning a
+serial, so native remains unclaimed. No lynx-stack source diff or Full Demo is
+needed because this records an existing lifecycle capability rather than
+unlocking a broader pattern.

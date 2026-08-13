@@ -57,6 +57,7 @@ import {
     STYLE_MOTION_VALUE_CASE,
     SUSPENSE_INHERITED_CHILD_CASE,
     SUSPENSE_INITIAL_FRAME_CASE,
+    SUSPENSE_REMOUNT_RESET_CASE,
     TAP_ANIMATION_LIFECYCLE_CASE,
     TAP_GESTURE_CASE,
     TRANSITION_FROM_CASE,
@@ -2480,6 +2481,69 @@ test("manifest case: a child resolving from Suspense samples its inherited initi
         )
         expect(opacity, `${renderer} starts near inherited hidden`).toBeLessThan(
             SUSPENSE_INITIAL_FRAME_CASE.expected.initialSampleMaxOpacity
+        )
+    }
+
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: Suspense remount resets MotionValues to initial", async ({
+    browser,
+}) => {
+    const webPage = await browser.newPage()
+    const lynxPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "suspense-remount-reset" })
+        )
+    })
+    await webPage.goto(
+        "http://localhost:4173/?mode=baseline&case=suspense-remount-reset"
+    )
+    await lynxPage.goto(`http://localhost:3000${previewUrl}`)
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const card = page.locator("#example-suspense-remount-reset")
+        const target = page.locator("#target-suspense-remount-reset")
+        await expect(target, `${renderer} child mounted`).toBeVisible()
+        await expect
+            .poll(
+                () =>
+                    target.evaluate((element) => {
+                        const style = getComputedStyle(element)
+                        const scale = new DOMMatrixReadOnly(style.transform).a
+                        return Math.min(Number(style.opacity), scale)
+                    }),
+                {
+                    message: `${renderer} opacity and scale reach intermediate frames`,
+                }
+            )
+            .toBeGreaterThan(SUSPENSE_REMOUNT_RESET_CASE.expected.preSuspendMin)
+
+        await card.click()
+        await expect(
+            page.locator("#fallback-suspense-remount-reset"),
+            `${renderer} fallback`
+        ).toBeVisible()
+
+        await card.click()
+        await expect(target, `${renderer} child remounted`).toBeVisible()
+        const remountValues = await target.evaluate((element) => {
+            const style = getComputedStyle(element)
+            return {
+                opacity: Number(style.opacity),
+                scale: new DOMMatrixReadOnly(style.transform).a,
+            }
+        })
+        expect(
+            Math.max(remountValues.opacity, remountValues.scale),
+            `${renderer} opacity and scale restart near initial`
+        ).toBeLessThan(
+            SUSPENSE_REMOUNT_RESET_CASE.expected.remountSampleMax
         )
     }
 
