@@ -138,7 +138,7 @@ export const CANONICAL_STACK: readonly CanonicalStackLayer[] = [
         confidence: "ok",
         assessment: "iterate",
         enables: "motion.* components, variants, MotionValue, tap and hover",
-        validation: "Relevant CI green; unrelated Web Elements coverage rerun pending",
+        validation: "Full repository CI green after unrelated Web coverage rerun",
         supersedes: [3436, 3474, 3491],
         caveat: "True Git base on #3477; completion ownership still needs review.",
     },

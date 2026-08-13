@@ -120,8 +120,8 @@ main
 #3477 and #3509 are fork PRs, so `gh-stack` cannot add them to the GitHub Stack
 UI. Their Git bases are nevertheless real: #3509 targets an upstream mirror of
 the exact #3477 head. The upstream conformance portion is GitHub stack #3525.
-#3477 is recommended ready after its full CI pass; #3509 remains OK/draft while
-completion ownership is reviewed. PRs #3515–#3522 are ready; #3523 and #3524
+#3477 is recommended ready after its full CI pass; #3509 remains OK/draft after
+its full CI rerun while completion ownership is reviewed. PRs #3515–#3522 are ready; #3523 and #3524
 remain OK/draft despite 134/134 package tests because completion/interruption
 acceptance and current-host native proof are still open. Historical records
 below retain their original PR numbers because
