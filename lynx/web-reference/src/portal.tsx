@@ -280,12 +280,30 @@ function LossMonitor({ lang, t }: { lang: Lang; t: Translate }) {
                     <polyline className="loss-line" points={points} />
                     {CONVERGENCE_HISTORY.map((record, index) => (
                         <g key={record.id}>
-                            <circle
-                                className="loss-point"
-                                cx={x(index)}
-                                cy={y(record.lossAfter)}
-                                r={labelSet.has(index) ? 5 : 3}
-                            />
+                            <a
+                                href={`${localizedHref(lang, {
+                                    view: "conformance",
+                                })}#rec-${record.id}`}
+                                aria-label={`${recordLabel(record)} · ${
+                                    record.title
+                                } — ${t("loss.pointLabel")}`}
+                            >
+                                <circle
+                                    className="loss-hit"
+                                    cx={x(index)}
+                                    cy={y(record.lossAfter)}
+                                    r="10"
+                                />
+                                <circle
+                                    className="loss-point"
+                                    cx={x(index)}
+                                    cy={y(record.lossAfter)}
+                                    r={labelSet.has(index) ? 5 : 3}
+                                />
+                                <title>
+                                    {`${recordLabel(record)} · ${record.title} · ${record.lossBefore} → ${record.lossAfter}`}
+                                </title>
+                            </a>
                             {labelSet.has(index) && (
                                 <>
                                     <text
@@ -343,11 +361,45 @@ function LossMonitor({ lang, t }: { lang: Lang; t: Translate }) {
                     )}
                 </svg>
             </div>
-            <footer className="loss-monitor-footer">
-                <a href={localizedHref(lang, { view: "conformance" })}>
-                    {t("loss.history")}
-                </a>
-            </footer>
+            <div className="recent-steps">
+                <header>
+                    <h3>{t("loss.recentTitle")}</h3>
+                    <a href={localizedHref(lang, { view: "conformance" })}>
+                        {t("loss.history")}
+                    </a>
+                </header>
+                <ol>
+                    {[...CONVERGENCE_HISTORY]
+                        .slice(-4)
+                        .reverse()
+                        .map((record) => (
+                            <li className="recent-step" key={record.id}>
+                                <a
+                                    href={`${localizedHref(lang, {
+                                        view: "conformance",
+                                    })}#rec-${record.id}`}
+                                >
+                                    <span>{recordLabel(record)}</span>
+                                    <strong>{record.title}</strong>
+                                    <small>
+                                        <i
+                                            className={`record-status status-${record.status}`}
+                                        >
+                                            {t(`record.${record.status}`)}
+                                        </i>
+                                        <b>
+                                            {record.lossBefore} →{" "}
+                                            {record.lossAfter}
+                                            {record.expectedLossAfter !==
+                                                undefined &&
+                                                ` → ${record.expectedLossAfter}?`}
+                                        </b>
+                                    </small>
+                                </a>
+                            </li>
+                        ))}
+                </ol>
+            </div>
         </section>
     )
 }
@@ -1177,6 +1229,19 @@ function Conformance({ lang, t }: { lang: Lang; t: Translate }) {
     const exact = Math.round(
         (CONFORMANCE_METRICS.conformant / CONFORMANCE_METRICS.tracked) * 100
     )
+
+    // Deep links from the overview loss chart (#rec-*) land after React
+    // renders, so the native anchor scroll never fired and :target was
+    // computed against a not-yet-rendered element — do both by hand.
+    useEffect(() => {
+        const hash = window.location.hash.slice(1)
+        if (!hash) return
+        const row = document.getElementById(hash)
+        if (!row) return
+        row.classList.add("row-targeted")
+        row.scrollIntoView({ block: "start" })
+    }, [])
+
     return (
         <main className="page conformance-page" id="main-content">
             <header className="page-intro conformance-intro">
@@ -1243,7 +1308,7 @@ function Conformance({ lang, t }: { lang: Lang; t: Translate }) {
                 </header>
                 <ol className="convergence-ledger">
                     {CONVERGENCE_HISTORY.map((record) => (
-                        <li key={record.id}>
+                        <li key={record.id} id={`rec-${record.id}`}>
                             <a
                                 href={recordHref(record)}
                                 target="_blank"

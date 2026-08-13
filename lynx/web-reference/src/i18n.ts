@@ -130,6 +130,11 @@ const STRINGS = {
         en: "Full convergence ledger in Conformance →",
         zh: "完整收敛记录见一致性页 →",
     },
+    "loss.recentTitle": { en: "Latest steps", zh: "最近收敛步" },
+    "loss.pointLabel": {
+        en: "Open this step in the convergence ledger",
+        zh: "在收敛记录中查看此步骤",
+    },
 
     "showoff.title": {
         en: "Gallery ({0} live scenarios)",

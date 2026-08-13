@@ -4300,9 +4300,19 @@ test("evidence portal exposes examples, API inventory, and conformance metrics",
     )
     await expect(page.locator(".loss-chart")).toHaveCount(1)
     // The overview stays an overview: the per-case evidence table and the
-    // convergence ledger live in the Conformance view now.
+    // convergence ledger live in the Conformance view now. A latest-steps
+    // strip under the chart deep-links into the full ledger.
     await expect(page.locator(".test-row")).toHaveCount(0)
     await expect(page.locator(".convergence-ledger")).toHaveCount(0)
+    await expect(page.locator(".recent-step")).toHaveCount(
+        Math.min(4, CONVERGENCE_HISTORY.length)
+    )
+    await page.locator(".recent-step a").first().click()
+    await expect(page).toHaveURL(/view=conformance#rec-/)
+    await expect(
+        page.locator(".convergence-ledger li.row-targeted")
+    ).toBeInViewport()
+    await page.goBack()
 
     await page.getByRole("link", { name: "API", exact: true }).click()
     await expect(

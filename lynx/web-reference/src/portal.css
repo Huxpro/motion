@@ -653,23 +653,104 @@ button {
     fill: var(--foreground-feint);
 }
 
-.loss-monitor-footer {
-    min-height: 52px;
-    display: flex;
-    align-items: center;
-    padding: 12px 0;
+.loss-hit {
+    fill: transparent;
+    cursor: pointer;
 }
 
-.loss-monitor-footer a {
+.loss-chart a:hover .loss-point,
+.loss-chart a:focus-visible .loss-point {
+    fill: var(--accent);
+}
+
+.loss-chart a:focus-visible {
+    outline: 2px solid var(--accent);
+}
+
+.recent-steps header {
+    min-height: 56px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.recent-steps h3 {
+    margin: 0;
+    font-size: 1rem;
+    letter-spacing: -0.02em;
+}
+
+.recent-steps header a {
     color: var(--foreground-feint);
     font-size: 0.875rem;
     font-weight: 700;
     text-underline-offset: 4px;
 }
 
-.loss-monitor-footer a:hover,
-.loss-monitor-footer a:focus-visible {
+.recent-steps header a:hover,
+.recent-steps header a:focus-visible {
     color: var(--foreground);
+}
+
+.recent-steps ol {
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border-top: 1px solid var(--border);
+    list-style: none;
+}
+
+.recent-step a {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 16px 18px 16px 0;
+    background: var(--background);
+    text-decoration: none;
+    transition: background 120ms var(--ease-out);
+}
+
+.recent-step a:hover,
+.recent-step a:focus-visible {
+    background: var(--layer);
+    outline: none;
+}
+
+.recent-step + .recent-step a {
+    padding-left: 18px;
+}
+
+.recent-step span {
+    color: var(--accent);
+    font: 700 0.75rem var(--font-mono);
+}
+
+.recent-step strong {
+    font-size: 0.9375rem;
+    line-height: 1.3;
+}
+
+.recent-step small {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    margin-top: auto;
+}
+
+.recent-step i {
+    font-style: normal;
+}
+
+.recent-step b {
+    color: var(--foreground);
+    font: 700 0.8125rem var(--font-mono);
+    font-variant-numeric: tabular-nums;
 }
 
 .convergence-monitor {
@@ -711,6 +792,17 @@ button {
 
 .convergence-ledger li:last-child {
     border-bottom: 0;
+}
+
+.convergence-ledger li {
+    scroll-margin-top: 96px;
+}
+
+.convergence-ledger li:target,
+.convergence-ledger li.row-targeted {
+    background: var(--layer);
+    box-shadow: inset 3px 0 0 var(--accent);
+    padding-left: 14px;
 }
 
 .convergence-ledger li > a {
@@ -1666,6 +1758,15 @@ button {
         border-left: 0;
     }
 
+    .recent-steps ol {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .recent-step a,
+    .recent-step + .recent-step a {
+        padding: 16px 18px;
+    }
+
     .gallery-showoff {
         grid-template-columns: minmax(200px, 0.55fr) minmax(0, 1fr);
         gap: 32px;
@@ -1828,6 +1929,10 @@ button {
 
     .loss-chart-wrap {
         display: none;
+    }
+
+    .recent-steps ol {
+        grid-template-columns: 1fr;
     }
 
     .convergence-ledger li {
