@@ -7,6 +7,7 @@ import {
     DEFAULT_TRANSITION_CASE,
     DISPLAY_REVEAL_CASE,
     FUNCTION_VARIANTS_CASE,
+    INHERITED_VARIANT_VALUE_UPDATE_CASE,
     INSTANT_TRANSITION_CASE,
     INITIAL_FALSE_CASE,
     INITIAL_FALSE_PROPAGATION_CASE,
@@ -185,6 +186,8 @@ export function App() {
         conformanceMode === "initial-false-propagation"
     const inheritedVariantLifecycleMode =
         conformanceMode === "inherited-variant-lifecycle"
+    const inheritedVariantValueUpdateMode =
+        conformanceMode === "inherited-variant-value-update"
     const liveX = useMotionValue(STYLE_MOTION_VALUE_CASE.expected.startX)
     let styleMotionValueRenders = 0
     styleMotionValueRenders += 1
@@ -242,6 +245,9 @@ export function App() {
     const [inheritedVariantLifecycle, setInheritedVariantLifecycle] = useState<
         string[]
     >([])
+    const [inheritedVariantX, setInheritedVariantX] = useState(
+        INHERITED_VARIANT_VALUE_UPDATE_CASE.expected.initialX
+    )
 
     return (
         <view style={page}>
@@ -491,6 +497,41 @@ export function App() {
                                                 ]
                                             )
                                         }
+                                    />
+                                </motion.view>
+                            </view>
+                        </view>
+                    )}
+
+                    {inheritedVariantValueUpdateMode && (
+                        <view
+                            id="example-inherited-variant-value-update"
+                            style={conformanceCard}
+                            bindtap={() =>
+                                setInheritedVariantX(
+                                    INHERITED_VARIANT_VALUE_UPDATE_CASE.expected
+                                        .updatedX
+                                )
+                            }
+                        >
+                            <view style={info}>
+                                <text style={cardTitle}>
+                                    Reactive inherited variant
+                                </text>
+                                <text style={code}>x: {inheritedVariantX}</text>
+                            </view>
+                            <view style={demo}>
+                                <motion.view initial={false} animate="variant">
+                                    <motion.view
+                                        id="target-inherited-variant-value-update"
+                                        style={{
+                                            ...dot,
+                                            backgroundColor: "#d3df63",
+                                        }}
+                                        variants={{
+                                            variant: { x: inheritedVariantX },
+                                        }}
+                                        transition={{ type: false }}
                                     />
                                 </motion.view>
                             </view>
