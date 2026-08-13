@@ -127,3 +127,7 @@ dynamic stagger/`when`/controls boundary tracked in issue #10.
 Hux evidence PR #72 adds the upstream inherited-child lifecycle contract against
 the same immutable package set. It requires no lynx-stack source diff: the child
 already reports the inherited variant label at animation start and completion.
+
+Hux evidence PR #73 adds the upstream reactive inherited-value contract against
+the same immutable package set. It also requires no lynx-stack source diff: a
+child re-resolves the inherited label when its variant target values change.

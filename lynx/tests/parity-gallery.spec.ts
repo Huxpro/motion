@@ -17,6 +17,7 @@ import {
     GESTURE_TRANSITION_END_CASE,
     HOVER_GESTURE_CASE,
     INHERITED_VARIANT_LIFECYCLE_CASE,
+    INHERITED_VARIANT_VALUE_UPDATE_CASE,
     INSTANT_TRANSITION_CASE,
     INITIAL_FALSE_CASE,
     INITIAL_FALSE_PROPAGATION_CASE,
@@ -351,6 +352,55 @@ test("manifest case: inherited child reports variant lifecycle", async ({
         await expect(status, `${renderer} lifecycle`).toHaveText(
             `start:${INHERITED_VARIANT_LIFECYCLE_CASE.expectedDefinitions.start}|complete:${INHERITED_VARIANT_LIFECYCLE_CASE.expectedDefinitions.complete}`
         )
+    }
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: inherited variant values update reactively", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+    }
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({
+                conformanceMode: "inherited-variant-value-update",
+            })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=inherited-variant-value-update"
+        ),
+    ])
+
+    for (const [renderer, page] of [
+        ["Lynx", lynxPage],
+        ["Web", webPage],
+    ] as const) {
+        const example = page.locator("#example-inherited-variant-value-update")
+        const target = page.locator("#target-inherited-variant-value-update")
+        const x = () =>
+            target.evaluate(
+                (element) =>
+                    new DOMMatrixReadOnly(
+                        getComputedStyle(element).transform
+                    ).m41
+            )
+        await expect
+            .poll(x, { message: `${renderer} initial x` })
+            .toBe(INHERITED_VARIANT_VALUE_UPDATE_CASE.expected.initialX)
+        await example.click()
+        await expect
+            .poll(x, { message: `${renderer} updated x` })
+            .toBe(INHERITED_VARIANT_VALUE_UPDATE_CASE.expected.updatedX)
     }
     expect(errors).toEqual([])
     await Promise.all([lynxPage.close(), webPage.close()])

@@ -1435,6 +1435,35 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         },
     },
     {
+        id: "variants/inherited-value-update",
+        category: "Variants",
+        title: "Reactive inherited variant values",
+        summary:
+            "A child re-resolves an inherited variant when that variant's target values change.",
+        status: "conformant",
+        api: ["variants", "animate", "inheritance", "reactive updates"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "changing values within an inherited variant triggers an animation"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the child initially resolves the inherited variant to x=0",
+            "the parent label remains unchanged while the child variants object changes",
+            "the child re-resolves and reaches x=100 in both renderers",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            initialX: 0,
+            updatedX: 100,
+        },
+    },
+    {
         id: "variants/orchestration",
         category: "Variants",
         title: "Variant orchestration + controls",
@@ -1874,6 +1903,12 @@ export const VARIANT_PROPAGATION_CASE = CONFORMANCE_CASES.find(
         visibleOpacity: number
         visibleX: number
     }
+}
+
+export const INHERITED_VARIANT_VALUE_UPDATE_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "variants/inherited-value-update"
+) as ConformanceCase & {
+    expected: { initialX: number; updatedX: number }
 }
 
 export const DELAY_CHILDREN_CASE = CONFORMANCE_CASES.find(
@@ -2382,6 +2417,16 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         contract:
             "Inherit declarative initial and animate labels through descendant Motion components.",
         exampleId: "variant-propagation",
+    },
+    {
+        id: "inherited-variant-value-update",
+        group: "Variants",
+        api: "reactive inherited variant values",
+        status: "supported",
+        evidence: "dual-renderer",
+        contract:
+            "Re-resolve an inherited label when a descendant's variant target values change.",
+        exampleId: "inherited-variant-value-update",
     },
     {
         id: "variant-delay-children",
@@ -3062,6 +3107,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Core declarative composition now fits ReactLynx context and reuses each child's existing upstream MotionValue path.",
+    },
+    {
+        caseId: "variants/inherited-value-update",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Common reactive component composition reuses the existing ReactLynx variant context and child MotionValue update path without a host boundary.",
     },
     {
         caseId: "variants/delay-children",
@@ -3926,5 +3981,17 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 9,
         lossAfter: WEIGHTED_LOSS,
         note: "I4/F5/M1/R1/C0 · immutable f6b0e90 motion/react/react-umd set · existing runtime reports the inherited visible definition at child start and completion with no lynx-stack source diff · complete dual-renderer suite 52/52 · loss stays 9 after expanding the measured surface · no Full Demo or native claim.",
+    },
+    {
+        id: "motion-73",
+        date: "2026-08-13",
+        title: "Reactive inherited variant value evidence",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 73,
+        caseIds: ["variants/inherited-value-update"],
+        lossBefore: 9,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F5/M1/R1/C0 · immutable f6b0e90 motion/react/react-umd set · existing runtime re-resolves a child's inherited variant when its target values change while the parent label stays constant, with no lynx-stack source diff · complete dual-renderer suite 53/53 · no Full Demo or native claim.",
     },
 ]

@@ -35,7 +35,7 @@ headless Chromium to verify manifest-backed semantic assertions as well as the
 legacy live/infinite animation, variants, lifecycle, and gesture checks.
 The current dependency gate is the immutable `f6b0e90` preview set published
 by validation-only [lynx-stack#3491](https://github.com/lynx-family/lynx-stack/pull/3491);
-the complete suite passes 52/52 source-linked behaviors. Capability ownership
+the complete suite passes 53/53 source-linked behaviors. Capability ownership
 remains with the atomic #3483–#3495 stack rather than the validation rollup.
 
 The Web reference in `web-reference/` is pinned to the same upstream Motion
@@ -70,7 +70,8 @@ contract.
 - string/array/function variants, `custom`, target-local transitions, and
   parent `initial`/`animate` label inheritance with numeric `delayChildren`
   and `inherit={false}` context boundaries; parent `initial={false}` also
-  suppresses inherited child mount animations
+  suppresses inherited child mount animations, and inherited targets re-resolve
+  when their variant values change
 - `whileTap` plus tap callbacks
 - `whileHover` plus hover callbacks on mouse-capable clients
 - `onAnimationStart` / `onAnimationComplete` for base `animate`, inherited
