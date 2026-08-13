@@ -2,6 +2,7 @@ import type { CSSProperties } from "@lynx-js/types"
 import type { IntrinsicElements } from "@lynx-js/types"
 import { useState } from "@lynx-js/react"
 import {
+    ARRAY_VARIANT_DEFINITION_PARITY_CASE,
     DELAY_CASE,
     DELAY_CHILDREN_CASE,
     DEEP_DELAY_CHILDREN_CASE,
@@ -144,6 +145,12 @@ const small: CSSProperties = {
 }
 const COLORS = ["#ff0088", "#ff8800", "#22cc88", "#3366ff"]
 
+const HOISTED_ARRAY_VARIANTS = {
+    base: { opacity: 1, scale: 1 },
+    offset: { x: -28 },
+    active: { x: 28, scale: 1.12, opacity: 0.8 },
+}
+
 const conformanceCard: CSSProperties = {
     ...card,
     height: "164px",
@@ -206,6 +213,8 @@ export function App() {
         conformanceMode === "nested-controlled-variants"
     const initialFalseExplicitChildMode =
         conformanceMode === "initial-false-explicit-child"
+    const arrayVariantDefinitionParityMode =
+        conformanceMode === "array-variant-definition-parity"
     const liveX = useMotionValue(STYLE_MOTION_VALUE_CASE.expected.startX)
     let styleMotionValueRenders = 0
     styleMotionValueRenders += 1
@@ -285,6 +294,49 @@ export function App() {
                     <text style={{ ...cardTitle, marginBottom: "10px" }}>
                         Conformance cases
                     </text>
+
+                    {arrayVariantDefinitionParityMode && (
+                        <view
+                            id="example-array-variant-definition-parity"
+                            style={conformanceCard}
+                            bindtap={() => setArrayActive(true)}
+                        >
+                            <view style={info}>
+                                <text style={cardTitle}>
+                                    Array definition parity
+                                </text>
+                                <text style={code}>
+                                    {arrayActive ? '["base", "active"]' : '["base", "offset"]'}
+                                </text>
+                            </view>
+                            <view style={demo}>
+                                <motion.view
+                                    id="target-array-variant-inline"
+                                    style={{ ...small, backgroundColor: "#d3df63" }}
+                                    initial={["base", "offset"]}
+                                    animate={arrayActive ? ["base", "active"] : ["base", "offset"]}
+                                    variants={{
+                                        base: { opacity: 1, scale: 1 },
+                                        offset: { x: ARRAY_VARIANT_DEFINITION_PARITY_CASE.expected.restX },
+                                        active: {
+                                            x: ARRAY_VARIANT_DEFINITION_PARITY_CASE.expected.activeX,
+                                            scale: ARRAY_VARIANT_DEFINITION_PARITY_CASE.expected.activeScale,
+                                            opacity: ARRAY_VARIANT_DEFINITION_PARITY_CASE.expected.activeOpacity,
+                                        },
+                                    }}
+                                    transition={{ type: false }}
+                                />
+                                <motion.view
+                                    id="target-array-variant-hoisted"
+                                    style={{ ...small, backgroundColor: "#9b72f2" }}
+                                    initial={["base", "offset"]}
+                                    animate={arrayActive ? ["base", "active"] : ["base", "offset"]}
+                                    variants={HOISTED_ARRAY_VARIANTS}
+                                    transition={{ type: false }}
+                                />
+                            </view>
+                        </view>
+                    )}
 
                     {variantPropagationMode && (
                         <view

@@ -158,3 +158,7 @@ without ownership collisions; no lynx-stack source diff is required.
 Atomic lynx-stack PR #3496 narrows inherited `initial={false}` to children that
 also inherit the parent animate label. Explicit object children retain their
 mount animation and lifecycle, verified from immutable `dfb913f`.
+
+Hux evidence PR #80 promotes array variant labels from Lynx-only gallery proof
+to the upstream inline-versus-hoisted definition contract. The existing
+`dfb913f` runtime merges labels left to right with no lynx-stack source diff.

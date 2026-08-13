@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test"
 import {
     ANIMATION_LIFECYCLE_CASE,
     API_METRICS,
+    ARRAY_VARIANT_DEFINITION_PARITY_CASE,
     COLOR_HSLA_RGBA_CASE,
     COLOR_KEYFRAMES_CASE,
     COMPLEX_GRADIENT_CASE,
@@ -1873,6 +1874,75 @@ test("manifest case: a changed string label resolves its named variant", async (
     await Promise.all([lynxPage.close(), webPage.close()])
 })
 
+test("manifest case: array variants preserve inline and hoisted definition parity", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    const errors: string[] = []
+
+    for (const page of [lynxPage, webPage]) {
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
+        })
+    }
+
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({
+                conformanceMode: "array-variant-definition-parity",
+            })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=array-variant-definition-parity"
+        ),
+    ])
+
+    for (const page of [lynxPage, webPage]) {
+        const semanticStyle = (selector: string) =>
+            page.locator(selector).evaluate((element) => {
+                const style = getComputedStyle(element)
+                const transform = new DOMMatrixReadOnly(style.transform)
+                return {
+                    opacity: Number(Number(style.opacity).toFixed(2)),
+                    translateX: Math.round(transform.m41),
+                    scale: Number(transform.a.toFixed(2)),
+                }
+            })
+
+        const inline = () => semanticStyle("#target-array-variant-inline")
+        const hoisted = () => semanticStyle("#target-array-variant-hoisted")
+        const rest = {
+            opacity: 1,
+            translateX:
+                ARRAY_VARIANT_DEFINITION_PARITY_CASE.expected.restX,
+            scale: 1,
+        }
+        await expect.poll(inline).toEqual(rest)
+        await expect.poll(hoisted).toEqual(rest)
+
+        await page.locator("#example-array-variant-definition-parity").click()
+        const active = {
+            opacity:
+                ARRAY_VARIANT_DEFINITION_PARITY_CASE.expected.activeOpacity,
+            translateX:
+                ARRAY_VARIANT_DEFINITION_PARITY_CASE.expected.activeX,
+            scale: ARRAY_VARIANT_DEFINITION_PARITY_CASE.expected.activeScale,
+        }
+        await expect.poll(inline).toEqual(active)
+        await expect.poll(hoisted).toEqual(active)
+        expect(await inline()).toEqual(await hoisted())
+    }
+
+    expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
 test("manifest case: ordered keyframes pass through their peak and settle", async ({
     browser,
 }) => {
@@ -2718,7 +2788,11 @@ test("manifest case: mirror repeat preserves easing direction", async ({
         ).toBeGreaterThanOrEqual(
             REPEAT_MIRROR_CASE.expected.returnQuarterMinimum
         )
-        expect(timeline.at(-1)!.value).toBeCloseTo(
+        // The trajectory samples establish mirror easing direction. Under a
+        // loaded full-suite browser, the fixed sampling window can end between
+        // the final generated frame and its style flush, so observe the exact
+        // settled endpoint separately instead of widening its tolerance.
+        await expect.poll(x).toBeCloseTo(
             REPEAT_MIRROR_CASE.expected.startX,
             0
         )
