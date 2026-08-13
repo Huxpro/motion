@@ -1,14 +1,14 @@
 # Reviewable PR stack for declarative Motion
 
-## Current problem
+## Historical decomposition problem
 
 PR [lynx-stack#3436](https://github.com/lynx-family/lynx-stack/pull/3436)
-targets `main` while depending on
+targeted `main` while depending on
 [lynx-stack#3405](https://github.com/lynx-family/lynx-stack/pull/3405).
 GitHub therefore presents the base PR plus variants, tap, hover, lifecycle,
 runtime fixes, tests, examples, and docs as one 40+ file review.
 
-The first mechanical correction is to set #3436's base to
+The first mechanical correction was to set #3436's base to
 `feat/declarative-motion`, the head of #3405. The follow-ups should then be
 split by behavior contract rather than by implementation file.
 
@@ -97,6 +97,36 @@ the harness review is concerned with upstream provenance and observable
 conformance.
 
 ## Current completion stack
+
+The live review stack was canonicalized on 2026-08-13. The operational source
+of truth is now:
+
+```text
+main
+└── #3477 MainThreadObject runtime
+    └── #3509 declarative Motion foundation
+        └── #3515 initial={false}
+            └── #3516 typed MotionValue styles
+                └── #3517 per-value transitions
+                    └── #3518 removed animate values
+                        └── #3519 transitionEnd
+                            └── #3520 unmount cancellation
+                                └── #3521 discrete visibility
+                                    └── #3522 CSS custom properties
+                                        └── #3523 tap lifecycle (draft / OK)
+                                            └── #3524 hover lifecycle (draft / OK)
+```
+
+#3477 and #3509 are fork PRs, so `gh-stack` cannot add them to the GitHub Stack
+UI. Their Git bases are nevertheless real: #3509 targets an upstream mirror of
+the exact #3477 head. The upstream conformance portion is GitHub stack #3525.
+PRs #3515–#3522 are marked ready to review; #3523 and #3524 remain draft while
+cross-thread gesture lifecycle ownership and current-host native proof are
+improved. Historical records below retain their original PR numbers because
+they document the immutable preview and loss movement at that time, rather
+than pretending those events occurred on the replacement branches.
+
+### Historical immutable evidence stack
 
 The next verified stack is based on the previous Motion PR head and keeps each
 behavior independently reviewable:

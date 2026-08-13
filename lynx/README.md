@@ -1,7 +1,7 @@
 # Motion × Lynx parity gallery
 
 This ReactLynx project is an integration consumer of the declarative components
-implemented in [`@lynx-js/motion`](https://github.com/lynx-family/lynx-stack/pull/3436).
+implemented in [`@lynx-js/motion`](https://github.com/lynx-family/lynx-stack/pull/3509).
 It deliberately contains no second animation backend: `src/motion/index.ts`
 only re-exports the lynx-stack package.
 
@@ -36,7 +36,11 @@ legacy live/infinite animation, variants, lifecycle, and gesture checks.
 The current dependency gate is the immutable `013e20e` preview set published
 by validation-only [lynx-stack#3491](https://github.com/lynx-family/lynx-stack/pull/3491);
 the complete suite passes 74/74 source-linked behaviors. Capability ownership
-remains with the atomic #3483–#3507 stack rather than the validation rollup.
+for that immutable evidence remains with the historical atomic stack rather
+than the validation rollup. Current review topology is now
+`main → #3477 → #3509 → #3515…#3524`; the Overview monitor lists every layer's
+remote state, confidence, evidence gate, and superseded PR. Published metrics
+stay pinned until this canonical stack produces a matching immutable preview.
 
 The Web reference in `web-reference/` is pinned to the same upstream Motion
 major as the lynx-stack preview package.

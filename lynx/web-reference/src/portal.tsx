@@ -8,6 +8,7 @@ import {
 import {
     API_METRICS,
     ATOMIC_CAPABILITIES,
+    CANONICAL_STACK,
     CONVERGENCE_HISTORY,
     CONFORMANCE_CASES,
     CONFORMANCE_METRICS,
@@ -440,6 +441,12 @@ function Overview({ lang, t }: { lang: Lang; t: Translate }) {
     const blockers = ATOMIC_CAPABILITIES.filter(
         (item) => item.status === "blocked"
     )
+    const reviewReady = CANONICAL_STACK.filter(
+        (item) => item.assessment === "ready"
+    ).length
+    const iterationCount = CANONICAL_STACK.filter(
+        (item) => item.assessment === "iterate"
+    ).length
 
     return (
         <main className="page overview-page" id="main-content">
@@ -447,20 +454,30 @@ function Overview({ lang, t }: { lang: Lang; t: Translate }) {
                 <div className="monitor-title">
                     <h1>{t("overview.title")}</h1>
                     <p>
+                        <span>main</span>
+                        <span aria-hidden="true"> → </span>
                         <a
                             href="https://github.com/lynx-family/lynx-stack/pull/3477"
                             target="_blank"
                             rel="noreferrer"
                         >
                             #3477
-                        </a>{" "}
-                        {t("overview.stackedMid")}{" "}
+                        </a>
+                        <span aria-hidden="true"> → </span>
                         <a
                             href="https://github.com/lynx-family/lynx-stack/pull/3509"
                             target="_blank"
                             rel="noreferrer"
                         >
                             #3509
+                        </a>
+                        <span aria-hidden="true"> → </span>
+                        <a
+                            href="https://github.com/lynx-family/lynx-stack/pull/3515"
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            #3515–#3524
                         </a>{" "}
                         {t("overview.stackedPost")}
                     </p>
@@ -473,6 +490,77 @@ function Overview({ lang, t }: { lang: Lang; t: Translate }) {
                     <span>{t("overview.versions")}</span>
                 </div>
             </header>
+
+            <section
+                className="stack-monitor"
+                aria-labelledby="stack-heading"
+            >
+                <header className="monitor-section-header stack-header">
+                    <div>
+                        <h2 id="stack-heading">{t("stack.title")}</h2>
+                        <p>{t("stack.desc")}</p>
+                    </div>
+                    <span>
+                        {t("stack.summary", reviewReady, iterationCount)}
+                    </span>
+                </header>
+                <div className="stack-table" role="table" aria-label={t("stack.tableLabel")}>
+                    <div className="stack-row stack-row-head" role="row">
+                        <span role="columnheader">{t("stack.pr")}</span>
+                        <span role="columnheader">{t("stack.layer")}</span>
+                        <span role="columnheader">{t("stack.state")}</span>
+                        <span role="columnheader">{t("stack.confidence")}</span>
+                        <span role="columnheader">{t("stack.evidence")}</span>
+                    </div>
+                    {CANONICAL_STACK.map((item) => (
+                        <div className="stack-row" role="row" key={item.pr}>
+                            <a
+                                role="cell"
+                                href={`https://github.com/lynx-family/lynx-stack/pull/${item.pr}`}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                #{item.pr}
+                            </a>
+                            <div className="stack-layer" role="cell">
+                                <strong>{item.title}</strong>
+                                <span>{item.enables}</span>
+                                {(item.supersedes || item.caveat) && (
+                                    <small>
+                                        {item.supersedes?.length
+                                            ? `${t("stack.supersedes")} ${item.supersedes.map((pr) => `#${pr}`).join(", ")}`
+                                            : ""}
+                                        {item.supersedes?.length && item.caveat
+                                            ? " · "
+                                            : ""}
+                                        {item.caveat ?? ""}
+                                    </small>
+                                )}
+                            </div>
+                            <div className="stack-meta">
+                                <span
+                                    role="cell"
+                                    className={`stack-state stack-state-${item.prState}`}
+                                >
+                                    <small>{t("stack.state")}</small>
+                                    {t(`stack.state.${item.prState}`)}
+                                </span>
+                                <span
+                                    role="cell"
+                                    className={`stack-confidence stack-confidence-${item.confidence}`}
+                                >
+                                    <small>{t("stack.confidence")}</small>
+                                    {t(`stack.confidence.${item.confidence}`)}
+                                </span>
+                            </div>
+                            <span className="stack-validation" role="cell">
+                                <small>{t("stack.evidence")}</small>
+                                {item.validation}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </section>
 
             <section
                 className="monitor-metrics"
@@ -963,7 +1051,7 @@ function Examples({ lang, t }: { lang: Lang; t: Translate }) {
     const lynxPaneHeader = (
         <header>
             <span>{t("examples.lynxPane")}</span>
-            <b>@lynx-js/motion · #3436</b>
+            <b>@lynx-js/motion · preview 013e20e</b>
             <a href={lynxUrl} target="_blank" rel="noreferrer">
                 {t("examples.open")}
             </a>
