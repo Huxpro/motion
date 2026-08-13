@@ -14,6 +14,7 @@ import {
     INHERITED_VARIANT_VALUE_UPDATE_CASE,
     INSTANT_TRANSITION_CASE,
     INITIAL_FALSE_CASE,
+    INITIAL_FALSE_EXPLICIT_CHILD_CASE,
     INITIAL_FALSE_PROPAGATION_CASE,
     KEYFRAME_TIMES_CASE,
     KEYFRAMES_CASE,
@@ -203,6 +204,8 @@ export function App() {
         conformanceMode === "explicit-child-delay-root"
     const nestedControlledVariantsMode =
         conformanceMode === "nested-controlled-variants"
+    const initialFalseExplicitChildMode =
+        conformanceMode === "initial-false-explicit-child"
     const liveX = useMotionValue(STYLE_MOTION_VALUE_CASE.expected.startX)
     let styleMotionValueRenders = 0
     styleMotionValueRenders += 1
@@ -261,6 +264,9 @@ export function App() {
     const [lifecycleEvents, setLifecycleEvents] = useState("events")
     const [tapLifecycle, setTapLifecycle] = useState<string[]>([])
     const [inheritedVariantLifecycle, setInheritedVariantLifecycle] = useState<
+        string[]
+    >([])
+    const [explicitChildLifecycle, setExplicitChildLifecycle] = useState<
         string[]
     >([])
     const [inheritedVariantX, setInheritedVariantX] = useState(
@@ -830,6 +836,56 @@ export function App() {
                                             },
                                         }}
                                         transition={{ type: false }}
+                                    />
+                                </motion.view>
+                            </view>
+                        </view>
+                    )}
+
+                    {initialFalseExplicitChildMode && (
+                        <view
+                            id="example-initial-false-explicit-child"
+                            style={conformanceCard}
+                        >
+                            <view style={info}>
+                                <text style={cardTitle}>
+                                    Independent child mount animation
+                                </text>
+                                <text
+                                    id="status-initial-false-explicit-child"
+                                    style={code}
+                                >
+                                    {explicitChildLifecycle.join("|")}
+                                </text>
+                            </view>
+                            <view style={demo}>
+                                <motion.view initial={false} animate="visible">
+                                    <motion.view
+                                        id="target-initial-false-explicit-child"
+                                        style={{
+                                            ...dot,
+                                            opacity: 1,
+                                            backgroundColor: "#d3df63",
+                                        }}
+                                        animate={{
+                                            opacity:
+                                                INITIAL_FALSE_EXPLICIT_CHILD_CASE
+                                                    .expected.opacity,
+                                        }}
+                                        transition={{ duration: 0.05 }}
+                                        onAnimationStart={() =>
+                                            setExplicitChildLifecycle(
+                                                (events) => [...events, "start"]
+                                            )
+                                        }
+                                        onAnimationComplete={() =>
+                                            setExplicitChildLifecycle(
+                                                (events) => [
+                                                    ...events,
+                                                    "complete",
+                                                ]
+                                            )
+                                        }
                                     />
                                 </motion.view>
                             </view>

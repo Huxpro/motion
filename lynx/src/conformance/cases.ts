@@ -1516,6 +1516,33 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { opacity: 1, x: 24 },
     },
     {
+        id: "initial/false-explicit-child",
+        category: "Variants",
+        title: "Parent initial={false} preserves explicit child animation",
+        summary:
+            "A parent's inherited first-frame policy does not suppress a child's independently controlled mount animation.",
+        status: "conformant",
+        api: ["initial={false}", "animate", "onAnimationStart", "onAnimationComplete"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "initial=false doesn't propagate to props"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the parent owns initial=false for its inherited variant subtree",
+            "the explicit object child keeps its own mount animation",
+            "the child reports start then completion and settles at opacity 0.4",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { opacity: 0.4 },
+        expectedDefinitions: { start: "start", complete: "complete" },
+    },
+    {
         id: "variants/deep-delay-children",
         category: "Variants",
         title: "Accumulated nested delayChildren",
@@ -2063,6 +2090,13 @@ export const DEEP_VARIANT_PROPAGATION_CASE = CONFORMANCE_CASES.find(
 export const DEEP_INITIAL_FALSE_PROPAGATION_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "initial/deep-false-propagation"
 ) as ConformanceCase & { expected: { opacity: number; x: number } }
+
+export const INITIAL_FALSE_EXPLICIT_CHILD_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "initial/false-explicit-child"
+) as ConformanceCase & {
+    expected: { opacity: number }
+    expectedDefinitions: { start: string; complete: string }
+}
 
 export const DEEP_DELAY_CHILDREN_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "variants/deep-delay-children"
@@ -2633,6 +2667,16 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         contract:
             "Preserve inherited initial=false through neutral Motion wrappers.",
         exampleId: "deep-initial-false-propagation",
+    },
+    {
+        id: "initial-false-explicit-child",
+        group: "Variants",
+        api: "initial={false} explicit-child ownership",
+        status: "supported",
+        evidence: "dual-renderer",
+        contract:
+            "Apply inherited initial=false only when the child also inherits the parent animate label.",
+        exampleId: "initial-false-explicit-child",
     },
     {
         id: "deep-delay-children",
@@ -3373,6 +3417,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Core no-flash first-frame semantics compose through the existing ReactLynx context chain without host or CSS adaptation.",
+    },
+    {
+        caseId: "initial/false-explicit-child",
+        importance: 5,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Core animation ownership requires only a narrow ReactLynx context condition and keeps the upstream child MotionValue lifecycle intact.",
     },
     {
         caseId: "variants/deep-delay-children",
@@ -4339,5 +4393,17 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 8,
         lossAfter: WEIGHTED_LOSS,
         note: "I5/F5/M1/R1/C0 · immutable f6b0e90 motion/react/react-umd set · nested parent and child explicit animate roots independently resolve and reactively switch their distinct named variants with no lynx-stack source diff · complete dual-renderer suite 58/58 · no Full Demo or native claim.",
+    },
+    {
+        id: "lynx-3496",
+        date: "2026-08-13",
+        title: "Preserve explicit child mount animations",
+        kind: "capability",
+        status: "verified",
+        lynxStackPr: 3496,
+        caseIds: ["initial/false-explicit-child"],
+        lossBefore: 8,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I5/F5/M1/R1/C0 · immutable dfb913f motion/react/react-umd set · inherited initial=false now applies only when the child also inherits the parent animate label, preserving explicit object child mount lifecycle · package declarative suite 41/41, build and Publint pass, focused dual-renderer 3/3, and complete suite 59/59 · no Full Demo or native claim.",
     },
 ]

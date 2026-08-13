@@ -24,6 +24,7 @@ import {
     INHERITED_VARIANT_VALUE_UPDATE_CASE,
     INSTANT_TRANSITION_CASE,
     INITIAL_FALSE_CASE,
+    INITIAL_FALSE_EXPLICIT_CHILD_CASE,
     INITIAL_FALSE_PROPAGATION_CASE,
     KEYFRAME_TIMES_CASE,
     KEYFRAMES_CASE,
@@ -618,6 +619,47 @@ test("manifest case: nested controlled variants switch independently", async ({
             NESTED_CONTROLLED_VARIANTS_CASE.expected.parentVisibleOpacity,
             NESTED_CONTROLLED_VARIANTS_CASE.expected.childVisibleOpacity,
         ])
+    }
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: parent initial false preserves explicit child animation", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "initial-false-explicit-child" })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=initial-false-explicit-child"
+        ),
+    ])
+
+    for (const [renderer, page] of [
+        ["Lynx", lynxPage],
+        ["Web", webPage],
+    ] as const) {
+        await expect(
+            page.locator("#status-initial-false-explicit-child"),
+            `${renderer} explicit child lifecycle`
+        ).toHaveText(
+            `${INITIAL_FALSE_EXPLICIT_CHILD_CASE.expectedDefinitions.start}|${INITIAL_FALSE_EXPLICIT_CHILD_CASE.expectedDefinitions.complete}`
+        )
+        await expect
+            .poll(() =>
+                page
+                    .locator("#target-initial-false-explicit-child")
+                    .evaluate((element) =>
+                        Number(getComputedStyle(element).opacity)
+                    )
+            )
+            .toBe(INITIAL_FALSE_EXPLICIT_CHILD_CASE.expected.opacity)
     }
     await Promise.all([lynxPage.close(), webPage.close()])
 })
