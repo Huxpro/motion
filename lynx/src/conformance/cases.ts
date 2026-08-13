@@ -1773,6 +1773,7 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         assertions: [
             "the parent publishes initial false in variant context",
             "the inherited child renders its final animate keyframe on the first frame",
+            "beforeChildren does not manufacture a mount delay when initial is false",
             "no intermediate hidden target is observed",
         ],
         evidence: {
@@ -5291,6 +5292,19 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 6,
         lossAfter: WEIGHTED_LOSS,
         note: "I5/F4/M1/R2/C0 · immutable 36e144e motion/react/react-umd set with matching x-commit-key · the parent routes opacity to 100ms and x to 200ms delay + 600ms duration; old 51d11ee failed the same headless assertion because Lynx child opacity was already 1 at 400ms, while 36e144e holds 0.1 and settles only after the longest 800ms value window · package declarative 50/50, package full 159/159, commit hooks and build/declarations/Publint pass · focused dual-renderer 1/1 and complete suite 74/74 · native timing remains unclaimed under the same SDK 0.0.1 event-dispatch boundary recorded by #95 · weighted loss remains 6 because automatic/repeating completion, afterChildren, stagger, controls, and gesture propagation remain blocked in issue #10 · no Full Demo because this widens the same orchestration slice rather than unlocking the full production pattern.",
+    },
+    {
+        id: "lynx-3508-motion-98",
+        date: "2026-08-13",
+        title: "initial=false bypasses beforeChildren mount delay",
+        kind: "evidence",
+        status: "verified",
+        lynxStackPr: 3508,
+        motionPr: 98,
+        caseIds: ["initial/false-propagation"],
+        lossBefore: 6,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I5/F5/M1/R1/C0 · test-only lynx-stack PR #3508 locks an already-supported upstream composition: initial=false suppresses the inherited child's mount animation even when the parent declares a ten-second beforeChildren window · immutable 013e20e consumer scene renders the child immediately at opacity 1 / x 24 in both renderers instead of waiting for the parent · package declarative 52/52 and full 161/161; focused and complete consumer evidence are recorded by motion PR #98 · no capability count, loss, native, or Full Demo claim moves because this is regression evidence for an existing contract.",
     },
     {
         id: "lynx-3507-motion-97",
