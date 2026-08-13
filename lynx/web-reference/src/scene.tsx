@@ -1,5 +1,5 @@
 import { motion, useMotionValue } from "framer-motion"
-import { CSSProperties, forwardRef, useState } from "react"
+import { CSSProperties, forwardRef, memo, useState } from "react"
 import type { ComponentPropsWithoutRef } from "react"
 import {
     ARRAY_VARIANT_DEFINITION_PARITY_CASE,
@@ -21,6 +21,7 @@ import {
     INITIAL_FALSE_PROPAGATION_CASE,
     KEYFRAME_TIMES_CASE,
     KEYFRAMES_CASE,
+    MEMOIZED_INHERITED_REMOVED_VALUE_CASE,
     MOTION_CREATE_CASE,
     NAMED_EASING_CASE,
     NAMED_VARIANTS_CASE,
@@ -181,6 +182,27 @@ const ForwardingDiv = forwardRef<
 
 const MotionForwardingDiv = motion.create(ForwardingDiv)
 
+const MemoizedInheritedRemovedValueChild = memo(() => (
+    <motion.div
+        id="target-memoized-inherited-removed-value"
+        style={{ ...dot, backgroundColor: "#d3df63" }}
+        variants={{
+            visible: {
+                x: MEMOIZED_INHERITED_REMOVED_VALUE_CASE.expected.visibleX,
+                opacity:
+                    MEMOIZED_INHERITED_REMOVED_VALUE_CASE.expected
+                        .visibleOpacity,
+            },
+            hidden: {
+                opacity:
+                    MEMOIZED_INHERITED_REMOVED_VALUE_CASE.expected
+                        .hiddenOpacity,
+            },
+        }}
+        transition={{ type: false }}
+    />
+))
+
 export function App() {
     const conformanceMode = new URLSearchParams(window.location.search).get(
         "case"
@@ -210,6 +232,8 @@ export function App() {
         conformanceMode === "inherited-variant-style-fallback"
     const dynamicInheritedChildMode =
         conformanceMode === "dynamic-inherited-child"
+    const memoizedInheritedRemovedValueMode =
+        conformanceMode === "memoized-inherited-removed-value"
     const variantPropagationMode = conformanceMode === "variant-propagation"
     const delayChildrenMode = conformanceMode === "delay-children"
     const variantInheritOptOutMode =
@@ -256,6 +280,8 @@ export function App() {
         useState(0)
     const [dynamicInheritedChildCount, setDynamicInheritedChildCount] =
         useState(1)
+    const [memoizedInheritedVisible, setMemoizedInheritedVisible] =
+        useState(false)
     const [visibilityRevealed, setVisibilityRevealed] = useState(false)
     const [unseenPropertyActive, setUnseenPropertyActive] = useState(false)
     const [instantActive, setInstantActive] = useState(false)
@@ -532,6 +558,41 @@ export function App() {
                                             )
                                         )}
                                     </motion.div>
+                                </motion.div>
+                            </div>
+                        </div>
+                    )}
+
+                    {memoizedInheritedRemovedValueMode && (
+                        <div
+                            id="example-memoized-inherited-removed-value"
+                            style={conformanceCard}
+                            onClick={() =>
+                                setMemoizedInheritedVisible((visible) =>
+                                    !visible
+                                )
+                            }
+                        >
+                            <div style={info}>
+                                <span style={cardTitle}>
+                                    Memoized inherited child
+                                </span>
+                                <span style={code}>
+                                    {memoizedInheritedVisible
+                                        ? 'animate="visible"'
+                                        : 'animate="hidden"'}
+                                </span>
+                            </div>
+                            <div style={demo}>
+                                <motion.div
+                                    initial={{ x: 0 }}
+                                    animate={
+                                        memoizedInheritedVisible
+                                            ? "visible"
+                                            : "hidden"
+                                    }
+                                >
+                                    <MemoizedInheritedRemovedValueChild />
                                 </motion.div>
                             </div>
                         </div>

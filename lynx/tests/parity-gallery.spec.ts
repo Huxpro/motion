@@ -32,6 +32,7 @@ import {
     INITIAL_FALSE_PROPAGATION_CASE,
     KEYFRAME_TIMES_CASE,
     KEYFRAMES_CASE,
+    MEMOIZED_INHERITED_REMOVED_VALUE_CASE,
     MOTION_CREATE_CASE,
     NAMED_EASING_CASE,
     NAMED_VARIANTS_CASE,
@@ -2332,6 +2333,63 @@ test("manifest case: a newly mounted child enters the current inherited variant"
                 opacity:
                     DYNAMIC_INHERITED_CHILD_CASE.expected.visibleOpacity,
                 x: DYNAMIC_INHERITED_CHILD_CASE.expected.visibleX,
+            })
+    }
+
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: a memoized child restores a value removed by its parent variant", async ({
+    browser,
+}) => {
+    const webPage = await browser.newPage()
+    const lynxPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({
+                conformanceMode: "memoized-inherited-removed-value",
+            })
+        )
+    })
+    await webPage.goto(
+        "http://localhost:4173/?mode=baseline&case=memoized-inherited-removed-value"
+    )
+    await lynxPage.goto(`http://localhost:3000${previewUrl}`)
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const card = page.locator("#example-memoized-inherited-removed-value")
+        const target = page.locator("#target-memoized-inherited-removed-value")
+        const style = () =>
+            target.evaluate((element) => {
+                const computed = getComputedStyle(element)
+                return {
+                    opacity: Number(computed.opacity),
+                    x: new DOMMatrixReadOnly(computed.transform).m41,
+                }
+            })
+        await expect.poll(style, { message: `${renderer} hidden` }).toEqual({
+            opacity:
+                MEMOIZED_INHERITED_REMOVED_VALUE_CASE.expected.hiddenOpacity,
+            x: MEMOIZED_INHERITED_REMOVED_VALUE_CASE.expected.restoredX,
+        })
+        await card.click()
+        await expect.poll(style, { message: `${renderer} visible` }).toEqual({
+            opacity:
+                MEMOIZED_INHERITED_REMOVED_VALUE_CASE.expected.visibleOpacity,
+            x: MEMOIZED_INHERITED_REMOVED_VALUE_CASE.expected.visibleX,
+        })
+        await card.click()
+        await expect
+            .poll(style, { message: `${renderer} removed x restored` })
+            .toEqual({
+                opacity:
+                    MEMOIZED_INHERITED_REMOVED_VALUE_CASE.expected
+                        .hiddenOpacity,
+                x: MEMOIZED_INHERITED_REMOVED_VALUE_CASE.expected.restoredX,
             })
     }
 

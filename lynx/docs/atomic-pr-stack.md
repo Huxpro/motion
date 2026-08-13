@@ -117,12 +117,13 @@ behavior independently reviewable:
                                             └── #3496 explicit child mount ownership
                                                 └── #3497 initial variant transitionEnd
                                                     └── #3498 inherited removed-key style fallback
+                                                        └── #3499 inherited removed-key identity fallback
 ```
 
 Feature-base PRs do not trigger the repository's `pkg.pr.new` workflow. Draft
 #3491 is therefore a validation-only rollup against `main`; it must not be
-merged. Its immutable `cd567e7` motion/react/react-umd package set contains the
-stack through #3498 and passes the Hux evidence build. The manifest records the
+merged. Its immutable `ed0c9f2` motion/react/react-umd package set contains the
+stack through #3499 and passes the Hux evidence build. The manifest records the
 capability PR that owns each contract, while #3491 records only the immutable
 validation gate. Numeric `delayChildren` is deliberately separate from the
 dynamic stagger/`when`/controls boundary tracked in issue #10.
@@ -210,3 +211,11 @@ wrapper still resolves inherited `hidden` and reaches `visible` on immutable
 not claimed because Playground SDK 0.0.1 cannot decode the current Rspeedy
 bundle. This closes list-entry composition only, so presence-driven exit remains
 the boundary before a complete dynamic-list Full Demo.
+
+Atomic lynx-stack PR #3499 adds the complementary no-style ownership rule from
+upstream: when a memoized child inherits `visible { x: 100, opacity: 1 }` and
+then `hidden { opacity: 0 }`, the omitted transform returns to Motion's x=0
+identity instead of retaining x=100. Hux evidence PR #90 verifies the exact
+hidden→visible→hidden contract against immutable `ed0c9f2`; static child style
+from #3498 still has higher precedence. This is an ownership correction rather
+than a new complete Gallery usage pattern, so it does not add a Full Demo.
