@@ -945,6 +945,61 @@ test("manifest case: stale instant variant transitionEnd cannot win", async ({
     await Promise.all([lynxPage.close(), webPage.close()])
 })
 
+test("manifest case: named variant applies transitionEnd after completion", async ({
+    browser,
+}) => {
+    const webPage = await browser.newPage()
+    const lynxPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({
+                conformanceMode: "variant-transition-end-completion",
+            })
+        )
+    })
+    await webPage.goto(
+        "http://localhost:4173/?mode=baseline&case=variant-transition-end-completion"
+    )
+    await lynxPage.goto(`http://localhost:3000${previewUrl}`)
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const target = page.locator(
+            "#target-variant-transition-end-completion"
+        )
+        const style = () =>
+            target.evaluate((element) => {
+                const computed = getComputedStyle(element)
+                return {
+                    display: computed.display,
+                    color: computed.backgroundColor,
+                }
+            })
+        await expect.poll(style).toEqual({
+            display: "block",
+            color: "rgb(0, 0, 255)",
+        })
+        await page.locator("#example-variant-transition-end-completion").click()
+        await page.waitForTimeout(120)
+        const intermediate = await style()
+        expect(intermediate.display, `${renderer} remains visible`).toBe("block")
+        expect(intermediate.color, `${renderer} leaves blue`).not.toBe(
+            "rgb(0, 0, 255)"
+        )
+        expect(intermediate.color, `${renderer} has not settled red`).not.toBe(
+            "rgb(255, 0, 0)"
+        )
+        await expect
+            .poll(style, { message: `${renderer} transitionEnd completion` })
+            .toEqual({ display: "none", color: "rgb(255, 0, 0)" })
+    }
+
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
 test("manifest cases: removed animate values follow upstream ownership", async ({
     browser,
 }) => {
