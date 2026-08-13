@@ -1516,6 +1516,37 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { opacity: 1, x: 24 },
     },
     {
+        id: "variants/deep-delay-children",
+        category: "Variants",
+        title: "Accumulated nested delayChildren",
+        summary:
+            "Numeric delayChildren values accumulate through inherited variant descendants.",
+        status: "conformant",
+        api: ["variants", "delayChildren", "inheritance"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "delay propagates throughout children"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the root and intermediate descendant each contribute 60ms",
+            "the deep child remains hidden inside the cumulative delay window",
+            "the deep child settles after the accumulated delay in both renderers",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            delayStepMs: 60,
+            holdMs: 80,
+            hiddenOpacity: 0,
+            visibleOpacity: 1,
+        },
+    },
+    {
         id: "variants/orchestration",
         category: "Variants",
         title: "Variant orchestration + controls",
@@ -1970,6 +2001,17 @@ export const DEEP_VARIANT_PROPAGATION_CASE = CONFORMANCE_CASES.find(
 export const DEEP_INITIAL_FALSE_PROPAGATION_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "initial/deep-false-propagation"
 ) as ConformanceCase & { expected: { opacity: number; x: number } }
+
+export const DEEP_DELAY_CHILDREN_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "variants/deep-delay-children"
+) as ConformanceCase & {
+    expected: {
+        delayStepMs: number
+        holdMs: number
+        hiddenOpacity: number
+        visibleOpacity: number
+    }
+}
 
 export const DELAY_CHILDREN_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "variants/delay-children"
@@ -2507,6 +2549,16 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         contract:
             "Preserve inherited initial=false through neutral Motion wrappers.",
         exampleId: "deep-initial-false-propagation",
+    },
+    {
+        id: "deep-delay-children",
+        group: "Variants",
+        api: "nested numeric delayChildren",
+        status: "supported",
+        evidence: "dual-renderer",
+        contract:
+            "Accumulate numeric child delays through inherited variant descendants.",
+        exampleId: "deep-delay-children",
     },
     {
         id: "variant-delay-children",
@@ -3217,6 +3269,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Core no-flash first-frame semantics compose through the existing ReactLynx context chain without host or CSS adaptation.",
+    },
+    {
+        caseId: "variants/deep-delay-children",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 2,
+        css: 0,
+        rationale:
+            "Nested list and component timing composes through ReactLynx context while each child keeps the upstream MotionValue animation path.",
     },
     {
         caseId: "variants/delay-children",
@@ -4117,5 +4179,17 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 9,
         lossAfter: WEIGHTED_LOSS,
         note: "I5/F5/M1/R1/C0 · immutable f6b0e90 motion/react/react-umd set · existing runtime preserves inherited initial=false through a neutral intermediate Motion component with no lynx-stack source diff · complete dual-renderer suite 55/55 · no Full Demo or native claim.",
+    },
+    {
+        id: "motion-76",
+        date: "2026-08-13",
+        title: "Nested delayChildren accumulation evidence",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 76,
+        caseIds: ["variants/deep-delay-children"],
+        lossBefore: 8,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F5/M1/R2/C0 · immutable f6b0e90 motion/react/react-umd set · two 60ms numeric delayChildren values accumulate through inherited descendants, hold the deep child at 80ms, then settle, with no lynx-stack source diff · complete dual-renderer suite 56/56 · dynamic delay, stagger, when, controls, and gesture propagation remain issue #10 · no Full Demo or native claim.",
     },
 ]
