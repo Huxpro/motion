@@ -1698,7 +1698,7 @@ export function EvidencePortal() {
                     <a href="https://github.com/Huxpro/motion/blob/main/lynx/src/conformance/cases.ts">
                         {t("footer.manifest")}
                     </a>
-                    <a href="https://github.com/Huxpro/motion/pull/100/checks">
+                    <a href="https://github.com/Huxpro/motion/pull/103/checks">
                         {t("footer.checks")}
                     </a>
                 </div>
