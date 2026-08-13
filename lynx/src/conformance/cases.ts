@@ -1464,6 +1464,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         },
     },
     {
+        id: "variants/deep-propagation",
+        category: "Variants",
+        title: "Variant propagation through neutral wrappers",
+        summary:
+            "An inherited variant label passes through Motion components that do not define animate.",
+        status: "conformant",
+        api: ["variants", "initial", "animate", "inheritance"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "propagates through components with no `animate` prop"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the root publishes the visible label",
+            "a neutral intermediate Motion component preserves the inherited context",
+            "the nested child reaches opacity 1 in both renderers",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { opacity: 1 },
+    },
+    {
         id: "variants/orchestration",
         category: "Variants",
         title: "Variant orchestration + controls",
@@ -1910,6 +1936,10 @@ export const INHERITED_VARIANT_VALUE_UPDATE_CASE = CONFORMANCE_CASES.find(
 ) as ConformanceCase & {
     expected: { initialX: number; updatedX: number }
 }
+
+export const DEEP_VARIANT_PROPAGATION_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "variants/deep-propagation"
+) as ConformanceCase & { expected: { opacity: number } }
 
 export const DELAY_CHILDREN_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "variants/delay-children"
@@ -2427,6 +2457,16 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         contract:
             "Re-resolve an inherited label when a descendant's variant target values change.",
         exampleId: "inherited-variant-value-update",
+    },
+    {
+        id: "deep-variant-propagation",
+        group: "Variants",
+        api: "variant propagation through neutral wrappers",
+        status: "supported",
+        evidence: "dual-renderer",
+        contract:
+            "Preserve inherited labels through Motion components with no animate prop.",
+        exampleId: "deep-variant-propagation",
     },
     {
         id: "variant-delay-children",
@@ -3117,6 +3157,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Common reactive component composition reuses the existing ReactLynx variant context and child MotionValue update path without a host boundary.",
+    },
+    {
+        caseId: "variants/deep-propagation",
+        importance: 5,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Core component encapsulation reuses the existing ReactLynx context chain and each descendant's upstream MotionValue path without host adaptation.",
     },
     {
         caseId: "variants/delay-children",
@@ -3993,5 +4043,17 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 9,
         lossAfter: WEIGHTED_LOSS,
         note: "I4/F5/M1/R1/C0 · immutable f6b0e90 motion/react/react-umd set · existing runtime re-resolves a child's inherited variant when its target values change while the parent label stays constant, with no lynx-stack source diff · complete dual-renderer suite 53/53 · no Full Demo or native claim.",
+    },
+    {
+        id: "motion-74",
+        date: "2026-08-13",
+        title: "Deep variant propagation evidence",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 74,
+        caseIds: ["variants/deep-propagation"],
+        lossBefore: 9,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I5/F5/M1/R1/C0 · immutable f6b0e90 motion/react/react-umd set · existing runtime preserves inherited labels through a neutral intermediate Motion component with no lynx-stack source diff · complete dual-renderer suite 54/54 · no Full Demo or native claim.",
     },
 ]

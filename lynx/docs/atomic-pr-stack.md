@@ -131,3 +131,8 @@ already reports the inherited variant label at animation start and completion.
 Hux evidence PR #73 adds the upstream reactive inherited-value contract against
 the same immutable package set. It also requires no lynx-stack source diff: a
 child re-resolves the inherited label when its variant target values change.
+
+Hux evidence PR #74 adds the upstream neutral-wrapper propagation contract
+against the same immutable package set. It needs no lynx-stack source diff:
+variant context already survives intermediate Motion components without an
+`animate` prop.
