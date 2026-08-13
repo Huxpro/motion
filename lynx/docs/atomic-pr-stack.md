@@ -120,12 +120,13 @@ behavior independently reviewable:
                                                         └── #3499 inherited removed-key identity fallback
                                                             └── #3504 explicit-duration beforeChildren
                                                                 └── #3506 value-specific beforeChildren timing
+                                                                    └── #3507 finite-repeat beforeChildren timing
 ```
 
 Feature-base PRs do not trigger the repository's `pkg.pr.new` workflow. Draft
 #3491 is therefore a validation-only rollup against `main`; it must not be
-merged. Its immutable `36e144e` motion/react/react-umd package set contains the
-stack through #3506 and passes the Hux evidence build. The manifest records the
+merged. Its immutable `013e20e` motion/react/react-umd package set contains the
+stack through #3507 and passes the Hux evidence build. The manifest records the
 capability PR that owns each contract, while #3491 records only the immutable
 validation gate. Numeric `delayChildren` is deliberately separate from the
 dynamic stagger/`when`/controls boundary tracked in issue #10.
@@ -266,3 +267,11 @@ PR #96 proves the same upgraded scene fails on `51d11ee` (child opacity already
 1 at 400ms) and passes on immutable `36e144e` (still 0.1, then settles after the
 800ms parent window). The remaining orchestration architecture and weighted
 loss stay unchanged, so this still does not justify a Full Demo.
+
+Atomic lynx-stack PR #3507 closes the finite-repeat slice by adding each
+value's explicit iterations and `repeatDelay` to the same parent completion
+window. Hux evidence PR #97 uses a 700ms parent window and proves immutable
+`36e144e` starts the child early while `013e20e` holds it at opacity 0.1 through
+the 400ms sample. Infinite repeat, automatic completion, `afterChildren`,
+stagger, controls, and gesture propagation remain in issue #10; the stable loss
+therefore remains 6 and no Full Demo is claimed.

@@ -1123,8 +1123,10 @@ export function App() {
                                                 when: "beforeChildren",
                                                 opacity: { duration: 0.1 },
                                                 x: {
-                                                    delay: 0.2,
-                                                    duration: 0.6,
+                                                    delay: 0.1,
+                                                    duration: 0.2,
+                                                    repeat: 1,
+                                                    repeatDelay: 0.2,
                                                 },
                                             },
                                         },

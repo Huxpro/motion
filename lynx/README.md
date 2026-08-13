@@ -33,10 +33,10 @@ npm run build:evidence
 starts both the locked upstream Web reference and Lynx-for-Web, then uses
 headless Chromium to verify manifest-backed semantic assertions as well as the
 legacy live/infinite animation, variants, lifecycle, and gesture checks.
-The current dependency gate is the immutable `36e144e` preview set published
+The current dependency gate is the immutable `013e20e` preview set published
 by validation-only [lynx-stack#3491](https://github.com/lynx-family/lynx-stack/pull/3491);
 the complete suite passes 74/74 source-linked behaviors. Capability ownership
-remains with the atomic #3483–#3506 stack rather than the validation rollup.
+remains with the atomic #3483–#3507 stack rather than the validation rollup.
 
 The Web reference in `web-reference/` is pinned to the same upstream Motion
 major as the lynx-stack preview package.
