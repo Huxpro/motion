@@ -1103,7 +1103,7 @@ export function App() {
                             <view style={info}>
                                 <text style={cardTitle}>Before children</text>
                                 <text style={code}>
-                                    parent → child · explicit duration
+                                    parent → child · longest value timing
                                 </text>
                             </view>
                             <view style={demo}>
@@ -1115,16 +1115,17 @@ export function App() {
                                             : "hidden"
                                     }
                                     variants={{
-                                        hidden: { x: 0 },
+                                        hidden: { opacity: 0.4, x: 0 },
                                         visible: {
+                                            opacity: 1,
                                             x: 24,
                                             transition: {
-                                                duration:
-                                                    BEFORE_CHILDREN_CASE
-                                                        .expected
-                                                        .parentDurationMs /
-                                                    1000,
                                                 when: "beforeChildren",
+                                                opacity: { duration: 0.1 },
+                                                x: {
+                                                    delay: 0.2,
+                                                    duration: 0.6,
+                                                },
                                             },
                                         },
                                     }}

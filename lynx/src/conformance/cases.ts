@@ -2023,7 +2023,7 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         category: "Variants",
         title: "Parent finishes before inherited children",
         summary:
-            "An explicit-duration parent variant completes before its inherited child starts.",
+            "Every explicitly timed parent value completes before its inherited child starts.",
         status: "conformant",
         api: ["variants", 'when="beforeChildren"', "inheritance"],
         upstream: source(
@@ -2032,8 +2032,8 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         ),
         baseline: "framer-motion@13.0.0",
         assertions: [
-            "the child stays at its initial value during the parent's explicit duration",
-            "the child starts only after the parent timing window closes",
+            "the child stays at its initial value during the longest parent value transition",
+            "value-specific delay and duration determine the parent completion window",
             "both renderers settle the inherited child at the visible target",
         ],
         evidence: {
@@ -2043,8 +2043,8 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
             native: false,
         },
         expected: {
-            parentDurationMs: 600,
-            holdMs: 200,
+            parentDurationMs: 800,
+            holdMs: 400,
             hiddenOpacity: 0.1,
             visibleOpacity: 1,
         },
@@ -4160,7 +4160,7 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         reactLynx: 2,
         css: 0,
         rationale:
-            "High-value parent-first sequencing reuses upstream transitions and the existing ReactLynx variant context when parent duration is explicit.",
+            "High-value parent-first sequencing reuses upstream value-transition routing and the existing ReactLynx variant context when every parent value has explicit timing.",
     },
     {
         caseId: "variants/orchestration",
@@ -5278,5 +5278,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 6,
         lossAfter: WEIGHTED_LOSS,
         note: "I5/F4/M1/R2/C0 · immutable 51d11ee motion/react/react-umd set with matching x-commit-key · before ed0c9f2: Web held the inherited child at opacity 0.1 while Lynx jumped to 1 inside the parent window; after: both hold through 200ms and settle only after the 600ms parent duration · package declarative 48/48, package full 157/157, build/Publint pass, focused dual-renderer 1/1, and complete suite 74/74 · Android Explorer loaded the exact bundle and exposed initial child opacity 0.1, but its SDK 0.0.1 event path left the parent at translateX(0px) after both DevTool tap and scaled ADB touch, so native timing remains unclaimed · weighted loss remains 6 because automatic/repeating duration, afterChildren, stagger, controls, and gesture propagation remain blocked in issue #10 · no Full Demo until the remaining orchestration family supports a broader production pattern.",
+    },
+    {
+        id: "lynx-3506-motion-96",
+        date: "2026-08-13",
+        title: "Value-specific beforeChildren completion window",
+        kind: "capability",
+        status: "verified",
+        lynxStackPr: 3506,
+        motionPr: 96,
+        caseIds: ["variants/before-children"],
+        lossBefore: 6,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I5/F4/M1/R2/C0 · immutable 36e144e motion/react/react-umd set with matching x-commit-key · the parent routes opacity to 100ms and x to 200ms delay + 600ms duration; old 51d11ee failed the same headless assertion because Lynx child opacity was already 1 at 400ms, while 36e144e holds 0.1 and settles only after the longest 800ms value window · package declarative 50/50, package full 159/159, commit hooks and build/declarations/Publint pass · focused dual-renderer 1/1 and complete suite 74/74 · native timing remains unclaimed under the same SDK 0.0.1 event-dispatch boundary recorded by #95 · weighted loss remains 6 because automatic/repeating completion, afterChildren, stagger, controls, and gesture propagation remain blocked in issue #10 · no Full Demo because this widens the same orchestration slice rather than unlocking the full production pattern.",
     },
 ]
