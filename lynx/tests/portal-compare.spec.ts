@@ -160,3 +160,33 @@ test("scenario run buttons enable once the panes are linked", async ({
     await openLinkedExamples(page)
     await expect(page.locator(".scenario-run").first()).toBeEnabled()
 })
+
+test("a mouse click presses the Lynx whileTap card directly", async ({
+    page,
+}) => {
+    // Lynx for Web recognises motion gestures from touch only; the portal's
+    // desktop tap adapter re-dispatches mouse clicks as synthetic touch.
+    await openLinkedExamples(page)
+    const lynxTarget = page
+        .frameLocator("iframe")
+        .nth(1)
+        .locator("#target-gesture-priority")
+    await lynxTarget.scrollIntoViewIfNeeded()
+    await expect(lynxTarget).toHaveText("Press")
+    await lynxTarget.click()
+    await expect(lynxTarget).toHaveText("Tapped 1", { timeout: 5_000 })
+})
+
+test("pressing the Web whileTap card mirrors the press into Lynx", async ({
+    page,
+}) => {
+    await openLinkedExamples(page)
+    const frames = page.frameLocator("iframe")
+    const webTarget = frames.first().locator("#target-gesture-priority")
+    const lynxTarget = frames.nth(1).locator("#target-gesture-priority")
+    await webTarget.scrollIntoViewIfNeeded()
+    await expect(lynxTarget).toHaveText("Press")
+    await webTarget.click()
+    await expect(webTarget).toHaveText("Tapped 1", { timeout: 5_000 })
+    await expect(lynxTarget).toHaveText("Tapped 1", { timeout: 5_000 })
+})

@@ -17,6 +17,8 @@ export interface PaneHandle {
     scroller: HTMLElement
     /** Card containers, cached: ids are shared verbatim between galleries. */
     cards: HTMLElement[]
+    /** Cards plus inner `target-*` gesture elements, for tap dispatch. */
+    triggers: HTMLElement[]
 }
 
 export interface ScrollAnchor {
@@ -26,9 +28,14 @@ export interface ScrollAnchor {
 }
 
 const CARD_PREFIXES = ["example-", "case-"]
+const TRIGGER_PREFIXES = ["target-", ...CARD_PREFIXES]
 
 function isCardId(id: string) {
     return CARD_PREFIXES.some((prefix) => id.startsWith(prefix))
+}
+
+function isTriggerId(id: string) {
+    return TRIGGER_PREFIXES.some((prefix) => id.startsWith(prefix))
 }
 
 /** Depth-limited walk that follows open shadow roots (Lynx for Web). */
@@ -42,9 +49,13 @@ function walk(root: ParentNode, visit: (el: Element) => void, depth = 0) {
 
 function collectPane(doc: Document): Omit<PaneHandle, "doc"> | null {
     const cards: HTMLElement[] = []
+    const triggers: HTMLElement[] = []
     let scroller: HTMLElement | null = null
     walk(doc, (el) => {
-        if (el.id && isCardId(el.id)) cards.push(el as HTMLElement)
+        if (el.id && isTriggerId(el.id)) {
+            triggers.push(el as HTMLElement)
+            if (isCardId(el.id)) cards.push(el as HTMLElement)
+        }
         const html = el as HTMLElement
         if (
             html.scrollHeight > html.clientHeight + 40 &&
@@ -55,7 +66,7 @@ function collectPane(doc: Document): Omit<PaneHandle, "doc"> | null {
         }
     })
     if (!scroller || cards.length === 0) return null
-    return { scroller, cards }
+    return { scroller, cards, triggers }
 }
 
 /**
@@ -97,11 +108,52 @@ export function applyAnchor(pane: PaneHandle, anchor: ScrollAnchor) {
         rect.top + anchor.fraction * rect.height - paneTop
 }
 
+/**
+ * Synthetic touch tap. Lynx for Web routes `bindtap` from click events but
+ * recognises motion gestures (whileTap and friends) from touch sequences
+ * only — and the two channels are disjoint, so dispatching a touch tap on
+ * top of a click never double-fires a handler. Framer Motion's press
+ * gesture listens to pointer events and ignores synthetic TouchEvents.
+ */
+export function dispatchTouchTap(el: Element): boolean {
+    const win = el.ownerDocument?.defaultView
+    if (!win?.TouchEvent || !win.Touch) return false
+    try {
+        const rect = el.getBoundingClientRect()
+        const touch = new win.Touch({
+            identifier: (performance.now() % 100000) | 0,
+            target: el,
+            clientX: rect.left + rect.width / 2,
+            clientY: rect.top + rect.height / 2,
+        })
+        const base = { bubbles: true, composed: true, cancelable: true }
+        el.dispatchEvent(
+            new win.TouchEvent("touchstart", {
+                ...base,
+                touches: [touch],
+                targetTouches: [touch],
+                changedTouches: [touch],
+            })
+        )
+        el.dispatchEvent(
+            new win.TouchEvent("touchend", {
+                ...base,
+                touches: [],
+                targetTouches: [],
+                changedTouches: [touch],
+            })
+        )
+        return true
+    } catch {
+        return false
+    }
+}
+
 /** Fire the same tap in a pane that a user gesture would produce. */
-export function triggerCard(pane: PaneHandle, cardId: string): boolean {
-    const card = pane.cards.find((el) => el.id === cardId)
-    if (!card) return false
-    const rect = card.getBoundingClientRect()
+export function triggerCard(pane: PaneHandle, triggerId: string): boolean {
+    const target = pane.triggers.find((el) => el.id === triggerId)
+    if (!target) return false
+    const rect = target.getBoundingClientRect()
     const init = {
         bubbles: true,
         composed: true,
@@ -109,22 +161,27 @@ export function triggerCard(pane: PaneHandle, cardId: string): boolean {
         clientX: rect.left + rect.width / 2,
         clientY: rect.top + rect.height / 2,
     }
-    card.dispatchEvent(
+    target.dispatchEvent(
         new PointerEvent("pointerdown", { ...init, pointerId: 1, isPrimary: true })
     )
-    card.dispatchEvent(
+    target.dispatchEvent(
         new PointerEvent("pointerup", { ...init, pointerId: 1, isPrimary: true })
     )
-    card.dispatchEvent(new MouseEvent("click", init))
+    target.dispatchEvent(new MouseEvent("click", init))
+    dispatchTouchTap(target)
     return true
 }
 
-/** Map a click target inside a pane to its enclosing card id, if any. */
+/**
+ * Map a click inside a pane to the most specific shared trigger id — an
+ * inner `target-*` gesture element when the tap landed on one, otherwise
+ * the enclosing card. composedPath is ordered innermost-first.
+ */
 export function cardIdFromEvent(event: Event): string | null {
     const path = event.composedPath?.() ?? []
     for (const node of path) {
         const el = node as HTMLElement
-        if (el?.id && isCardId(el.id)) return el.id
+        if (el?.id && isTriggerId(el.id)) return el.id
     }
     return null
 }

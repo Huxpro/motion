@@ -21,6 +21,7 @@ import {
     captureAnchor,
     cardIdFromEvent,
     connectPane,
+    dispatchTouchTap,
     scenarioCardId,
     triggerCard,
     type PaneHandle,
@@ -751,6 +752,41 @@ function Examples({ lang, t }: { lang: Lang; t: Translate }) {
                 pane.scroller.removeEventListener("scroll", onScroll)
                 pane.doc.removeEventListener("click", onTap, true)
             })
+
+            if (side === "lynx") {
+                // Desktop tap adapter: Lynx for Web recognises motion
+                // gestures (whileTap) from touch sequences only, so a mouse
+                // click alone cannot press them. Re-dispatch a synthetic
+                // touch tap for real mouse/pen clicks; real touch input
+                // already produced the touch sequence natively, so it is
+                // excluded to avoid double-firing.
+                let lastRealTouch = 0
+                const onNativeTouch = (event: Event) => {
+                    if (event.isTrusted) lastRealTouch = performance.now()
+                }
+                const onAdaptClick = (event: Event) => {
+                    if (!event.isTrusted) return
+                    if ((event as PointerEvent).pointerType === "touch") return
+                    if (performance.now() - lastRealTouch < 700) return
+                    // instanceof fails across iframe realms; duck-type it.
+                    const target = event.composedPath?.()[0] as
+                        | Element
+                        | undefined
+                    if (typeof target?.getBoundingClientRect === "function") {
+                        dispatchTouchTap(target)
+                    }
+                }
+                pane.doc.addEventListener("touchstart", onNativeTouch, true)
+                pane.doc.addEventListener("click", onAdaptClick, true)
+                cleanups.push(() => {
+                    pane.doc.removeEventListener(
+                        "touchstart",
+                        onNativeTouch,
+                        true
+                    )
+                    pane.doc.removeEventListener("click", onAdaptClick, true)
+                })
+            }
             return true
         }
 
@@ -1379,7 +1415,7 @@ export function EvidencePortal() {
                     <a href="https://github.com/Huxpro/motion/blob/main/lynx/src/conformance/cases.ts">
                         {t("footer.manifest")}
                     </a>
-                    <a href="https://github.com/Huxpro/motion/pull/13/checks">
+                    <a href="https://github.com/Huxpro/motion/pull/100/checks">
                         {t("footer.checks")}
                     </a>
                 </div>
