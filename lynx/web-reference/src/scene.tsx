@@ -1210,6 +1210,15 @@ export function App() {
                                 <motion.div
                                     initial={false}
                                     animate="visible"
+                                    variants={{
+                                        visible: {
+                                            x: 24,
+                                            transition: {
+                                                duration: 10,
+                                                when: "beforeChildren",
+                                            },
+                                        },
+                                    }}
                                 >
                                     <motion.div
                                         id="target-initial-false-propagation"

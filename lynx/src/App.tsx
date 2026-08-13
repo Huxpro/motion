@@ -1215,6 +1215,15 @@ export function App() {
                                 <motion.view
                                     initial={false}
                                     animate="visible"
+                                    variants={{
+                                        visible: {
+                                            x: 24,
+                                            transition: {
+                                                duration: 10,
+                                                when: "beforeChildren",
+                                            },
+                                        },
+                                    }}
                                 >
                                     <motion.view
                                         id="target-initial-false-propagation"

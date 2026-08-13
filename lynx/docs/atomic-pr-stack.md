@@ -121,6 +121,7 @@ behavior independently reviewable:
                                                             └── #3504 explicit-duration beforeChildren
                                                                 └── #3506 value-specific beforeChildren timing
                                                                     └── #3507 finite-repeat beforeChildren timing
+                                                                        └── #3508 initial=false orchestration regression
 ```
 
 Feature-base PRs do not trigger the repository's `pkg.pr.new` workflow. Draft
@@ -275,3 +276,10 @@ window. Hux evidence PR #97 uses a 700ms parent window and proves immutable
 the 400ms sample. Infinite repeat, automatic completion, `afterChildren`,
 stagger, controls, and gesture propagation remain in issue #10; the stable loss
 therefore remains 6 and no Full Demo is claimed.
+
+Test-only lynx-stack PR #3508 locks the intersection with inherited
+`initial={false}`: a ten-second parent `beforeChildren` window must not delay or
+start a child mount animation that upstream says is disabled. Hux evidence PR
+#98 proves the immutable `013e20e` runtime already renders the child at its
+visible target immediately. This adds regression depth without changing API,
+conformance, loss, native, or Full Demo counts.
