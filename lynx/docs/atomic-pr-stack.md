@@ -114,12 +114,13 @@ behavior independently reviewable:
                                 └── #3493 numeric delayChildren
                                     └── #3494 variant inheritance opt-out
                                         └── #3495 inherited initial=false
+                                            └── #3496 explicit child mount ownership
 ```
 
 Feature-base PRs do not trigger the repository's `pkg.pr.new` workflow. Draft
 #3491 is therefore a validation-only rollup against `main`; it must not be
-merged. Its immutable `f6b0e90` motion/react/react-umd package set contains the
-stack through #3495 and passes the Hux evidence build. The manifest records the
+merged. Its immutable `dfb913f` motion/react/react-umd package set contains the
+stack through #3496 and passes the Hux evidence build. The manifest records the
 capability PR that owns each contract, while #3491 records only the immutable
 validation gate. Numeric `delayChildren` is deliberately separate from the
 dynamic stagger/`when`/controls boundary tracked in issue #10.
@@ -153,3 +154,7 @@ parent's numeric `delayChildren`. No lynx-stack source diff is required.
 Hux evidence PR #78 adds the upstream nested-controlled-roots contract. Parent
 and child explicit `animate` props reactively switch their own named variants
 without ownership collisions; no lynx-stack source diff is required.
+
+Atomic lynx-stack PR #3496 narrows inherited `initial={false}` to children that
+also inherit the parent animate label. Explicit object children retain their
+mount animation and lifecycle, verified from immutable `dfb913f`.

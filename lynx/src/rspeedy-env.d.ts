@@ -22,6 +22,7 @@ declare module '@lynx-js/types' {
       | "deep-delay-children"
       | "explicit-child-delay-root"
       | "nested-controlled-variants"
+      | "initial-false-explicit-child"
       | "hover-rest-transition"
   }
 }
