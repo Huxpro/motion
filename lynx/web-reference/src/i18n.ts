@@ -49,12 +49,13 @@ const STRINGS = {
         en: "Motion on Lynx evidence overview",
         zh: "Motion on Lynx 证据总览",
     },
+    "masthead.stack": { en: "Canonical stack", zh: "标准 PR 栈" },
 
     "overview.title": { en: "Motion / Lynx status", zh: "Motion / Lynx 现状" },
     "overview.stackedMid": { en: "stacked on", zh: "堆叠于" },
     "overview.stackedPost": {
-        en: "· validated runtime remains #3436 · live status in PR checks",
-        zh: "· 已验证运行时仍为 #3436 · 实时状态见 PR 检查",
+        en: "· conformance PRs follow · #3509 remote restack pending",
+        zh: "· 后接一致性 PR · #3509 远端重叠待完成",
     },
     "overview.verdictLabel": { en: "Compatibility", zh: "兼容性结论" },
     "overview.verdict": {
@@ -98,6 +99,30 @@ const STRINGS = {
     "metric.nativeEvidenceNote": {
         en: "{0}% recorded on a native client",
         zh: "{0}% 已在原生客户端录证",
+    },
+
+    "validation.title": { en: "Current validation gates", zh: "当前验证关卡" },
+    "validation.desc": {
+        en: "Current canonical worktree evidence. Published Gallery metrics stay pinned until an immutable preview exists.",
+        zh: "当前标准工作树证据。发布版 Gallery 指标在不可变预览产出前保持原 pin。",
+    },
+    "validation.date": { en: "13 Aug 2026", zh: "2026-08-13" },
+    "validation.pass": { en: "Pass", zh: "通过" },
+    "validation.blocked": { en: "Blocked", zh: "阻塞" },
+    "validation.package": { en: "Package regression", zh: "包内回归" },
+    "validation.packageNote": {
+        en: "15 test files · TypeScript passes",
+        zh: "15 个测试文件 · TypeScript 通过",
+    },
+    "validation.headless": { en: "Headless interaction", zh: "无头交互" },
+    "validation.headlessNote": {
+        en: "hover → press → release → leave · lifecycle 5/5 · zero console errors",
+        zh: "悬停 → 按压 → 释放 → 离开 · 生命周期 5/5 · 控制台零错误",
+    },
+    "validation.native": { en: "Android native", zh: "Android 原生端" },
+    "validation.nativeNote": {
+        en: "Bundle loads; Sandbox host lacks the current MTS / MainThreadObject runtime contract",
+        zh: "Bundle 可加载；Sandbox host 缺少当前 MTS / MainThreadObject 运行时契约",
     },
 
     "areas.title": { en: "API progress by area", zh: "分领域 API 进度" },

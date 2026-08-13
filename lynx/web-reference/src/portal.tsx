@@ -122,11 +122,11 @@ function Masthead({
                 </a>
                 <a
                     className="build-stamp"
-                    href="https://github.com/lynx-family/lynx-stack/pull/3457"
+                    href="https://github.com/lynx-family/lynx-stack/pull/3477"
                     target="_blank"
                     rel="noreferrer"
                 >
-                    Stack #3457
+                    {t("masthead.stack")}
                 </a>
             </div>
         </header>
@@ -448,19 +448,19 @@ function Overview({ lang, t }: { lang: Lang; t: Translate }) {
                     <h1>{t("overview.title")}</h1>
                     <p>
                         <a
-                            href="https://github.com/lynx-family/lynx-stack/pull/3457"
+                            href="https://github.com/lynx-family/lynx-stack/pull/3477"
                             target="_blank"
                             rel="noreferrer"
                         >
-                            #3457
+                            #3477
                         </a>{" "}
                         {t("overview.stackedMid")}{" "}
                         <a
-                            href="https://github.com/lynx-family/lynx-stack/pull/3455"
+                            href="https://github.com/lynx-family/lynx-stack/pull/3509"
                             target="_blank"
                             rel="noreferrer"
                         >
-                            #3455
+                            #3509
                         </a>{" "}
                         {t("overview.stackedPost")}
                     </p>
@@ -552,6 +552,47 @@ function Overview({ lang, t }: { lang: Lang; t: Translate }) {
                     <small>{t("metric.nativeEvidenceNote", nativePercent)}</small>
                     <i style={{ width: `${Math.max(3, nativePercent)}%` }} />
                 </a>
+            </section>
+
+            <section
+                className="validation-gates"
+                aria-labelledby="validation-heading"
+            >
+                <header className="monitor-section-header">
+                    <div>
+                        <h2 id="validation-heading">
+                            {t("validation.title")}
+                        </h2>
+                        <p>{t("validation.desc")}</p>
+                    </div>
+                    <span>{t("validation.date")}</span>
+                </header>
+                <div className="validation-grid">
+                    <article>
+                        <span className="gate-status gate-pass">
+                            {t("validation.pass")}
+                        </span>
+                        <strong>{t("validation.package")}</strong>
+                        <b>132 / 132</b>
+                        <p>{t("validation.packageNote")}</p>
+                    </article>
+                    <article>
+                        <span className="gate-status gate-pass">
+                            {t("validation.pass")}
+                        </span>
+                        <strong>{t("validation.headless")}</strong>
+                        <b>5 / 5</b>
+                        <p>{t("validation.headlessNote")}</p>
+                    </article>
+                    <article>
+                        <span className="gate-status gate-blocked">
+                            {t("validation.blocked")}
+                        </span>
+                        <strong>{t("validation.native")}</strong>
+                        <b>SDK 0.0.1</b>
+                        <p>{t("validation.nativeNote")}</p>
+                    </article>
+                </div>
             </section>
 
             <section className="monitor-split">

@@ -4286,6 +4286,10 @@ test("evidence portal exposes examples, API inventory, and conformance metrics",
         page.getByRole("heading", { name: "Motion / Lynx status" })
     ).toBeVisible()
     await expect(page.locator(".monitor-metric")).toHaveCount(6)
+    await expect(page.locator(".validation-grid article")).toHaveCount(3)
+    await expect(page.locator(".validation-grid")).toContainText("132 / 132")
+    await expect(page.locator(".validation-grid")).toContainText("5 / 5")
+    await expect(page.locator(".validation-grid")).toContainText("SDK 0.0.1")
     await expect(
         page.locator(".capability-row:not(.capability-row-head)")
     ).toHaveCount(7)

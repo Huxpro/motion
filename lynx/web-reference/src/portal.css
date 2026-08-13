@@ -397,6 +397,84 @@ button {
     background: var(--accent);
 }
 
+.validation-gates {
+    border-bottom: 1px solid var(--border);
+}
+
+.validation-gates .monitor-section-header {
+    padding-right: 0;
+    padding-left: 0;
+}
+
+.validation-gates .monitor-section-header p {
+    max-width: 720px;
+    margin: 8px 0 0;
+    color: var(--foreground-feint);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.validation-gates .monitor-section-header > span {
+    color: var(--foreground-feint);
+    font-size: 0.875rem;
+}
+
+.validation-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.validation-grid article {
+    min-width: 0;
+    min-height: 184px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 24px;
+    border-right: 1px solid var(--border);
+}
+
+.validation-grid article:first-child {
+    padding-left: 0;
+}
+
+.validation-grid article:last-child {
+    border-right: 0;
+}
+
+.gate-status {
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.gate-pass {
+    color: var(--supported);
+}
+
+.gate-blocked {
+    color: var(--blocked);
+}
+
+.validation-grid strong {
+    font-size: 1rem;
+}
+
+.validation-grid b {
+    margin-top: auto;
+    font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+}
+
+.validation-grid p {
+    margin: 0;
+    color: var(--foreground-feint);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
 .monitor-split {
     display: grid;
     grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.55fr);
@@ -1910,6 +1988,31 @@ button {
         align-items: flex-start;
         flex-direction: column;
         padding: 24px 0;
+    }
+
+    .validation-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .validation-grid article,
+    .validation-grid article:first-child {
+        min-height: 0;
+        padding: 22px 0;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .validation-grid article:last-child {
+        border-bottom: 0;
+    }
+
+    .validation-grid b {
+        margin-top: 10px;
+    }
+
+    .validation-grid p {
+        max-width: 100%;
+        overflow-wrap: anywhere;
     }
 
     .capability-table {
