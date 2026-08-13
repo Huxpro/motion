@@ -191,3 +191,8 @@ Hux evidence PR #86 adds the upstream instant-variant `transitionEnd` race.
 After proving the `on` variant can apply `display:flex`, a same-turn `on`→`off`
 switch remains `display:none` after deferred completion work on immutable
 `2c805a2`; lynx-stack #3488 owns the adjacent generation guard.
+
+Hux evidence PR #87 adds the ordinary named-variant completion contract. Web
+and Lynx remain visible through a blue→red intermediate frame, then apply
+`display:none` only after settling red on immutable `2c805a2`; lynx-stack #3462
+owns declarative `transitionEnd` support.

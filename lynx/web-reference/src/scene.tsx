@@ -195,6 +195,8 @@ export function App() {
         conformanceMode === "animate-transition-end-only"
     const variantTransitionEndRaceMode =
         conformanceMode === "variant-transition-end-race"
+    const variantTransitionEndCompletionMode =
+        conformanceMode === "variant-transition-end-completion"
     const removedAnimateValues = conformanceMode === "removed-animate-values"
     const transformOriginMode = conformanceMode === "transform-origin"
     const complexGradientMode = conformanceMode === "complex-gradient"
@@ -258,6 +260,8 @@ export function App() {
         useState<string[]>([])
     const [variantTransitionEndRacePhase, setVariantTransitionEndRacePhase] =
         useState(0)
+    const [variantTransitionEndComplete, setVariantTransitionEndComplete] =
+        useState(false)
     const [removedAnimateActive, setRemovedAnimateActive] = useState(true)
     const [transformOriginActive, setTransformOriginActive] = useState(false)
     const [complexGradientActive, setComplexGradientActive] = useState(false)
@@ -1707,6 +1711,44 @@ export function App() {
                                             transition: { type: false },
                                         },
                                     }}
+                                />
+                            </div>
+                        </div>
+                    ) : null}
+
+                    {variantTransitionEndCompletionMode ? (
+                        <div
+                            id="example-variant-transition-end-completion"
+                            style={card}
+                            onClick={() => setVariantTransitionEndComplete(true)}
+                        >
+                            <div style={info}>
+                                <span style={cardTitle}>
+                                    Variant transitionEnd completion
+                                </span>
+                                <span style={code}>blue → red · then hide</span>
+                            </div>
+                            <div style={demo}>
+                                <motion.div
+                                    id="target-variant-transition-end-completion"
+                                    style={{ ...dot, display: "block" }}
+                                    initial="hidden"
+                                    animate={
+                                        variantTransitionEndComplete
+                                            ? "visible"
+                                            : "hidden"
+                                    }
+                                    variants={{
+                                        hidden: {
+                                            backgroundColor: "#0000ff",
+                                            display: "block",
+                                        },
+                                        visible: {
+                                            backgroundColor: "#ff0000",
+                                            transitionEnd: { display: "none" },
+                                        },
+                                    }}
+                                    transition={{ duration: 0.4, ease: "linear" }}
                                 />
                             </div>
                         </div>

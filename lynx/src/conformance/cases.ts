@@ -254,6 +254,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         },
     },
     {
+        id: "variants/transition-end-on-completion",
+        category: "Variants",
+        title: "Named variant transitionEnd waits for completion",
+        summary:
+            "A named variant remains visible through value interpolation and applies its discrete transitionEnd only after completion.",
+        status: "conformant",
+        api: ["variants", "animate", "transition", "transitionEnd"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "applies applyOnEnd and end of animation"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the target remains display block during color interpolation",
+            "an intermediate blue-to-red frame is observable",
+            "completion settles red before applying display none",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { durationMs: 400, sampleMs: 120 },
+    },
+    {
         id: "targets/removed-animate-original-initial",
         category: "Targets",
         title: "Removed target restores original initial",
@@ -3681,6 +3707,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "Common discrete state switching reuses the portable generation guard; named labels only add ReactLynx target resolution.",
     },
     {
+        caseId: "variants/transition-end-on-completion",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 1,
+        css: 1,
+        rationale:
+            "Common exit/cleanup semantics reuse upstream interpolation and the existing declarative completion path; only discrete host serialization is CSS-sensitive.",
+    },
+    {
         caseId: "initial/false-propagation",
         importance: 5,
         platformFit: 5,
@@ -4805,5 +4841,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 7,
         lossAfter: WEIGHTED_LOSS,
         note: "I4/F5/M1/R1/C0 · immutable 2c805a2 motion/react/react-umd set · on first proves its display:flex transitionEnd can apply, off restores display:none, then a same-turn on→off switch remains none after deferred completion work · adjacent package coverage protects latest/stale object-target generations; exact named-variant proof is the complete dual-renderer suite 66/66 · no Full Demo or native claim.",
+    },
+    {
+        id: "motion-87",
+        date: "2026-08-13",
+        title: "Named variant transitionEnd completion evidence",
+        kind: "evidence",
+        status: "verified",
+        lynxStackPr: 3462,
+        motionPr: 87,
+        caseIds: ["variants/transition-end-on-completion"],
+        lossBefore: 7,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F5/M1/R1/C1 · immutable 2c805a2 motion/react/react-umd set · Web and Lynx remain display:block at the 120ms intermediate blue→red frame, then settle red and apply display:none only after completion · package coverage plus complete dual-renderer suite 67/67 · no Full Demo or native claim.",
     },
 ]
