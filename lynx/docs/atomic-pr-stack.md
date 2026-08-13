@@ -119,12 +119,13 @@ behavior independently reviewable:
                                                     └── #3498 inherited removed-key style fallback
                                                         └── #3499 inherited removed-key identity fallback
                                                             └── #3504 explicit-duration beforeChildren
+                                                                └── #3506 value-specific beforeChildren timing
 ```
 
 Feature-base PRs do not trigger the repository's `pkg.pr.new` workflow. Draft
 #3491 is therefore a validation-only rollup against `main`; it must not be
-merged. Its immutable `51d11ee` motion/react/react-umd package set contains the
-stack through #3504 and passes the Hux evidence build. The manifest records the
+merged. Its immutable `36e144e` motion/react/react-umd package set contains the
+stack through #3506 and passes the Hux evidence build. The manifest records the
 capability PR that owns each contract, while #3491 records only the immutable
 validation gate. Numeric `delayChildren` is deliberately separate from the
 dynamic stagger/`when`/controls boundary tracked in issue #10.
@@ -256,3 +257,12 @@ immutable `51d11ee`: old Lynx jumped the child to opacity 1 inside 200ms while
 Web held at 0.1; both now hold and later settle. Automatic/repeating duration,
 `afterChildren`, dynamic stagger, controls, and gesture propagation remain in
 issue #10, so weighted loss stays 6 and no Full Demo is claimed.
+
+Atomic lynx-stack PR #3506 widens that same contract to parents whose animated
+values use distinct explicit transitions. The adapter reuses upstream
+`getValueTransition`, computes the longest value-specific delay plus duration,
+and refuses to claim mixed automatic, instant, or repeating timing. Hux evidence
+PR #96 proves the same upgraded scene fails on `51d11ee` (child opacity already
+1 at 400ms) and passes on immutable `36e144e` (still 0.1, then settles after the
+800ms parent window). The remaining orchestration architecture and weighted
+loss stay unchanged, so this still does not justify a Full Demo.
