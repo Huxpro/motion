@@ -218,6 +218,8 @@ export function App() {
         conformanceMode === "initial-false-explicit-child"
     const arrayVariantDefinitionParityMode =
         conformanceMode === "array-variant-definition-parity"
+    const initialTransitionEndMode =
+        conformanceMode === "initial-transition-end"
     const liveX = useMotionValue(STYLE_MOTION_VALUE_CASE.expected.startX)
     let styleMotionValueRenders = 0
     styleMotionValueRenders += 1
@@ -294,6 +296,38 @@ export function App() {
                     <span style={{ ...cardTitle, marginBottom: 10 }}>
                         Conformance cases
                     </span>
+
+                    {initialTransitionEndMode && (
+                        <div
+                            id="example-initial-transition-end"
+                            style={conformanceCard}
+                        >
+                            <div style={info}>
+                                <span style={cardTitle}>
+                                    Initial transitionEnd
+                                </span>
+                                <span style={code}>display: none</span>
+                            </div>
+                            <div style={demo}>
+                                <motion.div
+                                    id="target-initial-transition-end"
+                                    style={{
+                                        ...dot,
+                                        backgroundColor: "#d3df63",
+                                    }}
+                                    initial="visible"
+                                    variants={{
+                                        visible: {
+                                            opacity: 1,
+                                            transitionEnd: {
+                                                display: "none",
+                                            },
+                                        },
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     {arrayVariantDefinitionParityMode && (
                         <div
