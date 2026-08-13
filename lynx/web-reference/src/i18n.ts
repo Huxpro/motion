@@ -52,10 +52,9 @@ const STRINGS = {
     "masthead.stack": { en: "Canonical stack", zh: "标准 PR 栈" },
 
     "overview.title": { en: "Motion / Lynx status", zh: "Motion / Lynx 现状" },
-    "overview.stackedMid": { en: "stacked on", zh: "堆叠于" },
     "overview.stackedPost": {
-        en: "· conformance PRs follow · #3509 remote restack pending",
-        zh: "· 后接一致性 PR · #3509 远端重叠待完成",
+        en: "· GitHub stack #3525",
+        zh: "· GitHub 栈 #3525",
     },
     "overview.verdictLabel": { en: "Compatibility", zh: "兼容性结论" },
     "overview.verdict": {
@@ -65,6 +64,36 @@ const STRINGS = {
     "overview.versions": {
         en: "Upstream source 12.40.0 · Web baseline 13.0.0",
         zh: "上游源码 12.40.0 · Web 基线 13.0.0",
+    },
+    "stack.title": { en: "Canonical review stack", zh: "当前标准审查栈" },
+    "stack.desc": {
+        en: "Operational snapshot: what each PR enables, whether it is actually ready or draft, the confidence assessment, and the evidence behind that decision. Historical loss records keep their original PR provenance below.",
+        zh: "当前操作快照：每个 PR 启用了什么、远端实际为 Ready 还是 Draft、信心判断及其证据。下方历史损失记录继续保留原始 PR 来源。",
+    },
+    "stack.summary": {
+        en: "{0} recommended ready · {1} iteration layers",
+        zh: "{0} 个建议可审查 · {1} 层待优化",
+    },
+    "stack.tableLabel": {
+        en: "Canonical Motion conformance pull request stack",
+        zh: "Motion 一致性标准 PR 栈",
+    },
+    "stack.pr": { en: "PR", zh: "PR" },
+    "stack.layer": { en: "Capability / usage pattern", zh: "能力 / 使用模式" },
+    "stack.state": { en: "Remote state", zh: "远端状态" },
+    "stack.confidence": { en: "Assessment", zh: "判断" },
+    "stack.evidence": { en: "Evidence gate", zh: "证据关卡" },
+    "stack.supersedes": { en: "Supersedes", zh: "替代" },
+    "stack.state.ready": { en: "Ready", zh: "Ready" },
+    "stack.state.draft": { en: "Draft", zh: "Draft" },
+    "stack.confidence.very-confident": {
+        en: "Very confident",
+        zh: "非常有信心",
+    },
+    "stack.confidence.ok": { en: "OK · iterate", zh: "尚可 · 继续优化" },
+    "stack.confidence.dirty-hacky": {
+        en: "Dirty / hacky",
+        zh: "脏 / 临时方案",
     },
     "overview.metricsLabel": {
         en: "Current progress metrics",
@@ -103,8 +132,8 @@ const STRINGS = {
 
     "validation.title": { en: "Current validation gates", zh: "当前验证关卡" },
     "validation.desc": {
-        en: "Current canonical worktree evidence. Published Gallery metrics stay pinned until an immutable preview exists.",
-        zh: "当前标准工作树证据。发布版 Gallery 指标在不可变预览产出前保持原 pin。",
+        en: "Current canonical stack evidence. Published conformance metrics remain pinned to immutable 013e20e until the new stack publishes a matching preview.",
+        zh: "当前标准 PR 栈证据。发布版一致性指标继续固定在不可变版本 013e20e，直到新栈产出匹配预览。",
     },
     "validation.date": { en: "13 Aug 2026", zh: "2026-08-13" },
     "validation.pass": { en: "Pass", zh: "通过" },
@@ -173,8 +202,8 @@ const STRINGS = {
 
     "examples.title": { en: "Compare Web and Lynx.", zh: "对比 Web 与 Lynx。" },
     "examples.desc": {
-        en: "The Web pane runs the locked upstream baseline; the Lynx pane runs the #3436 adapter through Lynx for Web. Scrolling and taps can drive both panes at once.",
-        zh: "Web 栏运行锁定的上游基线；Lynx 栏通过 Lynx for Web 运行 #3436 适配层。滚动与点按可同时驱动两栏。",
+        en: "The Web pane runs the locked upstream baseline; the Lynx pane runs immutable preview 013e20e through Lynx for Web. Scrolling and taps can drive both panes at once.",
+        zh: "Web 栏运行锁定的上游基线；Lynx 栏通过 Lynx for Web 运行不可变预览 013e20e。滚动与点按可同时驱动两栏。",
     },
     "examples.sectionLabel": {
         en: "Web and Lynx live examples",
@@ -246,8 +275,8 @@ const STRINGS = {
     },
     "conformance.historyTitle": { en: "Convergence history", zh: "收敛历史" },
     "conformance.historyDesc": {
-        en: "Each step links the PR or issue that moved the weighted loss. The chart lives on the Overview.",
-        zh: "每一步链接到推动加权损失变化的 PR 或 issue；曲线图见总览页。",
+        en: "Each row records the PR state and weighted loss at that point in time. Current review state is listed on the Overview; the loss chart is unchanged by a topology-only restack.",
+        zh: "每行记录当时的 PR 状态和加权损失。当前审查状态见总览；只调整拓扑不会虚构新的损失下降。",
     },
     "conformance.caseListLabel": {
         en: "Tracked upstream contracts",

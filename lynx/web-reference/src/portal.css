@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap");
+
 @font-face {
     font-family: "TASA Orbiter";
     src: url("https://fonts.gstatic.com/s/tasaorbiter/v2/3XFtErw3860rsdSUVZx78hP2QtzZ9v5Cbw.woff2")
@@ -11,7 +13,8 @@
 :root {
     color: #ededec;
     background: #0d1111;
-    font-family: "TASA Orbiter", "Arial Narrow", sans-serif;
+    font-family: "TASA Orbiter", "Noto Sans SC", "Noto Sans CJK SC",
+        "PingFang SC", "Microsoft YaHei", "Arial Narrow", sans-serif;
     font-synthesis: none;
     --foreground: #ededec;
     --foreground-feint: #abb1af;
@@ -30,8 +33,9 @@
     --supported: var(--green);
     --partial: var(--yellow);
     --blocked: var(--red);
-    --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas,
-        monospace;
+    --font-mono: "Geist Mono", "Noto Sans Mono CJK SC", "Noto Sans SC",
+        "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", ui-monospace,
+        SFMono-Regular, Menlo, Consolas, monospace;
     --page-gutter: clamp(20px, 5vw, 72px);
     --content-width: 1296px;
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -395,6 +399,122 @@ button {
     height: 3px;
     display: block;
     background: var(--accent);
+}
+
+.stack-monitor {
+    border-bottom: 1px solid var(--border);
+}
+
+.stack-header {
+    padding-right: 0;
+    padding-left: 0;
+}
+
+.stack-header > div {
+    max-width: 760px;
+}
+
+.stack-header p {
+    margin: 8px 0 0;
+    color: var(--foreground-feint);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+}
+
+.stack-header > span {
+    color: var(--foreground-feint);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.stack-table {
+    overflow-x: auto;
+}
+
+.stack-row {
+    min-width: 960px;
+    min-height: 74px;
+    display: grid;
+    grid-template-columns: 74px minmax(330px, 1.4fr) 86px 132px minmax(230px, 1fr);
+    align-items: center;
+    gap: 18px;
+    border-bottom: 1px solid var(--border);
+}
+
+.stack-row:last-child {
+    border-bottom: 0;
+}
+
+.stack-row-head {
+    min-height: 42px;
+    color: var(--foreground-feint);
+    font: 700 0.75rem var(--font-mono);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.stack-row > a {
+    color: var(--accent);
+    font: 700 0.875rem var(--font-mono);
+    text-underline-offset: 3px;
+}
+
+.stack-layer {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 13px 0;
+}
+
+.stack-layer strong {
+    font-size: 1rem;
+    line-height: 1.3;
+}
+
+.stack-layer span,
+.stack-validation {
+    color: var(--foreground-feint);
+    font-size: 0.875rem;
+    line-height: 1.45;
+}
+
+.stack-layer small {
+    color: color-mix(in oklch, var(--foreground-feint) 82%, var(--accent));
+    font-size: 0.8125rem;
+    line-height: 1.45;
+}
+
+.stack-state,
+.stack-confidence {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.stack-meta {
+    display: contents;
+}
+
+.stack-state small,
+.stack-confidence small,
+.stack-validation small {
+    display: none;
+}
+
+.stack-state-ready,
+.stack-confidence-very-confident {
+    color: var(--supported);
+}
+
+.stack-state-draft,
+.stack-confidence-ok {
+    color: var(--partial);
+}
+
+.stack-confidence-dirty-hacky {
+    color: var(--blocked);
 }
 
 .validation-gates {
@@ -1992,6 +2112,71 @@ button {
 
     .validation-grid {
         grid-template-columns: 1fr;
+    }
+
+    .stack-header > span {
+        white-space: normal;
+    }
+
+    .stack-row {
+        min-width: 0;
+        grid-template-columns: 58px minmax(0, 1fr);
+        gap: 8px 14px;
+        padding: 18px 0;
+        align-items: start;
+    }
+
+    .stack-row-head {
+        display: none;
+    }
+
+    .stack-row > a {
+        grid-column: 1;
+        grid-row: 1;
+        padding-top: 2px;
+    }
+
+    .stack-layer {
+        grid-column: 2;
+        grid-row: 1;
+        padding: 0;
+    }
+
+    .stack-meta {
+        grid-column: 2;
+        grid-row: 2;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 18px;
+        padding-top: 3px;
+    }
+
+    .stack-state,
+    .stack-confidence {
+        display: inline-flex;
+        gap: 6px;
+        align-items: baseline;
+        font-size: 0.875rem;
+    }
+
+    .stack-state small,
+    .stack-confidence small,
+    .stack-validation small {
+        display: inline;
+        color: var(--foreground-feint);
+        font: 600 0.75rem var(--font-mono);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .stack-validation {
+        grid-column: 2;
+        grid-row: 3;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        padding-top: 3px;
+        font-size: 0.875rem;
     }
 
     .validation-grid article,

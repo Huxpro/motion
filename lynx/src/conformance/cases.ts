@@ -88,12 +88,174 @@ export interface ConvergenceRecord {
     note: string
 }
 
+export type StackConfidence = "very-confident" | "ok" | "dirty-hacky"
+export type StackAssessment = "ready" | "iterate" | "blocked"
+
+export interface CanonicalStackLayer {
+    pr: number
+    title: string
+    role: "foundation" | "conformance"
+    /** Snapshot of the actual GitHub PR state, not the recommendation. */
+    prState: "ready" | "draft"
+    confidence: StackConfidence
+    assessment: StackAssessment
+    enables: string
+    validation: string
+    supersedes?: readonly number[]
+    caveat?: string
+}
+
 const source = (path: string, testName: string): UpstreamSource => ({
     repository: "motiondivision/motion",
     sourceVersion: "12.40.0",
     path,
     testName,
 })
+
+/**
+ * Current review topology. Historical PR numbers remain in
+ * CONVERGENCE_HISTORY so the loss chart keeps its original provenance; this
+ * table answers the separate operational question: what should be reviewed
+ * now?
+ */
+export const CANONICAL_STACK: readonly CanonicalStackLayer[] = [
+    {
+        pr: 3477,
+        title: "MainThreadObject runtime",
+        role: "foundation",
+        prState: "draft",
+        confidence: "very-confident",
+        assessment: "ready",
+        enables: "Typed main-thread object identity, hydration, and disposal",
+        validation: "Core build, type and runtime CI green; Motion stack 132/132",
+        caveat: "Author-owned fork PR; ready recommendation, PR remains draft.",
+    },
+    {
+        pr: 3509,
+        title: "Declarative Motion foundation",
+        role: "foundation",
+        prState: "draft",
+        confidence: "very-confident",
+        assessment: "ready",
+        enables: "motion.* components, variants, MotionValue, tap and hover",
+        validation: "Ubuntu/Windows, type, React, Vitest and Android CI green",
+        supersedes: [3436, 3474, 3491],
+        caveat: "True Git base on #3477; fork PR cannot join GitHub Stack UI.",
+    },
+    {
+        pr: 3515,
+        title: "initial={false}",
+        role: "conformance",
+        prState: "ready",
+        confidence: "very-confident",
+        assessment: "ready",
+        enables: "Skip mount animation and render the final animate target",
+        validation: "Focused package tests; full stack 132/132 + TypeScript",
+        supersedes: [3457],
+    },
+    {
+        pr: 3516,
+        title: "Typed MotionValue styles",
+        role: "conformance",
+        prState: "ready",
+        confidence: "very-confident",
+        assessment: "ready",
+        enables: "MotionValue in CSS properties and transform aliases",
+        validation: "Compile-time coverage; full stack 132/132 + TypeScript",
+        supersedes: [3458],
+    },
+    {
+        pr: 3517,
+        title: "Per-value transitions",
+        role: "conformance",
+        prState: "ready",
+        confidence: "very-confident",
+        assessment: "ready",
+        enables: "Independent transition.opacity, transition.x, and fallback",
+        validation: "Routing and hydration tests; full stack 132/132",
+        supersedes: [3459],
+    },
+    {
+        pr: 3518,
+        title: "Removed animate values",
+        role: "conformance",
+        prState: "ready",
+        confidence: "very-confident",
+        assessment: "ready",
+        enables: "Restore style/initial ownership when animate drops a key",
+        validation: "Ownership regression tests; full stack 132/132",
+        supersedes: [3489],
+    },
+    {
+        pr: 3519,
+        title: "transitionEnd",
+        role: "conformance",
+        prState: "ready",
+        confidence: "very-confident",
+        assessment: "ready",
+        enables: "Apply final discrete styles after the owning animation",
+        validation: "Animated, instant and stale-completion tests; 132/132",
+        supersedes: [3462],
+    },
+    {
+        pr: 3520,
+        title: "Unmount cancellation",
+        role: "conformance",
+        prState: "ready",
+        confidence: "very-confident",
+        assessment: "ready",
+        enables: "Suppress completion callbacks after component teardown",
+        validation: "MTS binding + cancellation regression; 132/132",
+        supersedes: [3463],
+    },
+    {
+        pr: 3521,
+        title: "Discrete visibility",
+        role: "conformance",
+        prState: "ready",
+        confidence: "very-confident",
+        assessment: "ready",
+        enables: "display/visibility exits without a Lynx compatibility shim",
+        validation: "Zero-code platform-fit proof; full stack 132/132",
+        supersedes: [3465],
+    },
+    {
+        pr: 3522,
+        title: "CSS custom properties",
+        role: "conformance",
+        prState: "ready",
+        confidence: "very-confident",
+        assessment: "ready",
+        enables: "Animate and type --* targets through the existing style PAPI",
+        validation: "Static, animated and type coverage; full stack 132/132",
+        supersedes: [3466],
+        caveat: "Native var() consumption remains separately tracked in issue #57.",
+    },
+    {
+        pr: 3523,
+        title: "Tap animation lifecycle",
+        role: "conformance",
+        prState: "draft",
+        confidence: "ok",
+        assessment: "iterate",
+        enables: "Tap-driven onAnimationStart/onAnimationComplete",
+        validation: "Package 132/132; headless press/release lifecycle passes",
+        supersedes: [3483],
+        caveat: "Cross-thread completion and interruption ownership need review.",
+    },
+    {
+        pr: 3524,
+        title: "Hover animation lifecycle",
+        role: "conformance",
+        prState: "draft",
+        confidence: "ok",
+        assessment: "iterate",
+        enables: "Hover lifecycle plus an observable gesture probe",
+        validation: "Headless idle→hover→press→release→leave: 5/5",
+        supersedes: [3484],
+        caveat: "Pointer-only semantics; native proof awaits a current host SDK.",
+    },
+]
 
 /**
  * One entry represents one reviewable upstream behavior, not one visual demo.
