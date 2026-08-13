@@ -18,6 +18,7 @@ declare module '@lynx-js/types' {
       | "inherited-variant-lifecycle"
       | "inherited-variant-value-update"
       | "deep-variant-propagation"
+      | "deep-initial-false-propagation"
       | "hover-rest-transition"
   }
 }

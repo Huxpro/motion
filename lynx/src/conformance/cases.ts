@@ -1490,6 +1490,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { opacity: 1 },
     },
     {
+        id: "initial/deep-false-propagation",
+        category: "Variants",
+        title: "Deep inherited initial={false}",
+        summary:
+            "A parent's initial={false} first-frame semantic passes through neutral Motion wrappers.",
+        status: "conformant",
+        api: ["initial={false}", "variants", "inheritance"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "initial: false correctly propagates"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the root publishes initial false with the visible animate label",
+            "a neutral intermediate Motion component preserves both context values",
+            "the deep child renders opacity 1 and x=24 on its first observed frame",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { opacity: 1, x: 24 },
+    },
+    {
         id: "variants/orchestration",
         category: "Variants",
         title: "Variant orchestration + controls",
@@ -1940,6 +1966,10 @@ export const INHERITED_VARIANT_VALUE_UPDATE_CASE = CONFORMANCE_CASES.find(
 export const DEEP_VARIANT_PROPAGATION_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "variants/deep-propagation"
 ) as ConformanceCase & { expected: { opacity: number } }
+
+export const DEEP_INITIAL_FALSE_PROPAGATION_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "initial/deep-false-propagation"
+) as ConformanceCase & { expected: { opacity: number; x: number } }
 
 export const DELAY_CHILDREN_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "variants/delay-children"
@@ -2467,6 +2497,16 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         contract:
             "Preserve inherited labels through Motion components with no animate prop.",
         exampleId: "deep-variant-propagation",
+    },
+    {
+        id: "deep-initial-false-propagation",
+        group: "Variants",
+        api: "deep initial={false} propagation",
+        status: "supported",
+        evidence: "dual-renderer",
+        contract:
+            "Preserve inherited initial=false through neutral Motion wrappers.",
+        exampleId: "deep-initial-false-propagation",
     },
     {
         id: "variant-delay-children",
@@ -3167,6 +3207,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Core component encapsulation reuses the existing ReactLynx context chain and each descendant's upstream MotionValue path without host adaptation.",
+    },
+    {
+        caseId: "initial/deep-false-propagation",
+        importance: 5,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Core no-flash first-frame semantics compose through the existing ReactLynx context chain without host or CSS adaptation.",
     },
     {
         caseId: "variants/delay-children",
@@ -4055,5 +4105,17 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 9,
         lossAfter: WEIGHTED_LOSS,
         note: "I5/F5/M1/R1/C0 · immutable f6b0e90 motion/react/react-umd set · existing runtime preserves inherited labels through a neutral intermediate Motion component with no lynx-stack source diff · complete dual-renderer suite 54/54 · no Full Demo or native claim.",
+    },
+    {
+        id: "motion-75",
+        date: "2026-08-13",
+        title: "Deep initial=false propagation evidence",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 75,
+        caseIds: ["initial/deep-false-propagation"],
+        lossBefore: 9,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I5/F5/M1/R1/C0 · immutable f6b0e90 motion/react/react-umd set · existing runtime preserves inherited initial=false through a neutral intermediate Motion component with no lynx-stack source diff · complete dual-renderer suite 55/55 · no Full Demo or native claim.",
     },
 ]

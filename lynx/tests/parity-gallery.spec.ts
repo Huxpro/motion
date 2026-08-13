@@ -10,6 +10,7 @@ import {
     CONFORMANCE_METRICS,
     DELAY_CASE,
     DELAY_CHILDREN_CASE,
+    DEEP_INITIAL_FALSE_PROPAGATION_CASE,
     DEFAULT_TRANSITION_CASE,
     DEEP_VARIANT_PROPAGATION_CASE,
     DISPLAY_REVEAL_CASE,
@@ -446,6 +447,48 @@ test("manifest case: variant labels propagate through a neutral wrapper", async 
             .toBe(DEEP_VARIANT_PROPAGATION_CASE.expected.opacity)
     }
     expect(errors).toEqual([])
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: initial false propagates through a neutral wrapper", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({
+                conformanceMode: "deep-initial-false-propagation",
+            })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=deep-initial-false-propagation"
+        ),
+    ])
+
+    for (const [renderer, page] of [
+        ["Lynx", lynxPage],
+        ["Web", webPage],
+    ] as const) {
+        const target = page.locator("#target-deep-initial-false-propagation")
+        await expect
+            .poll(
+                () =>
+                    target.evaluate((element) => {
+                        const computed = getComputedStyle(element)
+                        return {
+                            opacity: Number(computed.opacity),
+                            x: new DOMMatrixReadOnly(computed.transform).m41,
+                        }
+                    }),
+                { message: `${renderer} deep first frame` }
+            )
+            .toEqual(DEEP_INITIAL_FALSE_PROPAGATION_CASE.expected)
+    }
     await Promise.all([lynxPage.close(), webPage.close()])
 })
 
