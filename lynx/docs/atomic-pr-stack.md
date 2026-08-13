@@ -181,3 +181,8 @@ Removing `animate` restores the current static opacity/rotate values, later
 style updates remain reactive, and re-entering the variant masks style changes
 while active on immutable `2c805a2`; lynx-stack #3489 owns the adjacent removed-
 target capability.
+
+Hux evidence PR #85 adds the complementary partial-variant contract. Switching
+from an opacity variant to an x-only variant restores opacity from static style
+while applying x on immutable `2c805a2`; this also reuses lynx-stack #3489's
+removed-key ownership without a new source patch.

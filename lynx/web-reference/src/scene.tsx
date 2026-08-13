@@ -199,6 +199,8 @@ export function App() {
     const displayExitMode = conformanceMode === "display-exit"
     const variantStyleFallbackMode =
         conformanceMode === "variant-style-fallback"
+    const variantPartialStyleFallbackMode =
+        conformanceMode === "variant-partial-style-fallback"
     const variantPropagationMode = conformanceMode === "variant-propagation"
     const delayChildrenMode = conformanceMode === "delay-children"
     const variantInheritOptOutMode =
@@ -240,6 +242,7 @@ export function App() {
     const [displayRevealed, setDisplayRevealed] = useState(false)
     const [displayExited, setDisplayExited] = useState(false)
     const [variantStylePhase, setVariantStylePhase] = useState(0)
+    const [variantPartialStylePhase, setVariantPartialStylePhase] = useState(0)
     const [visibilityRevealed, setVisibilityRevealed] = useState(false)
     const [unseenPropertyActive, setUnseenPropertyActive] = useState(false)
     const [instantActive, setInstantActive] = useState(false)
@@ -355,6 +358,49 @@ export function App() {
                                     }
                                     variants={{
                                         active: { opacity: 1, rotate: 1 },
+                                    }}
+                                    transition={{ type: false }}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {variantPartialStyleFallbackMode && (
+                        <div
+                            id="example-variant-partial-style-fallback"
+                            style={conformanceCard}
+                            onClick={() =>
+                                setVariantPartialStylePhase((phase) =>
+                                    Math.min(phase + 1, 2)
+                                )
+                            }
+                        >
+                            <div style={info}>
+                                <span style={cardTitle}>
+                                    Partial variant ownership
+                                </span>
+                                <span style={code}>
+                                    {`phase ${variantPartialStylePhase}`}
+                                </span>
+                            </div>
+                            <div style={demo}>
+                                <motion.div
+                                    id="target-variant-partial-style-fallback"
+                                    style={{
+                                        ...dot,
+                                        opacity: 0,
+                                        backgroundColor: "#d3df63",
+                                    }}
+                                    animate={
+                                        variantPartialStylePhase === 1
+                                            ? "opaque"
+                                            : variantPartialStylePhase === 2
+                                              ? "moved"
+                                              : undefined
+                                    }
+                                    variants={{
+                                        opaque: { opacity: 1 },
+                                        moved: { x: 48 },
                                     }}
                                     transition={{ type: false }}
                                 />
