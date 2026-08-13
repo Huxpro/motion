@@ -4298,34 +4298,74 @@ test("evidence portal exposes examples, API inventory, and conformance metrics",
     await expect(page.locator(".loss-monitor-header > strong")).toHaveText(
         String(WEIGHTED_LOSS)
     )
-    await expect(page.locator(".convergence-ledger li")).toHaveCount(
-        CONVERGENCE_HISTORY.length
-    )
-    await expect(page.locator(".test-row:not(.test-row-head)")).toHaveCount(
-        CONFORMANCE_METRICS.tracked
-    )
-    await expect(
-        page.getByRole("heading", {
-            name: `Upstream contract evidence (${CONFORMANCE_METRICS.tracked})`,
-        })
-    ).toBeVisible()
+    await expect(page.locator(".loss-chart")).toHaveCount(1)
+    // The overview stays an overview: the per-case evidence table and the
+    // convergence ledger live in the Conformance view now.
+    await expect(page.locator(".test-row")).toHaveCount(0)
+    await expect(page.locator(".convergence-ledger")).toHaveCount(0)
 
     await page.getByRole("link", { name: "API", exact: true }).click()
     await expect(
         page.getByRole("heading", { name: "Supported API surface." })
     ).toBeVisible()
     await expect(page.locator(".matrix-row")).toHaveCount(API_METRICS.total)
+    expect(
+        await page.locator('a[href^="https://motion.dev/docs"]').count()
+    ).toBeGreaterThan(10)
 
     await page.getByRole("link", { name: "Conformance" }).click()
     await expect(page.locator(".case-row")).toHaveCount(
         CONFORMANCE_METRICS.tracked
     )
+    await expect(page.locator(".convergence-ledger li")).toHaveCount(
+        CONVERGENCE_HISTORY.length
+    )
+    await expect(page.locator(".case-evidence")).toHaveCount(
+        CONFORMANCE_METRICS.tracked
+    )
+    expect(
+        await page
+            .locator(
+                'a[href*="github.com/motiondivision/motion/blob/v"]'
+            )
+            .count()
+    ).toBeGreaterThan(0)
 
     await page.getByRole("link", { name: "Examples" }).click()
     await expect(page.locator(".scenario-row")).toHaveCount(
         GALLERY_EXAMPLES.length
     )
     await expect(page.locator("iframe")).toHaveCount(2)
+    await expect(page.locator(".compare-toolbar")).toBeVisible()
+    await expect(page.locator(".compare-status")).toBeVisible()
+    await expect(page.locator(".scenario-run")).toHaveCount(
+        GALLERY_EXAMPLES.length
+    )
+})
+
+test("evidence portal renders the Chinese locale and keeps it across views", async ({
+    page,
+}) => {
+    await page.goto("http://localhost:4173/?view=overview&lang=zh")
+
+    await expect(
+        page.getByRole("heading", { name: "Motion / Lynx 现状" })
+    ).toBeVisible()
+    await expect(page.locator(".lang-toggle")).toHaveText("EN")
+
+    await page.getByRole("link", { name: "一致性", exact: true }).click()
+    await expect(
+        page.getByRole("heading", { name: "上游一致性。" })
+    ).toBeVisible()
+    await expect(page.locator(".case-row")).toHaveCount(
+        CONFORMANCE_METRICS.tracked
+    )
+
+    // Switching back to English keeps the current view.
+    await page.locator(".lang-toggle").click()
+    await expect(
+        page.getByRole("heading", { name: "Upstream conformance." })
+    ).toBeVisible()
 })
 
 test("evidence portal keeps every view usable at mobile width", async ({

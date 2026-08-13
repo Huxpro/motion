@@ -50,11 +50,24 @@ repository-level config can publish the local output; the established
 cross-origin isolation headers required by Lynx for Web. Every PR preview
 exposes four shareable views:
 
-- `/?view=overview` — current verdict and evidence ladder;
-- `/?view=examples` — live, side-by-side Web and ReactLynx galleries;
-- `/?view=api` — filterable atomic API support/boundary matrix; and
-- `/?view=conformance` — upstream source paths, test names, acceptance
-  criteria, and coverage status.
+- `/?view=overview` — current verdict, metrics, and the weighted-loss chart;
+- `/?view=examples` — live Web and ReactLynx galleries with synchronized
+  scrolling, mirrored taps, a dual-runtime "run both" trigger per scenario,
+  and an overlay slider layout for small screens;
+- `/?view=api` — filterable atomic API support/boundary matrix, with each
+  API linked to its Motion.dev documentation page; and
+- `/?view=conformance` — the convergence ledger plus upstream source paths
+  (linked to `motiondivision/motion` at the pinned version), test names,
+  acceptance criteria, and per-case evidence marks.
+
+Every view is available in English and Simplified Chinese via the `lang`
+query parameter (persisted to `localStorage`); the masthead carries the
+toggle. In production the two Examples panes are same-origin, which is what
+lets the portal observe scroll positions and dispatch synthetic taps into
+both runtimes — including through Lynx for Web's open shadow roots. The
+bridge degrades gracefully (controls disable) in `npm run dev`, where the
+Lynx preview is served cross-origin; `tests/portal-compare.spec.ts` covers
+it against the assembled `evidence-dist/` artifact.
 
 The portal, Gallery, and Playwright checks consume
 [`src/conformance/cases.ts`](./src/conformance/cases.ts). Counts and percentages

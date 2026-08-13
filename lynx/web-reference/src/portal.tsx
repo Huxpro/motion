@@ -1,4 +1,10 @@
-import { useMemo, useState } from "react"
+import {
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    type PointerEvent as ReactPointerEvent,
+} from "react"
 import {
     API_METRICS,
     ATOMIC_CAPABILITIES,
@@ -10,53 +16,87 @@ import {
     WEIGHTED_LOSS,
     type SupportStatus,
 } from "../../src/conformance/cases.js"
+import {
+    applyAnchor,
+    captureAnchor,
+    cardIdFromEvent,
+    connectPane,
+    scenarioCardId,
+    triggerCard,
+    type PaneHandle,
+} from "./compare.js"
+import {
+    currentLang,
+    localizedHref,
+    makeT,
+    type Lang,
+    type Translate,
+} from "./i18n.js"
+import {
+    MOTION_DOCS_HOME,
+    motionDocsUrl,
+    UPSTREAM_REPO_URL,
+    upstreamSourceUrl,
+} from "./motion-links.js"
 import "./portal.css"
 
 type View = "overview" | "examples" | "api" | "conformance"
 
-const VIEW_LABELS: Record<View, string> = {
-    overview: "Overview",
-    examples: "Examples",
-    api: "API",
-    conformance: "Conformance",
-}
+const VIEWS: readonly View[] = ["overview", "examples", "api", "conformance"]
 
-const STATUS_LABEL: Record<SupportStatus, string> = {
-    supported: "Supported",
-    partial: "Partial",
-    blocked: "Blocked",
-}
+const NAV_KEYS = {
+    overview: "nav.overview",
+    examples: "nav.examples",
+    api: "nav.api",
+    conformance: "nav.conformance",
+} as const
 
 function currentView(): View {
     const candidate = new URLSearchParams(window.location.search).get("view")
-    return candidate && candidate in VIEW_LABELS
-        ? (candidate as View)
-        : "overview"
+    return VIEWS.includes(candidate as View) ? (candidate as View) : "overview"
 }
 
-function StatusMark({ status }: { status: SupportStatus }) {
+function StatusMark({
+    status,
+    t,
+}: {
+    status: SupportStatus
+    t: Translate
+}) {
     return (
         <span className={`status-mark status-${status}`}>
             <span aria-hidden="true" className="status-dot" />
-            {STATUS_LABEL[status]}
+            {t(`status.${status}`)}
         </span>
     )
 }
 
-function Masthead({ view }: { view: View }) {
+function Masthead({
+    view,
+    lang,
+    t,
+}: {
+    view: View
+    lang: Lang
+    t: Translate
+}) {
+    const otherLang: Lang = lang === "zh" ? "en" : "zh"
+    // The toggle always carries an explicit lang so it overrides the
+    // persisted preference; plain view links inherit it instead.
+    const toggleParams = new URLSearchParams({ view, lang: otherLang })
     return (
         <header className="masthead">
             <a
                 className="wordmark"
-                href="?view=overview"
-                aria-label="Motion on Lynx evidence overview"
+                href={localizedHref(lang, { view: "overview" })}
+                aria-label={t("masthead.label")}
             >
                 <span className="wordmark-motion">Motion</span>
                 <span className="wordmark-cross">/</span>
                 <span className="wordmark-lynx">Lynx</span>
             </a>
-            <nav className="nav" aria-label="Evidence views">
-                {(Object.keys(VIEW_LABELS) as View[]).map((item) => (
+            <nav className="nav" aria-label={t("nav.label")}>
+                {VIEWS.map((item) => (
                     <a
                         key={item}
                         className={
@@ -64,20 +104,30 @@ function Masthead({ view }: { view: View }) {
                                 ? "nav-link nav-link-active"
                                 : "nav-link"
                         }
-                        href={`?view=${item}`}
+                        href={localizedHref(lang, { view: item })}
                     >
-                        {VIEW_LABELS[item]}
+                        {t(NAV_KEYS[item])}
                     </a>
                 ))}
             </nav>
-            <a
-                className="build-stamp"
-                href="https://github.com/lynx-family/lynx-stack/pull/3457"
-                target="_blank"
-                rel="noreferrer"
-            >
-                Stack #3457
-            </a>
+            <div className="masthead-actions">
+                <a
+                    className="lang-toggle"
+                    href={`?${toggleParams.toString()}`}
+                    lang={otherLang === "zh" ? "zh-Hans" : "en"}
+                    aria-label={t("lang.toggleLabel")}
+                >
+                    {t("lang.toggle")}
+                </a>
+                <a
+                    className="build-stamp"
+                    href="https://github.com/lynx-family/lynx-stack/pull/3457"
+                    target="_blank"
+                    rel="noreferrer"
+                >
+                    Stack #3457
+                </a>
+            </div>
         </header>
     )
 }
@@ -106,9 +156,11 @@ function CoverageStrip() {
 function EvidenceMark({
     available,
     label,
+    t,
 }: {
     available: boolean
     label: string
+    t: Translate
 }) {
     return (
         <span
@@ -120,7 +172,7 @@ function EvidenceMark({
             aria-label={`${label}: ${available ? "available" : "missing"}`}
         >
             <i aria-hidden="true" />
-            {available ? "Yes" : "—"}
+            {available ? t("mark.yes") : "—"}
         </span>
     )
 }
@@ -143,7 +195,7 @@ function recordHref(record: (typeof CONVERGENCE_HISTORY)[number]) {
     return `https://github.com/Huxpro/motion/pull/${record.motionPr}`
 }
 
-function LossMonitor() {
+function LossMonitor({ lang, t }: { lang: Lang; t: Translate }) {
     const width = 960
     const height = 268
     const left = 52
@@ -160,6 +212,25 @@ function LossMonitor() {
     const points = CONVERGENCE_HISTORY.map(
         (record, index) => `${x(index)},${y(record.lossAfter)}`
     ).join(" ")
+    // Label only loss change-points with breathing room, so a long history
+    // stays readable; the full ledger carries the per-record detail.
+    const lastIndex = CONVERGENCE_HISTORY.length - 1
+    const labeled: number[] = []
+    CONVERGENCE_HISTORY.forEach((record, index) => {
+        const changed =
+            index === 0 ||
+            record.lossAfter !== CONVERGENCE_HISTORY[index - 1].lossAfter
+        if (!changed && index !== lastIndex) return
+        if (
+            labeled.length &&
+            x(index) - x(labeled[labeled.length - 1]) < 52
+        ) {
+            if (index !== lastIndex) return
+            labeled.pop()
+        }
+        labeled.push(index)
+    })
+    const labelSet = new Set(labeled)
     const pending = [...CONVERGENCE_HISTORY]
         .reverse()
         .find((record) => record.expectedLossAfter !== undefined)
@@ -170,11 +241,8 @@ function LossMonitor() {
         <section className="loss-monitor" aria-labelledby="loss-heading">
             <header className="monitor-section-header loss-monitor-header">
                 <div>
-                    <h2 id="loss-heading">Weighted conformance loss</h2>
-                    <p>
-                        Importance-weighted semantic gap; partial = ½ loss,
-                        blocked = full loss.
-                    </p>
+                    <h2 id="loss-heading">{t("loss.title")}</h2>
+                    <p>{t("loss.desc")}</p>
                 </div>
                 <strong>{WEIGHTED_LOSS}</strong>
             </header>
@@ -183,7 +251,11 @@ function LossMonitor() {
                     className="loss-chart"
                     viewBox={`0 0 ${width} ${height}`}
                     role="img"
-                    aria-label={`Weighted loss is ${WEIGHTED_LOSS} after ${CONVERGENCE_HISTORY.length} recorded PR steps`}
+                    aria-label={t(
+                        "loss.chartLabel",
+                        WEIGHTED_LOSS,
+                        CONVERGENCE_HISTORY.length
+                    )}
                 >
                     {[100, 75, 50, 25, 0].map((tick) => (
                         <g key={tick}>
@@ -211,24 +283,28 @@ function LossMonitor() {
                                 className="loss-point"
                                 cx={x(index)}
                                 cy={y(record.lossAfter)}
-                                r="5"
+                                r={labelSet.has(index) ? 5 : 3}
                             />
-                            <text
-                                className="loss-value"
-                                x={x(index)}
-                                y={y(record.lossAfter) - 12}
-                                textAnchor="middle"
-                            >
-                                {record.lossAfter}
-                            </text>
-                            <text
-                                className="loss-pr-label"
-                                x={x(index)}
-                                y={height - 28}
-                                textAnchor="middle"
-                            >
-                                {recordLabel(record)}
-                            </text>
+                            {labelSet.has(index) && (
+                                <>
+                                    <text
+                                        className="loss-value"
+                                        x={x(index)}
+                                        y={y(record.lossAfter) - 12}
+                                        textAnchor="middle"
+                                    >
+                                        {record.lossAfter}
+                                    </text>
+                                    <text
+                                        className="loss-pr-label"
+                                        x={x(index)}
+                                        y={height - 28}
+                                        textAnchor="middle"
+                                    >
+                                        {recordLabel(record)}
+                                    </text>
+                                </>
+                            )}
                         </g>
                     ))}
                     {pending?.expectedLossAfter !== undefined && (
@@ -252,7 +328,7 @@ function LossMonitor() {
                                 y={y(pending.expectedLossAfter) - 13}
                                 textAnchor="middle"
                             >
-                                {pending.expectedLossAfter} pending
+                                {pending.expectedLossAfter} {t("loss.pending")}
                             </text>
                             <text
                                 className="loss-pr-label"
@@ -260,44 +336,22 @@ function LossMonitor() {
                                 y={height - 28}
                                 textAnchor="middle"
                             >
-                                verified
+                                {t("loss.verified")}
                             </text>
                         </g>
                     )}
                 </svg>
             </div>
-            <ol className="convergence-ledger">
-                {CONVERGENCE_HISTORY.map((record) => (
-                    <li key={record.id}>
-                        <a
-                            href={recordHref(record)}
-                            target="_blank"
-                            rel="noreferrer"
-                        >
-                            {recordLabel(record)}
-                        </a>
-                        <div>
-                            <strong>{record.title}</strong>
-                            <p>{record.note}</p>
-                        </div>
-                        <span
-                            className={`record-status status-${record.status}`}
-                        >
-                            {record.status}
-                        </span>
-                        <b>
-                            {record.lossBefore} → {record.lossAfter}
-                            {record.expectedLossAfter !== undefined &&
-                                ` → ${record.expectedLossAfter}?`}
-                        </b>
-                    </li>
-                ))}
-            </ol>
+            <footer className="loss-monitor-footer">
+                <a href={localizedHref(lang, { view: "conformance" })}>
+                    {t("loss.history")}
+                </a>
+            </footer>
         </section>
     )
 }
 
-function Overview() {
+function Overview({ lang, t }: { lang: Lang; t: Translate }) {
     const implementationPercent = Math.round(
         ((API_METRICS.supported + API_METRICS.partial) / API_METRICS.total) *
             100
@@ -338,7 +392,7 @@ function Overview() {
         <main className="page overview-page" id="main-content">
             <header className="monitor-header">
                 <div className="monitor-title">
-                    <h1>Motion / Lynx status</h1>
+                    <h1>{t("overview.title")}</h1>
                     <p>
                         <a
                             href="https://github.com/lynx-family/lynx-stack/pull/3457"
@@ -347,7 +401,7 @@ function Overview() {
                         >
                             #3457
                         </a>{" "}
-                        stacked on{" "}
+                        {t("overview.stackedMid")}{" "}
                         <a
                             href="https://github.com/lynx-family/lynx-stack/pull/3455"
                             target="_blank"
@@ -355,73 +409,94 @@ function Overview() {
                         >
                             #3455
                         </a>{" "}
-                        · validated runtime remains #3436 · live status in PR
-                        checks
+                        {t("overview.stackedPost")}
                     </p>
                 </div>
                 <div className="monitor-verdict">
-                    <span className="monitor-verdict-label">Compatibility</span>
-                    <strong>Useful subset, not drop-in compatible</strong>
-                    <span>Upstream source 12.40.0 · Web baseline 13.0.0</span>
+                    <span className="monitor-verdict-label">
+                        {t("overview.verdictLabel")}
+                    </span>
+                    <strong>{t("overview.verdict")}</strong>
+                    <span>{t("overview.versions")}</span>
                 </div>
             </header>
 
             <section
                 className="monitor-metrics"
-                aria-label="Current progress metrics"
+                aria-label={t("overview.metricsLabel")}
             >
-                <a className="monitor-metric" href="?view=api">
-                    <span>API readiness</span>
+                <a
+                    className="monitor-metric"
+                    href={localizedHref(lang, { view: "api" })}
+                >
+                    <span>{t("metric.apiReadiness")}</span>
                     <strong>
                         {API_METRICS.supported + API_METRICS.partial} /{" "}
                         {API_METRICS.total}
                     </strong>
                     <small>
-                        {implementationPercent}% implemented or partial
+                        {t("metric.apiReadinessNote", implementationPercent)}
                     </small>
                     <i style={{ width: `${implementationPercent}%` }} />
                 </a>
-                <a className="monitor-metric" href="?view=conformance">
-                    <span>Exact parity</span>
+                <a
+                    className="monitor-metric"
+                    href={localizedHref(lang, { view: "conformance" })}
+                >
+                    <span>{t("metric.exactParity")}</span>
                     <strong>
                         {CONFORMANCE_METRICS.conformant} /{" "}
                         {CONFORMANCE_METRICS.tracked}
                     </strong>
-                    <small>{exactPercent}% dual-renderer conformance</small>
+                    <small>{t("metric.exactParityNote", exactPercent)}</small>
                     <i style={{ width: `${Math.max(3, exactPercent)}%` }} />
                 </a>
-                <a className="monitor-metric" href="?view=conformance">
-                    <span>Package evidence</span>
+                <a
+                    className="monitor-metric"
+                    href={localizedHref(lang, { view: "conformance" })}
+                >
+                    <span>{t("metric.packageEvidence")}</span>
                     <strong>
                         {packageTestCount} / {CONFORMANCE_METRICS.tracked}
                     </strong>
                     <small>
-                        {packageTestPercent}% have focused package tests
+                        {t("metric.packageEvidenceNote", packageTestPercent)}
                     </small>
                     <i style={{ width: `${packageTestPercent}%` }} />
                 </a>
-                <a className="monitor-metric" href="?view=examples">
-                    <span>Gallery runnable</span>
+                <a
+                    className="monitor-metric"
+                    href={localizedHref(lang, { view: "examples" })}
+                >
+                    <span>{t("metric.galleryRunnable")}</span>
                     <strong>
                         {CONFORMANCE_METRICS.gallery} /{" "}
                         {CONFORMANCE_METRICS.tracked}
                     </strong>
-                    <small>{galleryPercent}% executable in both panes</small>
+                    <small>
+                        {t("metric.galleryRunnableNote", galleryPercent)}
+                    </small>
                     <i style={{ width: `${galleryPercent}%` }} />
                 </a>
-                <a className="monitor-metric" href="?view=conformance">
-                    <span>Weighted loss</span>
+                <a
+                    className="monitor-metric"
+                    href={localizedHref(lang, { view: "conformance" })}
+                >
+                    <span>{t("metric.weightedLoss")}</span>
                     <strong>{WEIGHTED_LOSS}</strong>
-                    <small>importance-adjusted unresolved semantics</small>
+                    <small>{t("metric.weightedLossNote")}</small>
                     <i style={{ width: `${100 - WEIGHTED_LOSS}%` }} />
                 </a>
-                <a className="monitor-metric" href="?view=conformance">
-                    <span>Native evidence</span>
+                <a
+                    className="monitor-metric"
+                    href={localizedHref(lang, { view: "conformance" })}
+                >
+                    <span>{t("metric.nativeEvidence")}</span>
                     <strong>
                         {CONFORMANCE_METRICS.native} /{" "}
                         {CONFORMANCE_METRICS.tracked}
                     </strong>
-                    <small>{nativePercent}% recorded on a native client</small>
+                    <small>{t("metric.nativeEvidenceNote", nativePercent)}</small>
                     <i style={{ width: `${Math.max(3, nativePercent)}%` }} />
                 </a>
             </section>
@@ -429,23 +504,29 @@ function Overview() {
             <section className="monitor-split">
                 <article className="capability-monitor">
                     <header className="monitor-section-header">
-                        <h2>API progress by area</h2>
-                        <a href="?view=api">Open API inventory →</a>
+                        <h2>{t("areas.title")}</h2>
+                        <a href={localizedHref(lang, { view: "api" })}>
+                            {t("areas.open")}
+                        </a>
                     </header>
                     <div
                         className="capability-table"
                         role="table"
-                        aria-label="Atomic API status by area"
+                        aria-label={t("areas.tableLabel")}
                     >
                         <div
                             className="capability-row capability-row-head"
                             role="row"
                         >
-                            <span role="columnheader">Area</span>
-                            <span role="columnheader">Supported</span>
-                            <span role="columnheader">Partial</span>
-                            <span role="columnheader">Blocked</span>
-                            <span role="columnheader">Distribution</span>
+                            <span role="columnheader">{t("areas.area")}</span>
+                            <span role="columnheader">
+                                {t("areas.supported")}
+                            </span>
+                            <span role="columnheader">{t("areas.partial")}</span>
+                            <span role="columnheader">{t("areas.blocked")}</span>
+                            <span role="columnheader">
+                                {t("areas.distribution")}
+                            </span>
                         </div>
                         {groups.map((group) => (
                             <div
@@ -498,8 +579,8 @@ function Overview() {
 
                 <aside className="blocker-monitor">
                     <header className="monitor-section-header">
-                        <h2>Ranked next gaps</h2>
-                        <span>{blockers.length} API blockers</span>
+                        <h2>{t("gaps.title")}</h2>
+                        <span>{t("gaps.blockers", blockers.length)}</span>
                     </header>
                     <ol className="priority-list">
                         {PRIORITIZED_GAPS.slice(0, 5).map((item, index) => (
@@ -534,155 +615,381 @@ function Overview() {
                 </aside>
             </section>
 
-            <LossMonitor />
-
-            <section className="test-monitor">
-                <header className="monitor-section-header test-monitor-header">
-                    <h2>
-                        Upstream contract evidence (
-                        {CONFORMANCE_METRICS.tracked})
-                    </h2>
-                    <div className="test-summary">
-                        <span>
-                            <i className="summary-supported" />
-                            {CONFORMANCE_METRICS.conformant} conformant
-                        </span>
-                        <span>
-                            <i className="summary-partial" />
-                            {CONFORMANCE_METRICS.partial} partial
-                        </span>
-                        <span>
-                            <i className="summary-blocked" />
-                            {CONFORMANCE_METRICS.blocked} blocked
-                        </span>
-                    </div>
-                </header>
-                <div className="test-table-scroll">
-                    <div
-                        className="test-table"
-                        role="table"
-                        aria-label="Upstream conformance evidence matrix"
-                    >
-                        <div className="test-row test-row-head" role="row">
-                            <span role="columnheader">
-                                Contract / upstream test
-                            </span>
-                            <span role="columnheader">Package</span>
-                            <span role="columnheader">Gallery</span>
-                            <span role="columnheader">Dual</span>
-                            <span role="columnheader">Native</span>
-                            <span role="columnheader">Result</span>
-                        </div>
-                        {CONFORMANCE_CASES.map((item, index) => (
-                            <div className="test-row" role="row" key={item.id}>
-                                <div className="test-contract" role="cell">
-                                    <span>
-                                        {String(index + 1).padStart(2, "0")} /{" "}
-                                        {item.category}
-                                    </span>
-                                    <strong>{item.title}</strong>
-                                    <small>{item.upstream.testName}</small>
-                                </div>
-                                <EvidenceMark
-                                    available={item.evidence.packageTest}
-                                    label="Package test"
-                                />
-                                <EvidenceMark
-                                    available={item.evidence.gallery}
-                                    label="Gallery"
-                                />
-                                <EvidenceMark
-                                    available={item.evidence.dualRenderer}
-                                    label="Dual renderer"
-                                />
-                                <EvidenceMark
-                                    available={item.evidence.native}
-                                    label="Native evidence"
-                                />
-                                <StatusMark
-                                    status={
-                                        item.status === "conformant"
-                                            ? "supported"
-                                            : item.status
-                                    }
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-                <footer className="test-monitor-footer">
-                    Evidence availability is not a live CI result. Open the{" "}
-                    <a href="?view=conformance">conformance ledger</a> for
-                    source paths, assertions, and gaps.
-                </footer>
-            </section>
+            <LossMonitor lang={lang} t={t} />
 
             <section className="gallery-showoff">
-                <h2>Gallery ({GALLERY_EXAMPLES.length} live scenarios)</h2>
-                <p>
-                    Compare the supported subset in Web Motion and ReactLynx.
-                    Gallery evidence alone does not imply exact conformance.
-                </p>
-                <a href="?view=examples">Open Web / Lynx Gallery →</a>
+                <h2>{t("showoff.title", GALLERY_EXAMPLES.length)}</h2>
+                <p>{t("showoff.desc")}</p>
+                <a href={localizedHref(lang, { view: "examples" })}>
+                    {t("showoff.cta")}
+                </a>
             </section>
         </main>
     )
 }
 
-function Examples() {
+function ApiChips({ apis }: { apis: readonly string[] }) {
+    return (
+        <code className="api-chips">
+            {apis.map((api, index) => {
+                const docs = motionDocsUrl(api)
+                return (
+                    <span key={`${api}-${index}`}>
+                        {index > 0 && " · "}
+                        {docs ? (
+                            <a
+                                className="api-chip-link"
+                                href={docs}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                {api}
+                            </a>
+                        ) : (
+                            api
+                        )}
+                    </span>
+                )
+            })}
+        </code>
+    )
+}
+
+type PaneSide = "web" | "lynx"
+type LinkState = "connecting" | "linked" | "unavailable"
+type CompareLayout = "split" | "overlay"
+
+function Examples({ lang, t }: { lang: Lang; t: Translate }) {
     const lynxUrl = import.meta.env.DEV
         ? "http://localhost:3000/__web_preview?casename=main.web.bundle"
         : "./lynx/index.html"
+    const webUrl = "?mode=baseline"
+
+    const stageRef = useRef<HTMLElement>(null)
+    const webFrame = useRef<HTMLIFrameElement>(null)
+    const lynxFrame = useRef<HTMLIFrameElement>(null)
+    const panes = useRef<Record<PaneSide, PaneHandle | null>>({
+        web: null,
+        lynx: null,
+    })
+    const drivenUntil = useRef<Record<PaneSide, number>>({ web: 0, lynx: 0 })
+    const mirrorGuardUntil = useRef(0)
+
+    const [linkState, setLinkState] = useState<LinkState>("connecting")
+    const [syncScroll, setSyncScroll] = useState(true)
+    const [mirrorTaps, setMirrorTaps] = useState(true)
+    const [layout, setLayout] = useState<CompareLayout>(() =>
+        window.matchMedia("(max-width: 980px)").matches ? "overlay" : "split"
+    )
+    const [reveal, setReveal] = useState(50)
+    const [reloadTick, setReloadTick] = useState(0)
+
+    const syncScrollRef = useRef(syncScroll)
+    syncScrollRef.current = syncScroll
+    const mirrorTapsRef = useRef(mirrorTaps)
+    mirrorTapsRef.current = mirrorTaps
+
+    const lynxSameOrigin = useMemo(() => {
+        try {
+            return (
+                new URL(lynxUrl, window.location.href).origin ===
+                window.location.origin
+            )
+        } catch {
+            return false
+        }
+    }, [lynxUrl])
+
+    useEffect(() => {
+        panes.current = { web: null, lynx: null }
+        if (!lynxSameOrigin) {
+            setLinkState("unavailable")
+            return
+        }
+        setLinkState("connecting")
+        let disposed = false
+        let timer: ReturnType<typeof setTimeout> | undefined
+        const cleanups: (() => void)[] = []
+        const startedAt = performance.now()
+
+        const wire = (side: PaneSide, other: PaneSide) => {
+            const frame = side === "web" ? webFrame.current : lynxFrame.current
+            if (!frame) return false
+            const pane = connectPane(frame)
+            if (!pane) return false
+            panes.current[side] = pane
+
+            const onScroll = () => {
+                if (!syncScrollRef.current) return
+                if (performance.now() < drivenUntil.current[side]) return
+                requestAnimationFrame(() => {
+                    const from = panes.current[side]
+                    const to = panes.current[other]
+                    if (!from || !to || !syncScrollRef.current) return
+                    const anchor = captureAnchor(from)
+                    if (!anchor) return
+                    drivenUntil.current[other] = performance.now() + 180
+                    applyAnchor(to, anchor)
+                })
+            }
+            pane.scroller.addEventListener("scroll", onScroll, {
+                passive: true,
+            })
+
+            const onTap = (event: Event) => {
+                if (!mirrorTapsRef.current) return
+                if (performance.now() < mirrorGuardUntil.current) return
+                const cardId = cardIdFromEvent(event)
+                const to = panes.current[other]
+                if (!cardId || !to) return
+                mirrorGuardUntil.current = performance.now() + 250
+                triggerCard(to, cardId)
+            }
+            pane.doc.addEventListener("click", onTap, true)
+
+            cleanups.push(() => {
+                pane.scroller.removeEventListener("scroll", onScroll)
+                pane.doc.removeEventListener("click", onTap, true)
+            })
+            return true
+        }
+
+        const tryConnect = () => {
+            if (disposed) return
+            const webOk = !!panes.current.web || wire("web", "lynx")
+            const lynxOk = !!panes.current.lynx || wire("lynx", "web")
+            if (webOk && lynxOk) {
+                setLinkState("linked")
+                return
+            }
+            if (performance.now() - startedAt > 30000) {
+                setLinkState("unavailable")
+                return
+            }
+            timer = setTimeout(tryConnect, 350)
+        }
+        tryConnect()
+
+        return () => {
+            disposed = true
+            if (timer) clearTimeout(timer)
+            cleanups.forEach((dispose) => dispose())
+        }
+    }, [lynxSameOrigin, reloadTick, layout])
+
+    const replayBoth = () => setReloadTick((tick) => tick + 1)
+
+    const runScenario = (scenarioId: string) => {
+        const cardId = scenarioCardId(scenarioId)
+        stageRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+        })
+        const sides: PaneSide[] = ["web", "lynx"]
+        for (const side of sides) {
+            const pane = panes.current[side]
+            if (!pane) continue
+            drivenUntil.current[side] = performance.now() + 600
+            applyAnchor(pane, { id: cardId, fraction: -0.06 })
+        }
+        window.setTimeout(() => {
+            mirrorGuardUntil.current = performance.now() + 400
+            for (const side of sides) {
+                const pane = panes.current[side]
+                if (pane) triggerCard(pane, cardId)
+            }
+        }, 420)
+    }
+
+    const onHandleDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+        const stage = stageRef.current
+        if (!stage) return
+        const handle = event.currentTarget
+        handle.setPointerCapture(event.pointerId)
+        const rect = stage.getBoundingClientRect()
+        const move = (pointer: PointerEvent) => {
+            const percent =
+                ((pointer.clientX - rect.left) / rect.width) * 100
+            setReveal(Math.min(94, Math.max(6, percent)))
+        }
+        const up = () => {
+            handle.removeEventListener("pointermove", move)
+            handle.removeEventListener("pointerup", up)
+            handle.removeEventListener("pointercancel", up)
+        }
+        handle.addEventListener("pointermove", move)
+        handle.addEventListener("pointerup", up)
+        handle.addEventListener("pointercancel", up)
+    }
+
+    const webPaneHeader = (
+        <header>
+            <span>{t("examples.webPane")}</span>
+            <b>framer-motion@13.0.0</b>
+            <a href={webUrl} target="_blank" rel="noreferrer">
+                {t("examples.open")}
+            </a>
+        </header>
+    )
+    const lynxPaneHeader = (
+        <header>
+            <span>{t("examples.lynxPane")}</span>
+            <b>@lynx-js/motion · #3436</b>
+            <a href={lynxUrl} target="_blank" rel="noreferrer">
+                {t("examples.open")}
+            </a>
+        </header>
+    )
+    const webIframe = (
+        <iframe
+            key={`web-${reloadTick}`}
+            ref={webFrame}
+            title={t("examples.webFrameTitle")}
+            src={webUrl}
+        />
+    )
+    const lynxIframe = (
+        <iframe
+            key={`lynx-${reloadTick}`}
+            ref={lynxFrame}
+            title={t("examples.lynxFrameTitle")}
+            src={lynxUrl}
+        />
+    )
 
     return (
         <main className="page examples-page" id="main-content">
             <header className="page-intro split-intro">
                 <div>
-                    <h1>Compare Web and Lynx.</h1>
+                    <h1>{t("examples.title")}</h1>
                 </div>
-                <p>
-                    Use both panes. Web runs the locked upstream baseline; Lynx
-                    runs the #3436 adapter through Lynx for Web.
-                </p>
+                <p>{t("examples.desc")}</p>
             </header>
 
-            <section
-                className="comparison-grid"
-                aria-label="Web and Lynx live examples"
+            <div
+                className="compare-toolbar"
+                role="toolbar"
+                aria-label={t("compare.layoutLabel")}
             >
-                <article className="runtime-frame">
-                    <header>
-                        <span>WEB REFERENCE</span>
-                        <b>framer-motion@13.0.0</b>
-                        <a
-                            href="?mode=baseline"
-                            target="_blank"
-                            rel="noreferrer"
+                <div className="compare-modes">
+                    <button
+                        className={layout === "split" ? "toggle-active" : ""}
+                        aria-pressed={layout === "split"}
+                        onClick={() => setLayout("split")}
+                    >
+                        {t("compare.sideBySide")}
+                    </button>
+                    <button
+                        className={layout === "overlay" ? "toggle-active" : ""}
+                        aria-pressed={layout === "overlay"}
+                        onClick={() => setLayout("overlay")}
+                    >
+                        {t("compare.overlay")}
+                    </button>
+                </div>
+                <div className="compare-switches">
+                    <button
+                        className={syncScroll ? "toggle-active" : ""}
+                        aria-pressed={syncScroll}
+                        disabled={linkState === "unavailable"}
+                        onClick={() => setSyncScroll((value) => !value)}
+                    >
+                        {t("compare.syncScroll")}
+                    </button>
+                    <button
+                        className={mirrorTaps ? "toggle-active" : ""}
+                        aria-pressed={mirrorTaps}
+                        disabled={linkState === "unavailable"}
+                        onClick={() => setMirrorTaps((value) => !value)}
+                    >
+                        {t("compare.mirrorTaps")}
+                    </button>
+                    <button className="compare-replay" onClick={replayBoth}>
+                        {t("compare.replay")}
+                    </button>
+                </div>
+                <span
+                    className={`compare-status compare-status-${linkState}`}
+                    role="status"
+                >
+                    <i aria-hidden="true" />
+                    {linkState === "linked"
+                        ? t("compare.linked")
+                        : linkState === "connecting"
+                          ? t("compare.connecting")
+                          : t("compare.unavailable")}
+                </span>
+            </div>
+
+            <section
+                ref={stageRef}
+                className={`compare-stage compare-${layout}`}
+                aria-label={t("examples.sectionLabel")}
+            >
+                {layout === "split" ? (
+                    <>
+                        <article className="runtime-frame">
+                            {webPaneHeader}
+                            {webIframe}
+                        </article>
+                        <article className="runtime-frame runtime-frame-lynx">
+                            {lynxPaneHeader}
+                            {lynxIframe}
+                        </article>
+                    </>
+                ) : (
+                    <div className="overlay-stage">
+                        <article className="runtime-frame">
+                            {webPaneHeader}
+                            {webIframe}
+                        </article>
+                        <div
+                            className="overlay-top"
+                            style={{
+                                clipPath: `inset(0 ${100 - reveal}% 0 0)`,
+                            }}
                         >
-                            Open ↗
-                        </a>
-                    </header>
-                    <iframe title="Web Motion reference" src="?mode=baseline" />
-                </article>
-                <article className="runtime-frame runtime-frame-lynx">
-                    <header>
-                        <span>REACTLYNX</span>
-                        <b>@lynx-js/motion · #3436</b>
-                        <a href={lynxUrl} target="_blank" rel="noreferrer">
-                            Open ↗
-                        </a>
-                    </header>
-                    <iframe title="ReactLynx Motion preview" src={lynxUrl} />
-                </article>
+                            <article className="runtime-frame runtime-frame-lynx">
+                                {lynxPaneHeader}
+                                {lynxIframe}
+                            </article>
+                        </div>
+                        <div
+                            className="overlay-handle"
+                            style={{ left: `${reveal}%` }}
+                            onPointerDown={onHandleDown}
+                            role="slider"
+                            aria-label={t("compare.dragHint")}
+                            aria-valuenow={Math.round(reveal)}
+                            aria-valuemin={6}
+                            aria-valuemax={94}
+                            tabIndex={0}
+                            onKeyDown={(event) => {
+                                if (event.key === "ArrowLeft") {
+                                    setReveal((value) =>
+                                        Math.max(6, value - 4)
+                                    )
+                                }
+                                if (event.key === "ArrowRight") {
+                                    setReveal((value) =>
+                                        Math.min(94, value + 4)
+                                    )
+                                }
+                            }}
+                        >
+                            <i aria-hidden="true" />
+                        </div>
+                        <span className="overlay-hint" aria-hidden="true">
+                            {t("compare.dragHint")}
+                        </span>
+                    </div>
+                )}
             </section>
 
             <section className="scenario-index">
                 <div className="section-heading compact-heading">
-                    <h2>{GALLERY_EXAMPLES.length} executable combinations</h2>
-                    <p>
-                        These are human-facing compositions. Exact upstream
-                        coverage is tracked separately.
-                    </p>
+                    <h2>{t("scenarios.title", GALLERY_EXAMPLES.length)}</h2>
+                    <p>{t("scenarios.desc")}</p>
                 </div>
                 <div className="scenario-list">
                     {GALLERY_EXAMPLES.map((example, index) => (
@@ -694,12 +1001,25 @@ function Examples() {
                                 <h3>{example.title}</h3>
                                 <p>{example.summary}</p>
                             </div>
-                            <code>{example.api.join(" · ")}</code>
-                            <span
-                                className={`evidence-tag evidence-${example.evidence}`}
-                            >
-                                {example.evidence}
-                            </span>
+                            <ApiChips apis={example.api} />
+                            <div className="scenario-actions">
+                                <span
+                                    className={`evidence-tag evidence-${example.evidence}`}
+                                >
+                                    {example.evidence}
+                                </span>
+                                <button
+                                    className="scenario-run"
+                                    disabled={linkState !== "linked"}
+                                    aria-label={t(
+                                        "scenarios.runLabel",
+                                        example.title
+                                    )}
+                                    onClick={() => runScenario(example.id)}
+                                >
+                                    {t("scenarios.run")}
+                                </button>
+                            </div>
                         </article>
                     ))}
                 </div>
@@ -708,7 +1028,7 @@ function Examples() {
     )
 }
 
-function ApiMatrix() {
+function ApiMatrix({ t }: { t: Translate }) {
     const [filter, setFilter] = useState<SupportStatus | "all">("all")
     const items = useMemo(
         () =>
@@ -723,22 +1043,25 @@ function ApiMatrix() {
         <main className="page matrix-page" id="main-content">
             <header className="page-intro matrix-intro">
                 <div>
-                    <h1>Supported API surface.</h1>
+                    <h1>{t("api.title")}</h1>
                 </div>
                 <div className="matrix-summary">
                     <CoverageStrip />
                     <p>
-                        {API_METRICS.total} tracked APIs ·{" "}
-                        {API_METRICS.supported} supported ·{" "}
-                        {API_METRICS.partial} partial · {API_METRICS.blocked}{" "}
-                        blocked
+                        {t(
+                            "api.summary",
+                            API_METRICS.total,
+                            API_METRICS.supported,
+                            API_METRICS.partial,
+                            API_METRICS.blocked
+                        )}
                     </p>
                 </div>
             </header>
             <div
                 className="filter-bar"
                 role="group"
-                aria-label="Filter API status"
+                aria-label={t("api.filterLabel")}
             >
                 {(["all", "supported", "partial", "blocked"] as const).map(
                     (status) => (
@@ -748,8 +1071,8 @@ function ApiMatrix() {
                             onClick={() => setFilter(status)}
                         >
                             {status === "all"
-                                ? `All ${API_METRICS.total}`
-                                : `${STATUS_LABEL[status]} ${API_METRICS[status]}`}
+                                ? t("api.all", API_METRICS.total)
+                                : `${t(`status.${status}`)} ${API_METRICS[status]}`}
                         </button>
                     )
                 )}
@@ -765,27 +1088,47 @@ function ApiMatrix() {
                         >
                             {items
                                 .filter((item) => item.group === group)
-                                .map((item) => (
-                                    <div
-                                        className="matrix-row"
-                                        role="row"
-                                        key={item.id}
-                                    >
-                                        <code role="cell">{item.api}</code>
-                                        <div role="cell">
-                                            <strong>{item.contract}</strong>
-                                            {item.boundary && (
-                                                <p>{item.boundary}</p>
-                                            )}
-                                        </div>
-                                        <StatusMark status={item.status} />
-                                        <span
-                                            className={`evidence-tag evidence-${item.evidence}`}
+                                .map((item) => {
+                                    const docs = motionDocsUrl(item.api)
+                                    return (
+                                        <div
+                                            className="matrix-row"
+                                            role="row"
+                                            key={item.id}
                                         >
-                                            {item.evidence}
-                                        </span>
-                                    </div>
-                                ))}
+                                            <code role="cell">{item.api}</code>
+                                            <div role="cell">
+                                                <strong>{item.contract}</strong>
+                                                {item.boundary && (
+                                                    <p>{item.boundary}</p>
+                                                )}
+                                                {docs && (
+                                                    <a
+                                                        className="docs-link"
+                                                        href={docs}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        aria-label={t(
+                                                            "api.docsLabel",
+                                                            item.api
+                                                        )}
+                                                    >
+                                                        {t("api.docs")}
+                                                    </a>
+                                                )}
+                                            </div>
+                                            <StatusMark
+                                                status={item.status}
+                                                t={t}
+                                            />
+                                            <span
+                                                className={`evidence-tag evidence-${item.evidence}`}
+                                            >
+                                                {item.evidence}
+                                            </span>
+                                        </div>
+                                    )
+                                })}
                         </div>
                     </section>
                 ))}
@@ -794,7 +1137,7 @@ function ApiMatrix() {
     )
 }
 
-function Conformance() {
+function Conformance({ lang, t }: { lang: Lang; t: Translate }) {
     const exact = Math.round(
         (CONFORMANCE_METRICS.conformant / CONFORMANCE_METRICS.tracked) * 100
     )
@@ -802,30 +1145,30 @@ function Conformance() {
         <main className="page conformance-page" id="main-content">
             <header className="page-intro conformance-intro">
                 <div>
-                    <h1>Upstream conformance.</h1>
+                    <h1>{t("conformance.title")}</h1>
                 </div>
                 <div className="conformance-number">
                     <strong>{exact}%</strong>
-                    <span>exact dual-renderer conformance</span>
+                    <span>{t("conformance.exact")}</span>
                 </div>
             </header>
 
             <section
                 className="coverage-ledger"
-                aria-label="Conformance coverage metrics"
+                aria-label={t("conformance.coverageLabel")}
             >
                 <div>
-                    <span>Tracked contracts</span>
+                    <span>{t("conformance.tracked")}</span>
                     <strong>{CONFORMANCE_METRICS.tracked}</strong>
                     <small>100%</small>
                 </div>
                 <div>
-                    <span>Conformant</span>
+                    <span>{t("conformance.conformant")}</span>
                     <strong>{CONFORMANCE_METRICS.conformant}</strong>
                     <small>{exact}%</small>
                 </div>
                 <div>
-                    <span>Runnable / partial</span>
+                    <span>{t("conformance.partialRunnable")}</span>
                     <strong>{CONFORMANCE_METRICS.partial}</strong>
                     <small>
                         {Math.round(
@@ -837,7 +1180,7 @@ function Conformance() {
                     </small>
                 </div>
                 <div>
-                    <span>Blocked</span>
+                    <span>{t("conformance.blocked")}</span>
                     <strong>{CONFORMANCE_METRICS.blocked}</strong>
                     <small>
                         {Math.round(
@@ -850,13 +1193,51 @@ function Conformance() {
                 </div>
             </section>
 
-            <p className="method-note">
-                This denominator is a source-linked declarative slice selected
-                for Lynx convergence. It is deliberately not presented as
-                coverage of Motion’s entire upstream test suite.
-            </p>
+            <p className="method-note">{t("conformance.method")}</p>
 
-            <section className="case-list">
+            <section className="convergence-monitor">
+                <header className="monitor-section-header convergence-header">
+                    <div>
+                        <h2>{t("conformance.historyTitle")}</h2>
+                        <p>{t("conformance.historyDesc")}</p>
+                    </div>
+                    <a href={localizedHref(lang, { view: "overview" })}>
+                        {t("nav.overview")} →
+                    </a>
+                </header>
+                <ol className="convergence-ledger">
+                    {CONVERGENCE_HISTORY.map((record) => (
+                        <li key={record.id}>
+                            <a
+                                href={recordHref(record)}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                {recordLabel(record)}
+                            </a>
+                            <div>
+                                <strong>{record.title}</strong>
+                                <p>{record.note}</p>
+                            </div>
+                            <span
+                                className={`record-status status-${record.status}`}
+                            >
+                                {t(`record.${record.status}`)}
+                            </span>
+                            <b>
+                                {record.lossBefore} → {record.lossAfter}
+                                {record.expectedLossAfter !== undefined &&
+                                    ` → ${record.expectedLossAfter}?`}
+                            </b>
+                        </li>
+                    ))}
+                </ol>
+            </section>
+
+            <section
+                className="case-list"
+                aria-label={t("conformance.caseListLabel")}
+            >
                 {CONFORMANCE_CASES.map((item, index) => (
                     <article
                         className="case-row"
@@ -872,15 +1253,24 @@ function Conformance() {
                                 <h2>{item.title}</h2>
                             </div>
                             <p>{item.summary}</p>
-                            <code>{item.api.join(" · ")}</code>
+                            <ApiChips apis={item.api} />
                             <details>
                                 <summary>
-                                    Upstream source and acceptance criteria
+                                    {t("conformance.upstreamDetail")}
                                 </summary>
                                 <div className="case-detail">
                                     <p>
                                         <b>{item.upstream.sourceVersion}</b> ·{" "}
-                                        {item.upstream.path}
+                                        <a
+                                            href={upstreamSourceUrl(
+                                                item.upstream.sourceVersion,
+                                                item.upstream.path
+                                            )}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                        >
+                                            {item.upstream.path}
+                                        </a>
                                     </p>
                                     <p>“{item.upstream.testName}”</p>
                                     <ul>
@@ -890,9 +1280,20 @@ function Conformance() {
                                     </ul>
                                     {item.gap && (
                                         <p className="gap-copy">
-                                            Gap: {item.gap}
+                                            {t("conformance.gap")} {item.gap}
                                         </p>
                                     )}
+                                    <a
+                                        className="docs-link"
+                                        href={upstreamSourceUrl(
+                                            item.upstream.sourceVersion,
+                                            item.upstream.path
+                                        )}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        {t("conformance.viewSource")}
+                                    </a>
                                 </div>
                             </details>
                         </div>
@@ -903,19 +1304,34 @@ function Conformance() {
                                         ? "supported"
                                         : item.status
                                 }
+                                t={t}
                             />
-                            <span>
-                                {item.evidence.dualRenderer
-                                    ? "Web ↔ Lynx"
-                                    : item.evidence.gallery
-                                      ? "Gallery evidence"
-                                      : "Not executable"}
-                            </span>
-                            <span>
-                                {item.evidence.native
-                                    ? "Native recorded"
-                                    : "Native pending"}
-                            </span>
+                            <div className="case-evidence">
+                                <span>{t("evidence.package")}</span>
+                                <EvidenceMark
+                                    available={item.evidence.packageTest}
+                                    label={t("evidence.package")}
+                                    t={t}
+                                />
+                                <span>{t("evidence.gallery")}</span>
+                                <EvidenceMark
+                                    available={item.evidence.gallery}
+                                    label={t("evidence.gallery")}
+                                    t={t}
+                                />
+                                <span>{t("evidence.dual")}</span>
+                                <EvidenceMark
+                                    available={item.evidence.dualRenderer}
+                                    label={t("evidence.dual")}
+                                    t={t}
+                                />
+                                <span>{t("evidence.native")}</span>
+                                <EvidenceMark
+                                    available={item.evidence.native}
+                                    label={t("evidence.native")}
+                                    t={t}
+                                />
+                            </div>
                         </div>
                     </article>
                 ))}
@@ -926,24 +1342,45 @@ function Conformance() {
 
 export function EvidencePortal() {
     const view = currentView()
+    const lang = currentLang()
+    const t = useMemo(() => makeT(lang), [lang])
+
+    useEffect(() => {
+        document.documentElement.lang = lang === "zh" ? "zh-Hans" : "en"
+    }, [lang])
+
     return (
         <div className={`site-shell view-${view}`}>
             <a className="skip-link" href="#main-content">
-                Skip to evidence
+                {t("skip")}
             </a>
-            <Masthead view={view} />
-            {view === "overview" && <Overview />}
-            {view === "examples" && <Examples />}
-            {view === "api" && <ApiMatrix />}
-            {view === "conformance" && <Conformance />}
+            <Masthead view={view} lang={lang} t={t} />
+            {view === "overview" && <Overview lang={lang} t={t} />}
+            {view === "examples" && <Examples lang={lang} t={t} />}
+            {view === "api" && <ApiMatrix t={t} />}
+            {view === "conformance" && <Conformance lang={lang} t={t} />}
             <footer className="footer">
-                <span>Repository snapshot, not live CI</span>
+                <span>{t("footer.snapshot")}</span>
                 <div>
-                    <a href="https://github.com/Huxpro/motion/blob/agent/lynx-motion-parity/lynx/src/conformance/cases.ts">
-                        Manifest source
+                    <a
+                        href={MOTION_DOCS_HOME}
+                        target="_blank"
+                        rel="noreferrer"
+                    >
+                        {t("footer.motionDocs")}
+                    </a>
+                    <a
+                        href={`${UPSTREAM_REPO_URL}/tree/v12.40.0`}
+                        target="_blank"
+                        rel="noreferrer"
+                    >
+                        {t("footer.upstream")}
+                    </a>
+                    <a href="https://github.com/Huxpro/motion/blob/main/lynx/src/conformance/cases.ts">
+                        {t("footer.manifest")}
                     </a>
                     <a href="https://github.com/Huxpro/motion/pull/13/checks">
-                        Live PR checks
+                        {t("footer.checks")}
                     </a>
                 </div>
             </footer>
