@@ -3,6 +3,7 @@ import { CSSProperties, forwardRef, memo, Suspense, useState } from "react"
 import type { ComponentPropsWithoutRef } from "react"
 import {
     ARRAY_VARIANT_DEFINITION_PARITY_CASE,
+    BEFORE_CHILDREN_CASE,
     DELAY_CASE,
     DELAY_CHILDREN_CASE,
     DEEP_DELAY_CHILDREN_CASE,
@@ -336,6 +337,7 @@ export function App() {
         conformanceMode === "suspense-remount-reset"
     const variantPropagationMode = conformanceMode === "variant-propagation"
     const delayChildrenMode = conformanceMode === "delay-children"
+    const beforeChildrenMode = conformanceMode === "before-children"
     const variantInheritOptOutMode =
         conformanceMode === "variant-inherit-opt-out"
     const initialFalsePropagationMode =
@@ -404,6 +406,7 @@ export function App() {
     const [variantPropagationActive, setVariantPropagationActive] =
         useState(false)
     const [delayChildrenActive, setDelayChildrenActive] = useState(false)
+    const [beforeChildrenActive, setBeforeChildrenActive] = useState(false)
     const [deepDelayChildrenActive, setDeepDelayChildrenActive] =
         useState(false)
     const [nestedControlledOpen, setNestedControlledOpen] = useState(false)
@@ -1081,6 +1084,67 @@ export function App() {
                                         }}
                                         transition={{ type: false }}
                                     />
+                                </motion.div>
+                            </div>
+                        </div>
+                    )}
+
+                    {beforeChildrenMode && (
+                        <div
+                            id="example-before-children"
+                            style={conformanceCard}
+                            onClick={() => setBeforeChildrenActive(true)}
+                        >
+                            <div style={info}>
+                                <span style={cardTitle}>Before children</span>
+                                <span style={code}>
+                                    parent → child · explicit duration
+                                </span>
+                            </div>
+                            <div style={demo}>
+                                <motion.div
+                                    initial="hidden"
+                                    animate={
+                                        beforeChildrenActive
+                                            ? "visible"
+                                            : "hidden"
+                                    }
+                                    variants={{
+                                        hidden: { x: 0 },
+                                        visible: {
+                                            x: 24,
+                                            transition: {
+                                                duration:
+                                                    BEFORE_CHILDREN_CASE
+                                                        .expected
+                                                        .parentDurationMs /
+                                                    1000,
+                                                when: "beforeChildren",
+                                            },
+                                        },
+                                    }}
+                                >
+                                    <motion.div>
+                                        <motion.div
+                                            id="target-before-children"
+                                            style={{
+                                                ...dot,
+                                                backgroundColor: "#8ca7ff",
+                                                opacity:
+                                                    BEFORE_CHILDREN_CASE.expected
+                                                        .hiddenOpacity,
+                                            }}
+                                            variants={{
+                                                visible: {
+                                                    opacity:
+                                                        BEFORE_CHILDREN_CASE
+                                                            .expected
+                                                            .visibleOpacity,
+                                                },
+                                            }}
+                                            transition={{ type: false }}
+                                        />
+                                    </motion.div>
                                 </motion.div>
                             </div>
                         </div>
