@@ -2023,7 +2023,7 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         category: "Variants",
         title: "Parent finishes before inherited children",
         summary:
-            "Every explicitly timed parent value completes before its inherited child starts.",
+            "Every explicitly timed finite parent value completes before its inherited child starts.",
         status: "conformant",
         api: ["variants", 'when="beforeChildren"', "inheritance"],
         upstream: source(
@@ -2033,7 +2033,7 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         baseline: "framer-motion@13.0.0",
         assertions: [
             "the child stays at its initial value during the longest parent value transition",
-            "value-specific delay and duration determine the parent completion window",
+            "value-specific delay, duration, repeat, and repeatDelay determine the parent completion window",
             "both renderers settle the inherited child at the visible target",
         ],
         evidence: {
@@ -2043,7 +2043,7 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
             native: false,
         },
         expected: {
-            parentDurationMs: 800,
+            parentDurationMs: 700,
             holdMs: 400,
             hiddenOpacity: 0.1,
             visibleOpacity: 1,
@@ -5291,5 +5291,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 6,
         lossAfter: WEIGHTED_LOSS,
         note: "I5/F4/M1/R2/C0 · immutable 36e144e motion/react/react-umd set with matching x-commit-key · the parent routes opacity to 100ms and x to 200ms delay + 600ms duration; old 51d11ee failed the same headless assertion because Lynx child opacity was already 1 at 400ms, while 36e144e holds 0.1 and settles only after the longest 800ms value window · package declarative 50/50, package full 159/159, commit hooks and build/declarations/Publint pass · focused dual-renderer 1/1 and complete suite 74/74 · native timing remains unclaimed under the same SDK 0.0.1 event-dispatch boundary recorded by #95 · weighted loss remains 6 because automatic/repeating completion, afterChildren, stagger, controls, and gesture propagation remain blocked in issue #10 · no Full Demo because this widens the same orchestration slice rather than unlocking the full production pattern.",
+    },
+    {
+        id: "lynx-3507-motion-97",
+        date: "2026-08-13",
+        title: "Finite-repeat beforeChildren completion window",
+        kind: "capability",
+        status: "verified",
+        lynxStackPr: 3507,
+        motionPr: 97,
+        caseIds: ["variants/before-children"],
+        lossBefore: 6,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I5/F4/M1/R2/C0 · immutable 013e20e motion/react/react-umd set with matching x-commit-key · the longest parent value uses 100ms delay + two 200ms iterations + one 200ms repeatDelay; old 36e144e fails the same focused assertion because Lynx child opacity is already 1 at 400ms, while 013e20e holds 0.1 and settles after the finite 700ms window · package declarative 51/51, package full 160/160, commit hooks and build/declarations/Publint pass · focused dual-renderer 1/1 and complete suite 74/74 · native timing remains unclaimed under the SDK 0.0.1 event-dispatch boundary recorded by #95 · Infinity, automatic completion, afterChildren, stagger, controls, and gesture propagation remain in issue #10, so weighted loss stays 6 and no Full Demo is claimed.",
     },
 ]
