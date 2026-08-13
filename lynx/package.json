@@ -11,9 +11,9 @@
   },
   "dependencies": {
     "@lynx-js/css-serializer": "^0.1.7",
-    "@lynx-js/motion": "https://pkg.pr.new/@lynx-js/motion@2c805a2",
-    "@lynx-js/react": "https://pkg.pr.new/@lynx-js/react@2c805a2",
-    "@lynx-js/react-umd": "https://pkg.pr.new/@lynx-js/react-umd@2c805a2",
+    "@lynx-js/motion": "https://pkg.pr.new/@lynx-js/motion@cd567e7",
+    "@lynx-js/react": "https://pkg.pr.new/@lynx-js/react@cd567e7",
+    "@lynx-js/react-umd": "https://pkg.pr.new/@lynx-js/react-umd@cd567e7",
     "@lynx-js/web-core": "^0.23.0",
     "@lynx-js/web-elements": "^0.12.7"
   },

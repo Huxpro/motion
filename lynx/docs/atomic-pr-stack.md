@@ -116,12 +116,13 @@ behavior independently reviewable:
                                         └── #3495 inherited initial=false
                                             └── #3496 explicit child mount ownership
                                                 └── #3497 initial variant transitionEnd
+                                                    └── #3498 inherited removed-key style fallback
 ```
 
 Feature-base PRs do not trigger the repository's `pkg.pr.new` workflow. Draft
 #3491 is therefore a validation-only rollup against `main`; it must not be
-merged. Its immutable `2c805a2` motion/react/react-umd package set contains the
-stack through #3497 and passes the Hux evidence build. The manifest records the
+merged. Its immutable `cd567e7` motion/react/react-umd package set contains the
+stack through #3498 and passes the Hux evidence build. The manifest records the
 capability PR that owns each contract, while #3491 records only the immutable
 validation gate. Numeric `delayChildren` is deliberately separate from the
 dynamic stagger/`when`/controls boundary tracked in issue #10.
@@ -196,3 +197,8 @@ Hux evidence PR #87 adds the ordinary named-variant completion contract. Web
 and Lynx remain visible through a blue→red intermediate frame, then apply
 `display:none` only after settling red on immutable `2c805a2`; lynx-stack #3462
 owns declarative `transitionEnd` support.
+
+Atomic lynx-stack PR #3498 separates inherited removed-key fallback from the
+child's initial animation values. Parent `a→b→c({})` now restores the child's
+static style rather than its initial variant on immutable `cd567e7`, without
+changing direct animate or delayed inherited animation starts.

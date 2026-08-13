@@ -23,6 +23,7 @@ import {
     GESTURE_TRANSITION_END_CASE,
     HOVER_GESTURE_CASE,
     INHERITED_VARIANT_LIFECYCLE_CASE,
+    INHERITED_VARIANT_STYLE_FALLBACK_CASE,
     INHERITED_VARIANT_VALUE_UPDATE_CASE,
     INSTANT_TRANSITION_CASE,
     INITIAL_FALSE_CASE,
@@ -2248,6 +2249,48 @@ test("manifest case: style owns a key omitted by the next named variant", async 
     await Promise.all([lynxPage.close(), webPage.close()])
 })
 
+test("manifest case: inherited variant removal falls back to child style", async ({
+    browser,
+}) => {
+    const webPage = await browser.newPage()
+    const lynxPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({
+                conformanceMode: "inherited-variant-style-fallback",
+            })
+        )
+    })
+    await webPage.goto(
+        "http://localhost:4173/?mode=baseline&case=inherited-variant-style-fallback"
+    )
+    await lynxPage.goto(`http://localhost:3000${previewUrl}`)
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const target = page.locator("#target-inherited-variant-style-fallback")
+        const opacity = () =>
+            target.evaluate((element) => Number(getComputedStyle(element).opacity))
+        const card = page.locator("#example-inherited-variant-style-fallback")
+        await expect
+            .poll(opacity, { message: `${renderer} inherited initial a` })
+            .toBe(INHERITED_VARIANT_STYLE_FALLBACK_CASE.expected.initialOpacity)
+        await card.click()
+        await expect
+            .poll(opacity, { message: `${renderer} inherited b` })
+            .toBe(INHERITED_VARIANT_STYLE_FALLBACK_CASE.expected.activeOpacity)
+        await card.click()
+        await expect
+            .poll(opacity, { message: `${renderer} inherited c fallback` })
+            .toBe(INHERITED_VARIANT_STYLE_FALLBACK_CASE.expected.styleOpacity)
+    }
+
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
 test("manifest case: array variants preserve inline and hoisted definition parity", async ({
     browser,
 }) => {
@@ -2443,7 +2486,10 @@ test("manifest case: keyframe times preserve duplicate boundary jumps", async ({
                 .map(({ value }) => value.toFixed(1))
                 .join(", ")}`
         ).toBeLessThanOrEqual(KEYFRAME_TIMES_CASE.expected.thirdX + 2)
-        expect(timeline.at(-1)!.value).toBeCloseTo(
+        // The fixed samples prove the duplicate-boundary trajectory. Under a
+        // loaded full suite, their final frame can precede the style flush, so
+        // observe the exact settled endpoint separately without widening it.
+        await expect.poll(translateX).toBeCloseTo(
             KEYFRAME_TIMES_CASE.expected.endX,
             0
         )

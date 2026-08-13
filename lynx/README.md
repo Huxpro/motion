@@ -33,10 +33,10 @@ npm run build:evidence
 starts both the locked upstream Web reference and Lynx-for-Web, then uses
 headless Chromium to verify manifest-backed semantic assertions as well as the
 legacy live/infinite animation, variants, lifecycle, and gesture checks.
-The current dependency gate is the immutable `2c805a2` preview set published
+The current dependency gate is the immutable `cd567e7` preview set published
 by validation-only [lynx-stack#3491](https://github.com/lynx-family/lynx-stack/pull/3491);
-the complete suite passes 67/67 source-linked behaviors. Capability ownership
-remains with the atomic #3483–#3497 stack rather than the validation rollup.
+the complete suite passes 68/68 source-linked behaviors. Capability ownership
+remains with the atomic #3483–#3498 stack rather than the validation rollup.
 
 The Web reference in `web-reference/` is pinned to the same upstream Motion
 major as the lynx-stack preview package.
@@ -86,7 +86,8 @@ contract.
   an explicit child `animate` prop starts a new delay-ownership root; nested
   controlled roots also switch their own variants independently, and a parent
   `initial={false}` does not suppress an explicitly controlled child mount
-  animation
+  animation; when an inherited parent variant omits a child property, that
+  property returns to the child static style rather than its initial variant
 - `whileTap` plus tap callbacks
 - `whileHover` plus hover callbacks on mouse-capable clients
 - `onAnimationStart` / `onAnimationComplete` for base `animate`, inherited
