@@ -20,6 +20,7 @@ declare module '@lynx-js/types' {
       | "deep-variant-propagation"
       | "deep-initial-false-propagation"
       | "deep-delay-children"
+      | "explicit-child-delay-root"
       | "hover-rest-transition"
   }
 }

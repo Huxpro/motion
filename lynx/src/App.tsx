@@ -9,6 +9,7 @@ import {
     DEEP_VARIANT_PROPAGATION_CASE,
     DEFAULT_TRANSITION_CASE,
     DISPLAY_REVEAL_CASE,
+    EXPLICIT_CHILD_DELAY_ROOT_CASE,
     FUNCTION_VARIANTS_CASE,
     INHERITED_VARIANT_VALUE_UPDATE_CASE,
     INSTANT_TRANSITION_CASE,
@@ -197,6 +198,8 @@ export function App() {
         conformanceMode === "deep-initial-false-propagation"
     const deepDelayChildrenMode =
         conformanceMode === "deep-delay-children"
+    const explicitChildDelayRootMode =
+        conformanceMode === "explicit-child-delay-root"
     const liveX = useMotionValue(STYLE_MOTION_VALUE_CASE.expected.startX)
     let styleMotionValueRenders = 0
     styleMotionValueRenders += 1
@@ -701,6 +704,60 @@ export function App() {
                                             transition={{ type: false }}
                                         />
                                     </motion.view>
+                                </motion.view>
+                            </view>
+                        </view>
+                    )}
+
+                    {explicitChildDelayRootMode && (
+                        <view
+                            id="example-explicit-child-delay-root"
+                            style={conformanceCard}
+                        >
+                            <view style={info}>
+                                <text style={cardTitle}>
+                                    Explicit child delay root
+                                </text>
+                                <text style={code}>
+                                    {`parent delay: ${EXPLICIT_CHILD_DELAY_ROOT_CASE.expected.parentDelayMs}ms`}
+                                </text>
+                            </view>
+                            <view style={demo}>
+                                <motion.view
+                                    animate="visible"
+                                    variants={{
+                                        visible: {
+                                            transition: {
+                                                delayChildren:
+                                                    EXPLICIT_CHILD_DELAY_ROOT_CASE
+                                                        .expected.parentDelayMs /
+                                                    1000,
+                                            },
+                                        },
+                                    }}
+                                >
+                                    <motion.view
+                                        id="target-explicit-child-delay-root"
+                                        style={{
+                                            ...dot,
+                                            backgroundColor: "#d3df63",
+                                        }}
+                                        initial="hidden"
+                                        animate="visible"
+                                        variants={{
+                                            hidden: {
+                                                opacity:
+                                                    EXPLICIT_CHILD_DELAY_ROOT_CASE
+                                                        .expected.hiddenOpacity,
+                                            },
+                                            visible: {
+                                                opacity:
+                                                    EXPLICIT_CHILD_DELAY_ROOT_CASE
+                                                        .expected.visibleOpacity,
+                                            },
+                                        }}
+                                        transition={{ type: false }}
+                                    />
                                 </motion.view>
                             </view>
                         </view>

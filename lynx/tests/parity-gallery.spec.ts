@@ -15,6 +15,7 @@ import {
     DEFAULT_TRANSITION_CASE,
     DEEP_VARIANT_PROPAGATION_CASE,
     DISPLAY_REVEAL_CASE,
+    EXPLICIT_CHILD_DELAY_ROOT_CASE,
     FUNCTION_VARIANTS_CASE,
     GALLERY_EXAMPLES,
     GESTURE_TRANSITION_END_CASE,
@@ -532,6 +533,48 @@ test("manifest case: delayChildren accumulates through descendants", async ({
         await expect
             .poll(opacity, { timeout: 1000, message: `${renderer} settles` })
             .toBe(DEEP_DELAY_CHILDREN_CASE.expected.visibleOpacity)
+    }
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: explicit child animate resets parent delay", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "explicit-child-delay-root" })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=explicit-child-delay-root"
+        ),
+    ])
+
+    for (const [renderer, page] of [
+        ["Lynx", lynxPage],
+        ["Web", webPage],
+    ] as const) {
+        const target = page.locator("#target-explicit-child-delay-root")
+        await expect(target).toBeAttached()
+        await expect
+            .poll(
+                () =>
+                    target.evaluate((element) =>
+                        Number(getComputedStyle(element).opacity)
+                    ),
+                {
+                    timeout:
+                        EXPLICIT_CHILD_DELAY_ROOT_CASE.expected
+                            .independentWindowMs,
+                    message: `${renderer} independent child`,
+                }
+            )
+            .toBe(EXPLICIT_CHILD_DELAY_ROOT_CASE.expected.visibleOpacity)
     }
     await Promise.all([lynxPage.close(), webPage.close()])
 })
