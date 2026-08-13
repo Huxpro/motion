@@ -8,6 +8,7 @@ declare module '@lynx-js/types' {
       | "tap-rest-transition"
       | "tap-transition-end-only"
       | "animate-transition-end-only"
+      | "variant-transition-end-race"
       | "removed-animate-values"
       | "transform-origin"
       | "complex-gradient"

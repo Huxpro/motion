@@ -191,6 +191,8 @@ export function App() {
         conformanceMode === "hover-rest-transition"
     const animateTransitionEndOnly =
         conformanceMode === "animate-transition-end-only"
+    const variantTransitionEndRaceMode =
+        conformanceMode === "variant-transition-end-race"
     const removedAnimateValues = conformanceMode === "removed-animate-values"
     const transformOriginMode = conformanceMode === "transform-origin"
     const complexGradientMode = conformanceMode === "complex-gradient"
@@ -255,6 +257,8 @@ export function App() {
         useState(false)
     const [animateTransitionEndLifecycle, setAnimateTransitionEndLifecycle] =
         useState<string[]>([])
+    const [variantTransitionEndRacePhase, setVariantTransitionEndRacePhase] =
+        useState(0)
     const [removedAnimateActive, setRemovedAnimateActive] = useState(true)
     const [transformOriginActive, setTransformOriginActive] = useState(false)
     const [complexGradientActive, setComplexGradientActive] = useState(false)
@@ -1655,6 +1659,60 @@ export function App() {
                                             (events) => [...events, "complete"]
                                         )
                                     }
+                                />
+                            </view>
+                        </view>
+                    ) : null}
+
+                    {variantTransitionEndRaceMode ? (
+                        <view
+                            id="example-variant-transition-end-race"
+                            style={card}
+                            bindtap={() => {
+                                if (variantTransitionEndRacePhase === 2) {
+                                    setVariantTransitionEndRacePhase(3)
+                                    setTimeout(
+                                        () => setVariantTransitionEndRacePhase(4),
+                                        0
+                                    )
+                                } else {
+                                    setVariantTransitionEndRacePhase(
+                                        variantTransitionEndRacePhase + 1
+                                    )
+                                }
+                            }}
+                        >
+                            <view style={info}>
+                                <text style={cardTitle}>
+                                    Stale transitionEnd guard
+                                </text>
+                                <text style={code}>
+                                    {`phase ${variantTransitionEndRacePhase}`}
+                                </text>
+                            </view>
+                            <view style={demo}>
+                                <motion.view
+                                    id="target-variant-transition-end-race"
+                                    style={{ ...dot, display: "none" }}
+                                    initial="off"
+                                    animate={
+                                        variantTransitionEndRacePhase === 1 ||
+                                        variantTransitionEndRacePhase === 3
+                                            ? "on"
+                                            : "off"
+                                    }
+                                    variants={{
+                                        on: {
+                                            opacity: 1,
+                                            transition: { type: false },
+                                            transitionEnd: { display: "flex" },
+                                        },
+                                        off: {
+                                            opacity: 0.5,
+                                            display: "none",
+                                            transition: { type: false },
+                                        },
+                                    }}
                                 />
                             </view>
                         </view>

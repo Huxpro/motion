@@ -186,3 +186,8 @@ Hux evidence PR #85 adds the complementary partial-variant contract. Switching
 from an opacity variant to an x-only variant restores opacity from static style
 while applying x on immutable `2c805a2`; this also reuses lynx-stack #3489's
 removed-key ownership without a new source patch.
+
+Hux evidence PR #86 adds the upstream instant-variant `transitionEnd` race.
+After proving the `on` variant can apply `display:flex`, a same-turn `on`→`off`
+switch remains `display:none` after deferred completion work on immutable
+`2c805a2`; lynx-stack #3488 owns the adjacent generation guard.

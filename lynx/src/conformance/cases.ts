@@ -229,6 +229,31 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         },
     },
     {
+        id: "variants/instant-transition-end-race",
+        category: "Variants",
+        title: "Latest variant wins an instant transitionEnd race",
+        summary:
+            "A superseded instant variant cannot apply its deferred transitionEnd over the next named variant.",
+        status: "conformant",
+        api: ["variants", "animate", "transition.type: false", "transitionEnd"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "transitionEnd from instant animation does not override subsequent variant"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the on variant can apply display flex through transitionEnd",
+            "the off variant restores display none",
+            "an immediate on-to-off switch remains none after deferred completion work",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: false,
+            dualRenderer: true,
+            native: false,
+        },
+    },
+    {
         id: "targets/removed-animate-original-initial",
         category: "Targets",
         title: "Removed target restores original initial",
@@ -3646,6 +3671,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "Discrete first-frame variant values require only portable target composition before the existing ReactLynx style serialization path.",
     },
     {
+        caseId: "variants/instant-transition-end-race",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Common discrete state switching reuses the portable generation guard; named labels only add ReactLynx target resolution.",
+    },
+    {
         caseId: "initial/false-propagation",
         importance: 5,
         platformFit: 5,
@@ -4757,5 +4792,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 7,
         lossAfter: WEIGHTED_LOSS,
         note: "I4/F5/M1/R1/C0 · immutable 2c805a2 motion/react/react-umd set · switching from an opacity variant to an x-only variant restores opacity from static style while applying x · adjacent object-target package coverage protects removed-key ownership; exact proof is the complete dual-renderer suite 65/65 · no Full Demo or native claim.",
+    },
+    {
+        id: "motion-86",
+        date: "2026-08-13",
+        title: "Instant variant transitionEnd race evidence",
+        kind: "evidence",
+        status: "verified",
+        lynxStackPr: 3488,
+        motionPr: 86,
+        caseIds: ["variants/instant-transition-end-race"],
+        lossBefore: 7,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F5/M1/R1/C0 · immutable 2c805a2 motion/react/react-umd set · on first proves its display:flex transitionEnd can apply, off restores display:none, then a same-turn on→off switch remains none after deferred completion work · adjacent package coverage protects latest/stale object-target generations; exact named-variant proof is the complete dual-renderer suite 66/66 · no Full Demo or native claim.",
     },
 ]

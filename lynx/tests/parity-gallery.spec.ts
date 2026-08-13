@@ -901,6 +901,50 @@ test("manifest case: animate applies a transitionEnd-only update", async ({
     await Promise.all([lynxPage.close(), webPage.close()])
 })
 
+test("manifest case: stale instant variant transitionEnd cannot win", async ({
+    browser,
+}) => {
+    const webPage = await browser.newPage()
+    const lynxPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "variant-transition-end-race" })
+        )
+    })
+    await webPage.goto(
+        "http://localhost:4173/?mode=baseline&case=variant-transition-end-race"
+    )
+    await lynxPage.goto(`http://localhost:3000${previewUrl}`)
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const target = page.locator("#target-variant-transition-end-race")
+        const display = () =>
+            target.evaluate((element) => getComputedStyle(element).display)
+        await expect.poll(display).toBe("none")
+        const card = page.locator("#example-variant-transition-end-race")
+        await card.click()
+        await expect
+            .poll(display, { message: `${renderer} on transitionEnd` })
+            .toBe("flex")
+        await card.click()
+        await expect
+            .poll(display, { message: `${renderer} off variant` })
+            .toBe("none")
+        await card.click()
+        await expect
+            .poll(display, { message: `${renderer} latest variant ownership` })
+            .toBe("none")
+        await page.waitForTimeout(80)
+        expect(await display()).toBe("none")
+    }
+
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
 test("manifest cases: removed animate values follow upstream ownership", async ({
     browser,
 }) => {

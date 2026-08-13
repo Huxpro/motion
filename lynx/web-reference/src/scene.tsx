@@ -193,6 +193,8 @@ export function App() {
         conformanceMode === "hover-rest-transition"
     const animateTransitionEndOnly =
         conformanceMode === "animate-transition-end-only"
+    const variantTransitionEndRaceMode =
+        conformanceMode === "variant-transition-end-race"
     const removedAnimateValues = conformanceMode === "removed-animate-values"
     const transformOriginMode = conformanceMode === "transform-origin"
     const complexGradientMode = conformanceMode === "complex-gradient"
@@ -254,6 +256,8 @@ export function App() {
         useState(false)
     const [animateTransitionEndLifecycle, setAnimateTransitionEndLifecycle] =
         useState<string[]>([])
+    const [variantTransitionEndRacePhase, setVariantTransitionEndRacePhase] =
+        useState(0)
     const [removedAnimateActive, setRemovedAnimateActive] = useState(true)
     const [transformOriginActive, setTransformOriginActive] = useState(false)
     const [complexGradientActive, setComplexGradientActive] = useState(false)
@@ -1649,6 +1653,60 @@ export function App() {
                                             (events) => [...events, "complete"]
                                         )
                                     }
+                                />
+                            </div>
+                        </div>
+                    ) : null}
+
+                    {variantTransitionEndRaceMode ? (
+                        <div
+                            id="example-variant-transition-end-race"
+                            style={card}
+                            onClick={() => {
+                                if (variantTransitionEndRacePhase === 2) {
+                                    setVariantTransitionEndRacePhase(3)
+                                    setTimeout(
+                                        () => setVariantTransitionEndRacePhase(4),
+                                        0
+                                    )
+                                } else {
+                                    setVariantTransitionEndRacePhase(
+                                        variantTransitionEndRacePhase + 1
+                                    )
+                                }
+                            }}
+                        >
+                            <div style={info}>
+                                <span style={cardTitle}>
+                                    Stale transitionEnd guard
+                                </span>
+                                <span style={code}>
+                                    {`phase ${variantTransitionEndRacePhase}`}
+                                </span>
+                            </div>
+                            <div style={demo}>
+                                <motion.div
+                                    id="target-variant-transition-end-race"
+                                    style={{ ...dot, display: "none" }}
+                                    initial="off"
+                                    animate={
+                                        variantTransitionEndRacePhase === 1 ||
+                                        variantTransitionEndRacePhase === 3
+                                            ? "on"
+                                            : "off"
+                                    }
+                                    variants={{
+                                        on: {
+                                            opacity: 1,
+                                            transition: { type: false },
+                                            transitionEnd: { display: "flex" },
+                                        },
+                                        off: {
+                                            opacity: 0.5,
+                                            display: "none",
+                                            transition: { type: false },
+                                        },
+                                    }}
                                 />
                             </div>
                         </div>
