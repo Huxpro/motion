@@ -38,6 +38,7 @@ import {
     NO_OP_KEYFRAMES_CASE,
     NULL_KEYFRAME_CASE,
     PRIORITIZED_GAPS,
+    PROPERTY_SPECIFIC_TRANSITION_CASE,
     REACTIVE_ANIMATE_CASE,
     REMOVED_ANIMATE_CURRENT_CASE,
     REMOVED_ANIMATE_ORIGINAL_CASE,
@@ -734,6 +735,64 @@ test("manifest case: transition.default wins over top-level options", async ({
         await expect
             .poll(async () => Math.round(await x()))
             .toBe(DEFAULT_TRANSITION_CASE.expected.endX)
+    }
+
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: each property selects its own transition timing", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({
+                conformanceMode: "property-specific-transition",
+            })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=property-specific-transition"
+        ),
+    ])
+
+    for (const [renderer, page] of [
+        ["Lynx", lynxPage],
+        ["Web", webPage],
+    ] as const) {
+        const target = page.locator("#target-property-specific-transition")
+        const style = () =>
+            target.evaluate((element) => {
+                const computed = getComputedStyle(element)
+                return {
+                    opacity: Number(computed.opacity),
+                    x: Math.round(
+                        new DOMMatrixReadOnly(computed.transform).m41
+                    ),
+                }
+            })
+
+        await expect.poll(style).toEqual({
+            opacity:
+                PROPERTY_SPECIFIC_TRANSITION_CASE.expected.startOpacity,
+            x: PROPERTY_SPECIFIC_TRANSITION_CASE.expected.startX,
+        })
+        await page.locator("#example-property-specific-transition").click()
+        await page.waitForTimeout(
+            PROPERTY_SPECIFIC_TRANSITION_CASE.expected.holdMs
+        )
+        expect(await style(), `${renderer} per-property hold`).toEqual({
+            opacity: PROPERTY_SPECIFIC_TRANSITION_CASE.expected.endOpacity,
+            x: PROPERTY_SPECIFIC_TRANSITION_CASE.expected.startX,
+        })
+        await expect.poll(style).toEqual({
+            opacity: PROPERTY_SPECIFIC_TRANSITION_CASE.expected.endOpacity,
+            x: PROPERTY_SPECIFIC_TRANSITION_CASE.expected.endX,
+        })
     }
 
     await Promise.all([lynxPage.close(), webPage.close()])

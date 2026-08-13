@@ -25,6 +25,7 @@ import {
     NESTED_CONTROLLED_VARIANTS_CASE,
     NEGATIVE_DELAY_CASE,
     NULL_KEYFRAME_CASE,
+    PROPERTY_SPECIFIC_TRANSITION_CASE,
     REACTIVE_ANIMATE_CASE,
     REPEAT_REVERSE_CASE,
     REPEAT_DELAY_CASE,
@@ -217,6 +218,8 @@ export function App() {
         conformanceMode === "array-variant-definition-parity"
     const initialTransitionEndMode =
         conformanceMode === "initial-transition-end"
+    const propertySpecificTransitionMode =
+        conformanceMode === "property-specific-transition"
     const liveX = useMotionValue(STYLE_MOTION_VALUE_CASE.expected.startX)
     let styleMotionValueRenders = 0
     styleMotionValueRenders += 1
@@ -296,6 +299,60 @@ export function App() {
                     <text style={{ ...cardTitle, marginBottom: "10px" }}>
                         Conformance cases
                     </text>
+
+                    {propertySpecificTransitionMode && (
+                        <view
+                            id="example-property-specific-transition"
+                            style={conformanceCard}
+                            bindtap={() => setReactiveActive(true)}
+                        >
+                            <view style={info}>
+                                <text style={cardTitle}>
+                                    Per-property timing
+                                </text>
+                                <text style={code}>opacity now · x delayed</text>
+                            </view>
+                            <view style={demo}>
+                                <motion.view
+                                    id="target-property-specific-transition"
+                                    style={{
+                                        ...dot,
+                                        backgroundColor: "#d3df63",
+                                    }}
+                                    initial={{
+                                        opacity:
+                                            PROPERTY_SPECIFIC_TRANSITION_CASE
+                                                .expected.startOpacity,
+                                        x: PROPERTY_SPECIFIC_TRANSITION_CASE
+                                            .expected.startX,
+                                    }}
+                                    animate={{
+                                        opacity: reactiveActive
+                                            ? PROPERTY_SPECIFIC_TRANSITION_CASE
+                                                  .expected.endOpacity
+                                            : PROPERTY_SPECIFIC_TRANSITION_CASE
+                                                  .expected.startOpacity,
+                                        x: reactiveActive
+                                            ? PROPERTY_SPECIFIC_TRANSITION_CASE
+                                                  .expected.endX
+                                            : PROPERTY_SPECIFIC_TRANSITION_CASE
+                                                  .expected.startX,
+                                    }}
+                                    transition={{
+                                        opacity: {
+                                            duration: 0.01,
+                                            ease: "linear",
+                                        },
+                                        x: {
+                                            delay: 0.3,
+                                            duration: 0.01,
+                                            ease: "linear",
+                                        },
+                                    }}
+                                />
+                            </view>
+                        </view>
+                    )}
 
                     {initialTransitionEndMode && (
                         <view

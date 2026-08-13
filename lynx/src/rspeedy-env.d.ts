@@ -25,6 +25,7 @@ declare module '@lynx-js/types' {
       | "initial-false-explicit-child"
       | "array-variant-definition-parity"
       | "initial-transition-end"
+      | "property-specific-transition"
       | "hover-rest-transition"
   }
 }
