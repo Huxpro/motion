@@ -3,6 +3,7 @@ import {
     ANIMATION_LIFECYCLE_CASE,
     API_METRICS,
     ARRAY_VARIANT_DEFINITION_PARITY_CASE,
+    BEFORE_CHILDREN_CASE,
     COLOR_HSLA_RGBA_CASE,
     COLOR_KEYFRAMES_CASE,
     COMPLEX_GRADIENT_CASE,
@@ -252,6 +253,53 @@ test("manifest case: numeric delayChildren delays an inherited child", async ({
                 opacity: DELAY_CHILDREN_CASE.expected.visibleOpacity,
                 x: DELAY_CHILDREN_CASE.expected.visibleX,
             })
+    }
+
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: parent variant finishes before inherited children", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "before-children" })
+        )
+    })
+    await Promise.all([
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=before-children"
+        ),
+    ])
+
+    for (const [renderer, page] of [
+        ["Lynx", lynxPage],
+        ["Web", webPage],
+    ] as const) {
+        const example = page.locator("#example-before-children")
+        const target = page.locator("#target-before-children")
+        const opacity = () =>
+            target.evaluate((element) =>
+                Number(getComputedStyle(element).opacity)
+            )
+        await expect
+            .poll(opacity)
+            .toBe(BEFORE_CHILDREN_CASE.expected.hiddenOpacity)
+        await example.click()
+        await page.waitForTimeout(BEFORE_CHILDREN_CASE.expected.holdMs)
+        expect(await opacity(), `${renderer} parent-first hold`).toBe(
+            BEFORE_CHILDREN_CASE.expected.hiddenOpacity
+        )
+        await expect
+            .poll(opacity, {
+                timeout: 2_000,
+                message: `${renderer} child settles after parent`,
+            })
+            .toBe(BEFORE_CHILDREN_CASE.expected.visibleOpacity)
     }
 
     await Promise.all([lynxPage.close(), webPage.close()])

@@ -2019,11 +2019,42 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         },
     },
     {
+        id: "variants/before-children",
+        category: "Variants",
+        title: "Parent finishes before inherited children",
+        summary:
+            "An explicit-duration parent variant completes before its inherited child starts.",
+        status: "conformant",
+        api: ["variants", 'when="beforeChildren"', "inheritance"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "when: beforeChildren works correctly"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the child stays at its initial value during the parent's explicit duration",
+            "the child starts only after the parent timing window closes",
+            "both renderers settle the inherited child at the visible target",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            parentDurationMs: 600,
+            holdMs: 200,
+            hiddenOpacity: 0.1,
+            visibleOpacity: 1,
+        },
+    },
+    {
         id: "variants/orchestration",
         category: "Variants",
-        title: "Variant orchestration + controls",
+        title: "Remaining variant orchestration + controls",
         summary:
-            "Coordinate descendant variants through timing, controls, and gesture state.",
+            "Coordinate descendant variants through aggregate completion, dynamic timing, controls, and gesture state.",
         status: "blocked",
         api: [
             "animation controls",
@@ -2038,11 +2069,11 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         ),
         baseline: "framer-motion@13.0.0",
         assertions: [
-            "parent and child timing honors when",
+            "afterChildren and automatic-duration beforeChildren honor aggregate completion",
             "dynamic delayChildren and staggerChildren order descendants",
             "controls and gesture labels propagate through the subtree",
         ],
-        gap: "Requires a cross-thread visual-element registry and subtree lifecycle aggregation; tracked in issue #10.",
+        gap: "Explicit-duration beforeChildren is split into its own conformant contract. The remaining APIs require a cross-thread visual-element registry and subtree lifecycle aggregation; tracked in issue #10.",
         evidence: {
             gallery: false,
             packageTest: false,
@@ -2626,6 +2657,17 @@ export const DELAY_CHILDREN_CASE = CONFORMANCE_CASES.find(
     }
 }
 
+export const BEFORE_CHILDREN_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "variants/before-children"
+) as ConformanceCase & {
+    expected: {
+        parentDurationMs: number
+        holdMs: number
+        hiddenOpacity: number
+        visibleOpacity: number
+    }
+}
+
 export const VARIANT_INHERIT_OPT_OUT_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "variants/inherit-opt-out"
 ) as ConformanceCase & {
@@ -3199,6 +3241,16 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         contract:
             "Delay inherited child variants while preserving each child's upstream MotionValue animation path.",
         exampleId: "delay-children",
+    },
+    {
+        id: "variant-before-children",
+        group: "Variants",
+        api: 'when: "beforeChildren" (explicit duration)',
+        status: "supported",
+        evidence: "dual-renderer",
+        contract:
+            "Finish a non-repeating, explicit-duration parent target before starting inherited children.",
+        exampleId: "before-children",
     },
     {
         id: "variant-inherit-opt-out",
@@ -4099,6 +4151,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "A common variant-composition boundary maps directly to ReactLynx context without host, callable, or CSS adaptation.",
+    },
+    {
+        caseId: "variants/before-children",
+        importance: 5,
+        platformFit: 4,
+        mts: 1,
+        reactLynx: 2,
+        css: 0,
+        rationale:
+            "High-value parent-first sequencing reuses upstream transitions and the existing ReactLynx variant context when parent duration is explicit.",
     },
     {
         caseId: "variants/orchestration",
@@ -5203,5 +5265,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 6,
         lossAfter: WEIGHTED_LOSS,
         note: "I4/F5/M1/R2/C0 · immutable ed0c9f2 motion/react/react-umd set · a child suspended during a four-second opacity/scale tween renders fallback, then both renderers restart below 0.15 after resolution instead of retaining the pre-suspend intermediate frame · focused dual-renderer 1/1 and complete suite 73/73 · the Sandbox lease endpoint timed out after 30 seconds without returning a serial, so native is unavailable and unclaimed · no Full Demo because this closes lifecycle evidence without newly unlocking a broader usage pattern.",
+    },
+    {
+        id: "lynx-3504-motion-95",
+        date: "2026-08-13",
+        title: "Explicit-duration beforeChildren sequencing",
+        kind: "capability",
+        status: "verified",
+        lynxStackPr: 3504,
+        motionPr: 95,
+        caseIds: ["variants/before-children"],
+        lossBefore: 6,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I5/F4/M1/R2/C0 · immutable 51d11ee motion/react/react-umd set with matching x-commit-key · before ed0c9f2: Web held the inherited child at opacity 0.1 while Lynx jumped to 1 inside the parent window; after: both hold through 200ms and settle only after the 600ms parent duration · package declarative 48/48, package full 157/157, build/Publint pass, focused dual-renderer 1/1, and complete suite 74/74 · Android Explorer loaded the exact bundle and exposed initial child opacity 0.1, but its SDK 0.0.1 event path left the parent at translateX(0px) after both DevTool tap and scaled ADB touch, so native timing remains unclaimed · weighted loss remains 6 because automatic/repeating duration, afterChildren, stagger, controls, and gesture propagation remain blocked in issue #10 · no Full Demo until the remaining orchestration family supports a broader production pattern.",
     },
 ]

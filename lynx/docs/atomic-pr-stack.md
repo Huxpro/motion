@@ -118,12 +118,13 @@ behavior independently reviewable:
                                                 └── #3497 initial variant transitionEnd
                                                     └── #3498 inherited removed-key style fallback
                                                         └── #3499 inherited removed-key identity fallback
+                                                            └── #3504 explicit-duration beforeChildren
 ```
 
 Feature-base PRs do not trigger the repository's `pkg.pr.new` workflow. Draft
 #3491 is therefore a validation-only rollup against `main`; it must not be
-merged. Its immutable `ed0c9f2` motion/react/react-umd package set contains the
-stack through #3499 and passes the Hux evidence build. The manifest records the
+merged. Its immutable `51d11ee` motion/react/react-umd package set contains the
+stack through #3504 and passes the Hux evidence build. The manifest records the
 capability PR that owns each contract, while #3491 records only the immutable
 validation gate. Numeric `delayChildren` is deliberately separate from the
 dynamic stagger/`when`/controls boundary tracked in issue #10.
@@ -246,3 +247,12 @@ The Sandbox lease endpoint timed out after 30 seconds without returning a
 serial, so native remains unclaimed. No lynx-stack source diff or Full Demo is
 needed because this records an existing lifecycle capability rather than
 unlocking a broader pattern.
+
+Atomic lynx-stack PR #3504 closes the explicit-duration slice of upstream's
+`when: beforeChildren` contract. A non-repeating parent target now contributes
+its declared duration to the existing inherited variant context, so descendants
+start only after that window. Hux evidence PR #95 proves the old/new delta on
+immutable `51d11ee`: old Lynx jumped the child to opacity 1 inside 200ms while
+Web held at 0.1; both now hold and later settle. Automatic/repeating duration,
+`afterChildren`, dynamic stagger, controls, and gesture propagation remain in
+issue #10, so weighted loss stays 6 and no Full Demo is claimed.

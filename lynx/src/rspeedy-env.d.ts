@@ -24,6 +24,7 @@ declare module '@lynx-js/types' {
       | "suspense-remount-reset"
       | "variant-propagation"
       | "delay-children"
+      | "before-children"
       | "variant-inherit-opt-out"
       | "initial-false-propagation"
       | "inherited-variant-lifecycle"
