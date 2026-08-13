@@ -1299,6 +1299,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { base: 0, active: 1, reactive: 0.5, masked: 0.75 },
     },
     {
+        id: "variants/style-fallback-when-next-omits-key",
+        category: "Variants",
+        title: "Static style fills keys omitted by the next variant",
+        summary:
+            "Switching to a named variant that omits an animated key restores that key from style while applying the new target.",
+        status: "conformant",
+        api: ["variants", "animate", "style", "dynamic target shape"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "style is used as fallback when a variant changes to not contain that style"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the first variant owns opacity",
+            "the next variant animates x but omits opacity",
+            "the omitted opacity returns to its static style value",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: false,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { baseOpacity: 0, opaqueOpacity: 1, baseX: 0, movedX: 48 },
+    },
+    {
         id: "variants/function-custom",
         category: "Variants",
         title: "Function variant + custom",
@@ -2207,6 +2233,17 @@ export const VARIANT_STYLE_FALLBACK_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "variants/style-fallback-after-removal"
 ) as ConformanceCase & {
     expected: { base: number; active: number; reactive: number; masked: number }
+}
+
+export const VARIANT_PARTIAL_STYLE_FALLBACK_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "variants/style-fallback-when-next-omits-key"
+) as ConformanceCase & {
+    expected: {
+        baseOpacity: number
+        opaqueOpacity: number
+        baseX: number
+        movedX: number
+    }
 }
 
 export const FUNCTION_VARIANTS_CASE = CONFORMANCE_CASES.find(
@@ -3507,6 +3544,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "Common conditional-variant ownership reuses the portable removed-target path; ReactLynx only supplies reactive props.",
     },
     {
+        caseId: "variants/style-fallback-when-next-omits-key",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Common partial-variant switching reuses portable removed-key ownership while ReactLynx only supplies the next label.",
+    },
+    {
         caseId: "variants/function-custom",
         importance: 3,
         platformFit: 5,
@@ -4697,5 +4744,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 7,
         lossAfter: WEIGHTED_LOSS,
         note: "I4/F5/M1/R1/C0 · immutable 2c805a2 motion/react/react-umd set · removing a named variant restores static opacity/rotate ownership, later style updates remain reactive, and re-entering the variant masks style changes while active · adjacent package coverage protects object-target removal; exact proof is the complete dual-renderer suite 64/64 · no Full Demo or native claim.",
+    },
+    {
+        id: "motion-85",
+        date: "2026-08-13",
+        title: "Partial variant style fallback evidence",
+        kind: "evidence",
+        status: "verified",
+        lynxStackPr: 3489,
+        motionPr: 85,
+        caseIds: ["variants/style-fallback-when-next-omits-key"],
+        lossBefore: 7,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F5/M1/R1/C0 · immutable 2c805a2 motion/react/react-umd set · switching from an opacity variant to an x-only variant restores opacity from static style while applying x · adjacent object-target package coverage protects removed-key ownership; exact proof is the complete dual-renderer suite 65/65 · no Full Demo or native claim.",
     },
 ]

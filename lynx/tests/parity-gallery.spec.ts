@@ -61,6 +61,7 @@ import {
     UNSEEN_PROPERTY_CASE,
     VARIANT_INHERIT_OPT_OUT_CASE,
     VARIANT_PROPAGATION_CASE,
+    VARIANT_PARTIAL_STYLE_FALLBACK_CASE,
     VARIANT_STYLE_FALLBACK_CASE,
     VISIBILITY_REVEAL_CASE,
     WEIGHTED_LOSS,
@@ -2083,6 +2084,66 @@ test("manifest case: style regains ownership after a named variant is removed", 
             opacity: VARIANT_STYLE_FALLBACK_CASE.expected.active,
             rotate: VARIANT_STYLE_FALLBACK_CASE.expected.active,
         })
+    }
+
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: style owns a key omitted by the next named variant", async ({
+    browser,
+}) => {
+    const lynxPage = await browser.newPage()
+    const webPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({
+                conformanceMode: "variant-partial-style-fallback",
+            })
+        )
+    })
+    await Promise.all([
+        webPage.goto(
+            "http://localhost:4173/?mode=baseline&case=variant-partial-style-fallback"
+        ),
+        lynxPage.goto(`http://localhost:3000${previewUrl}`),
+    ])
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const target = page.locator("#target-variant-partial-style-fallback")
+        const style = () =>
+            target.evaluate((element) => {
+                const computed = getComputedStyle(element)
+                const matrix = new DOMMatrixReadOnly(computed.transform)
+                return {
+                    opacity: Number(computed.opacity),
+                    x: Number(matrix.m41.toFixed(1)),
+                }
+            })
+        const card = page.locator("#example-variant-partial-style-fallback")
+        await expect.poll(style).toEqual({
+            opacity: VARIANT_PARTIAL_STYLE_FALLBACK_CASE.expected.baseOpacity,
+            x: VARIANT_PARTIAL_STYLE_FALLBACK_CASE.expected.baseX,
+        })
+        await card.click()
+        await expect
+            .poll(style, { message: `${renderer} first variant` })
+            .toEqual({
+                opacity:
+                    VARIANT_PARTIAL_STYLE_FALLBACK_CASE.expected.opaqueOpacity,
+                x: VARIANT_PARTIAL_STYLE_FALLBACK_CASE.expected.baseX,
+            })
+        await card.click()
+        await expect
+            .poll(style, { message: `${renderer} partial variant fallback` })
+            .toEqual({
+                opacity:
+                    VARIANT_PARTIAL_STYLE_FALLBACK_CASE.expected.baseOpacity,
+                x: VARIANT_PARTIAL_STYLE_FALLBACK_CASE.expected.movedX,
+            })
     }
 
     await Promise.all([lynxPage.close(), webPage.close()])

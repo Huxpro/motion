@@ -13,6 +13,7 @@ declare module '@lynx-js/types' {
       | "complex-gradient"
       | "display-exit"
       | "variant-style-fallback"
+      | "variant-partial-style-fallback"
       | "variant-propagation"
       | "delay-children"
       | "variant-inherit-opt-out"
