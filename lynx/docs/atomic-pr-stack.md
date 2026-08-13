@@ -202,3 +202,11 @@ Atomic lynx-stack PR #3498 separates inherited removed-key fallback from the
 child's initial animation values. Parent `a→b→c({})` now restores the child's
 static style rather than its initial variant on immutable `cd567e7`, without
 changing direct animate or delayed inherited animation starts.
+
+Hux evidence PR #89 adds upstream's dynamic inherited-child contract. After a
+parent has settled at `visible`, a newly mounted child beneath a neutral Motion
+wrapper still resolves inherited `hidden` and reaches `visible` on immutable
+`cd567e7`; no lynx-stack source diff is required. The native Sandbox attempt is
+not claimed because Playground SDK 0.0.1 cannot decode the current Rspeedy
+bundle. This closes list-entry composition only, so presence-driven exit remains
+the boundary before a complete dynamic-list Full Demo.
