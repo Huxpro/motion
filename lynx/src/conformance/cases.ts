@@ -762,6 +762,38 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         },
     },
     {
+        id: "transitions/property-specific-routing",
+        category: "Targets",
+        title: "Property-specific transition routing",
+        summary:
+            "Each animated property selects its own transition options from a shared animate update.",
+        status: "conformant",
+        api: ["transition.opacity", "transition.x"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "accepts base transition settings"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "opacity settles before the delayed x animation begins",
+            "x remains at its start value inside its property-specific delay",
+            "both properties eventually settle at their targets in both renderers",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            startX: 0,
+            endX: 40,
+            startOpacity: 0,
+            endOpacity: 1,
+            holdMs: 150,
+        },
+    },
+    {
         id: "transitions/instant",
         category: "Targets",
         title: "Instant transition",
@@ -1836,6 +1868,18 @@ export const TRANSITION_END_SUBSEQUENT_CASE = CONFORMANCE_CASES.find(
 export const INITIAL_VARIANT_TRANSITION_END_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "initial/variant-transition-end"
 ) as ConformanceCase
+
+export const PROPERTY_SPECIFIC_TRANSITION_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "transitions/property-specific-routing"
+) as ConformanceCase & {
+    expected: {
+        startX: number
+        endX: number
+        startOpacity: number
+        endOpacity: number
+        holdMs: number
+    }
+}
 
 export const REMOVED_ANIMATE_ORIGINAL_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "targets/removed-animate-original-initial"
@@ -3194,6 +3238,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "Common transition routing fallback reuses upstream getValueTransition without host adaptation.",
     },
     {
+        caseId: "transitions/property-specific-routing",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 0,
+        css: 0,
+        rationale:
+            "Common multi-property animation timing routes directly through upstream per-value transition selection without host adaptation.",
+    },
+    {
         caseId: "transitions/manual-from",
         importance: 3,
         platformFit: 5,
@@ -4520,5 +4574,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 8,
         lossAfter: WEIGHTED_LOSS,
         note: "I3/F5/M1/R1/C0 · immutable 2c805a2 motion/react/react-umd set · an initial named variant now composes transitionEnd over its ordinary target on the first frame · package declarative suite 42/42, focused dual-renderer 1/1, and complete suite 61/61 · no Full Demo or native claim.",
+    },
+    {
+        id: "motion-82",
+        date: "2026-08-13",
+        title: "Property-specific transition routing evidence",
+        kind: "evidence",
+        status: "verified",
+        lynxStackPr: 3459,
+        motionPr: 82,
+        caseIds: ["transitions/property-specific-routing"],
+        lossBefore: 8,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F5/M1/R0/C0 · immutable 2c805a2 motion/react/react-umd set · opacity settles while x remains inside its own delay, then both reach their targets · package coverage plus complete dual-renderer suite 62/62 · no Full Demo or native claim.",
     },
 ]

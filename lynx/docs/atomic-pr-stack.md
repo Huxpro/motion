@@ -167,3 +167,7 @@ to the upstream inline-versus-hoisted definition contract. The existing
 Atomic lynx-stack PR #3497 composes an initial named variant's `transitionEnd`
 over its ordinary target on the first frame, matching upstream's discrete
 initial-value contract. Immutable `2c805a2` provides the exact validation gate.
+
+Hux evidence PR #82 links lynx-stack #3459's existing property-specific
+transition routing to an upstream multi-property contract. Opacity settles while
+x remains in its own delay, then both reach their targets on immutable `2c805a2`.
