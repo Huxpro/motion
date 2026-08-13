@@ -20,6 +20,7 @@ import {
     MOTION_CREATE_CASE,
     NAMED_EASING_CASE,
     NAMED_VARIANTS_CASE,
+    NESTED_CONTROLLED_VARIANTS_CASE,
     NEGATIVE_DELAY_CASE,
     NULL_KEYFRAME_CASE,
     REACTIVE_ANIMATE_CASE,
@@ -203,6 +204,8 @@ export function App() {
         conformanceMode === "deep-delay-children"
     const explicitChildDelayRootMode =
         conformanceMode === "explicit-child-delay-root"
+    const nestedControlledVariantsMode =
+        conformanceMode === "nested-controlled-variants"
     const liveX = useMotionValue(STYLE_MOTION_VALUE_CASE.expected.startX)
     let styleMotionValueRenders = 0
     styleMotionValueRenders += 1
@@ -233,6 +236,7 @@ export function App() {
     const [delayChildrenActive, setDelayChildrenActive] = useState(false)
     const [deepDelayChildrenActive, setDeepDelayChildrenActive] =
         useState(false)
+    const [nestedControlledOpen, setNestedControlledOpen] = useState(false)
     const [defaultTransitionActive, setDefaultTransitionActive] =
         useState(false)
     const [nullKeyframeActive, setNullKeyframeActive] = useState(false)
@@ -754,6 +758,75 @@ export function App() {
                                                 opacity:
                                                     EXPLICIT_CHILD_DELAY_ROOT_CASE
                                                         .expected.visibleOpacity,
+                                            },
+                                        }}
+                                        transition={{ type: false }}
+                                    />
+                                </motion.div>
+                            </div>
+                        </div>
+                    )}
+
+                    {nestedControlledVariantsMode && (
+                        <div
+                            id="example-nested-controlled-variants"
+                            style={conformanceCard}
+                            onClick={() => setNestedControlledOpen(true)}
+                        >
+                            <div style={info}>
+                                <span style={cardTitle}>
+                                    Nested controlled variants
+                                </span>
+                                <span style={code}>
+                                    {nestedControlledOpen ? "visible" : "hidden"}
+                                </span>
+                            </div>
+                            <div style={demo}>
+                                <motion.div
+                                    id="target-nested-controlled-parent"
+                                    initial="hidden"
+                                    animate={
+                                        nestedControlledOpen
+                                            ? "visible"
+                                            : "hidden"
+                                    }
+                                    variants={{
+                                        hidden: {
+                                            opacity:
+                                                NESTED_CONTROLLED_VARIANTS_CASE
+                                                    .expected
+                                                    .parentHiddenOpacity,
+                                        },
+                                        visible: {
+                                            opacity:
+                                                NESTED_CONTROLLED_VARIANTS_CASE
+                                                    .expected
+                                                    .parentVisibleOpacity,
+                                        },
+                                    }}
+                                    transition={{ type: false }}
+                                >
+                                    <motion.div
+                                        id="target-nested-controlled-child"
+                                        style={{ ...dot, backgroundColor: "#d3df63" }}
+                                        initial="hidden"
+                                        animate={
+                                            nestedControlledOpen
+                                                ? "visible"
+                                                : "hidden"
+                                        }
+                                        variants={{
+                                            hidden: {
+                                                opacity:
+                                                    NESTED_CONTROLLED_VARIANTS_CASE
+                                                        .expected
+                                                        .childHiddenOpacity,
+                                            },
+                                            visible: {
+                                                opacity:
+                                                    NESTED_CONTROLLED_VARIANTS_CASE
+                                                        .expected
+                                                        .childVisibleOpacity,
                                             },
                                         }}
                                         transition={{ type: false }}

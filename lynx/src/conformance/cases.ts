@@ -1578,6 +1578,37 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         },
     },
     {
+        id: "variants/nested-controlled-roots",
+        category: "Variants",
+        title: "Nested controlled variant roots",
+        summary:
+            "Nested components with explicit animate props resolve and switch their own named variants.",
+        status: "conformant",
+        api: ["initial", "animate", "variants", "reactive updates"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "nested controlled variants switch correctly"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the parent and child resolve their distinct hidden variants",
+            "both explicit animate props react to the same state update",
+            "the parent and child settle at their distinct visible variants",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            parentHiddenOpacity: 0.4,
+            childHiddenOpacity: 0.6,
+            parentVisibleOpacity: 0.3,
+            childVisibleOpacity: 0.5,
+        },
+    },
+    {
         id: "variants/orchestration",
         category: "Variants",
         title: "Variant orchestration + controls",
@@ -2052,6 +2083,17 @@ export const EXPLICIT_CHILD_DELAY_ROOT_CASE = CONFORMANCE_CASES.find(
         independentWindowMs: number
         hiddenOpacity: number
         visibleOpacity: number
+    }
+}
+
+export const NESTED_CONTROLLED_VARIANTS_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "variants/nested-controlled-roots"
+) as ConformanceCase & {
+    expected: {
+        parentHiddenOpacity: number
+        childHiddenOpacity: number
+        parentVisibleOpacity: number
+        childVisibleOpacity: number
     }
 }
 
@@ -2611,6 +2653,16 @@ export const ATOMIC_CAPABILITIES: readonly AtomicCapability[] = [
         contract:
             "Start a new delay root when a child declares its own animate prop.",
         exampleId: "explicit-child-delay-root",
+    },
+    {
+        id: "nested-controlled-variants",
+        group: "Variants",
+        api: "nested controlled variants",
+        status: "supported",
+        evidence: "dual-renderer",
+        contract:
+            "Switch nested explicit variant roots without inherited ownership collisions.",
+        exampleId: "nested-controlled-variants",
     },
     {
         id: "variant-delay-children",
@@ -3341,6 +3393,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
         css: 0,
         rationale:
             "Independent component animation ownership is a common composition rule and reuses the existing context boundary without host adaptation.",
+    },
+    {
+        caseId: "variants/nested-controlled-roots",
+        importance: 5,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Core stateful component composition uses existing explicit ownership and reactive target paths without host adaptation.",
     },
     {
         caseId: "variants/delay-children",
@@ -4265,5 +4327,17 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 8,
         lossAfter: WEIGHTED_LOSS,
         note: "I4/F5/M1/R1/C0 · immutable f6b0e90 motion/react/react-umd set · a child with explicit animate settles within 500ms despite a one-second parent delayChildren window, establishing a new ownership root with no lynx-stack source diff · complete dual-renderer suite 57/57 · no Full Demo or native claim.",
+    },
+    {
+        id: "motion-78",
+        date: "2026-08-13",
+        title: "Nested controlled variant roots evidence",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 78,
+        caseIds: ["variants/nested-controlled-roots"],
+        lossBefore: 8,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I5/F5/M1/R1/C0 · immutable f6b0e90 motion/react/react-umd set · nested parent and child explicit animate roots independently resolve and reactively switch their distinct named variants with no lynx-stack source diff · complete dual-renderer suite 58/58 · no Full Demo or native claim.",
     },
 ]
