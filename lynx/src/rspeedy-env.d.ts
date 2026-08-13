@@ -20,6 +20,7 @@ declare module '@lynx-js/types' {
       | "dynamic-inherited-child"
       | "memoized-inherited-removed-value"
       | "suspense-inherited-child"
+      | "suspense-initial-frame"
       | "variant-propagation"
       | "delay-children"
       | "variant-inherit-opt-out"

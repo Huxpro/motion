@@ -1485,6 +1485,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { visibleOpacity: 1, startCount: 1 },
     },
     {
+        id: "variants/suspense-initial-frame",
+        category: "Variants",
+        title: "Suspense child preserves its inherited initial frame",
+        summary:
+            "An asynchronously resolved child starts near its inherited initial value instead of skipping directly to the parent's animate state.",
+        status: "conformant",
+        api: ["variants", "initial", "animate", "Suspense", "transition"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "child inside Suspense boundary should not skip directly to animate variant values"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the Suspense fallback is visible while the parent is already animating",
+            "resolving the boundary mounts a child with a ten-second inherited tween",
+            "the first sampled child opacity remains below 0.5 rather than jumping to visible opacity 1",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: false,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { durationSeconds: 10, initialSampleMaxOpacity: 0.5 },
+    },
+    {
         id: "variants/function-custom",
         category: "Variants",
         title: "Function variant + custom",
@@ -2437,6 +2463,12 @@ export const SUSPENSE_INHERITED_CHILD_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "variants/suspense-inherited-child"
 ) as ConformanceCase & {
     expected: { visibleOpacity: number; startCount: number }
+}
+
+export const SUSPENSE_INITIAL_FRAME_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "variants/suspense-initial-frame"
+) as ConformanceCase & {
+    expected: { durationSeconds: number; initialSampleMaxOpacity: number }
 }
 
 export const FUNCTION_VARIANTS_CASE = CONFORMANCE_CASES.find(
@@ -3787,6 +3819,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "Lazy-loaded UI is common, ReactLynx officially supports Suspense, and the child reuses existing variant context plus upstream MotionValue execution.",
     },
     {
+        caseId: "variants/suspense-initial-frame",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Correct lazy-entry animation prevents visual jumps and reuses the same official Suspense plus upstream MotionValue path.",
+    },
+    {
         caseId: "variants/function-custom",
         importance: 3,
         platformFit: 5,
@@ -5087,5 +5129,17 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 7,
         lossAfter: WEIGHTED_LOSS,
         note: "I4/F5/M1/R1/C0 · immutable ed0c9f2 motion/react/react-umd set · a real Suspense boundary first renders fallback, then its asynchronously resolved child reports an inherited animation start and settles at visible opacity 1 in Web and ReactLynx · focused dual-renderer 1/1 and complete suite 71/71 · Sandbox lease endpoint returned no serial and timed out on the bounded retry, so native is unavailable and unclaimed · no Full Demo because this records an already-supported lazy-entry composition rather than newly unblocking a broader pattern.",
+    },
+    {
+        id: "motion-92",
+        date: "2026-08-13",
+        title: "Suspense inherited initial-frame evidence",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 92,
+        caseIds: ["variants/suspense-initial-frame"],
+        lossBefore: 6,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F5/M1/R1/C0 · immutable ed0c9f2 motion/react/react-umd set · after a real Suspense boundary resolves beneath an already-animated parent, both renderers sample the child's ten-second inherited tween below opacity 0.5 rather than skipping to visible opacity 1 · focused dual-renderer 1/1 and complete suite 72/72 · native remains unavailable and unclaimed after the immediately preceding bounded Sandbox lease timeout · no Full Demo because this strengthens lazy-entry semantics rather than unlocking a broader usage pattern.",
     },
 ]

@@ -229,3 +229,11 @@ returned no serial and timed out on a bounded retry, so native remains
 unclaimed. This evidence does not add a Full Demo because it confirms an
 already-supported lazy-entry composition rather than unlocking a broader
 presence or orchestration pattern.
+
+Hux evidence PR #92 tightens that Suspense contract to the first animation
+sample. With a ten-second inherited tween, the asynchronously resolved child
+remains below opacity 0.5 shortly after mount in both renderers instead of
+jumping directly to opacity 1. It reuses immutable `ed0c9f2` with no lynx-stack
+source diff. Native remains unclaimed after the immediately preceding bounded
+Sandbox lease timeout, and the stronger assertion is still not a distinct Full
+Demo usage pattern.
