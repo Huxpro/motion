@@ -1706,6 +1706,31 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expectedDefinition: "visible",
     },
     {
+        id: "lifecycle/unmount-cancel",
+        category: "Lifecycle",
+        title: "Unmount cancels active animation",
+        summary:
+            "Unmounting a Motion component invalidates its active animation and suppresses late completion callbacks.",
+        status: "conformant",
+        api: ["unmount cleanup", "onAnimationComplete"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/animate-prop.test.tsx",
+            "unmount cancels active animations"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the target unmounts while its animation is still active",
+            "completion remains at zero immediately after unmount",
+            "no stale completion fires after the original duration elapses",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+    },
+    {
         id: "lifecycle/inherited-variant-child",
         category: "Lifecycle",
         title: "Inherited variant child lifecycle",
@@ -3984,6 +4009,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "Callback order and definitions are verified across Web, Lynx, and native Explorer.",
     },
     {
+        caseId: "lifecycle/unmount-cancel",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Core cleanup contract uses generation invalidation across the existing lifecycle bridge without a host-specific animation engine.",
+    },
+    {
         caseId: "lifecycle/inherited-variant-child",
         importance: 4,
         platformFit: 5,
@@ -5318,5 +5353,17 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 6,
         lossAfter: WEIGHTED_LOSS,
         note: "I5/F4/M1/R2/C0 · immutable 013e20e motion/react/react-umd set with matching x-commit-key · the longest parent value uses 100ms delay + two 200ms iterations + one 200ms repeatDelay; old 36e144e fails the same focused assertion because Lynx child opacity is already 1 at 400ms, while 013e20e holds 0.1 and settles after the finite 700ms window · package declarative 51/51, package full 160/160, commit hooks and build/declarations/Publint pass · focused dual-renderer 1/1 and complete suite 74/74 · native timing remains unclaimed under the SDK 0.0.1 event-dispatch boundary recorded by #95 · Infinity, automatic completion, afterChildren, stagger, controls, and gesture propagation remain in issue #10, so weighted loss stays 6 and no Full Demo is claimed.",
+    },
+    {
+        id: "lynx-3463-unmount-cancel",
+        date: "2026-08-13",
+        title: "Unmount cancellation promoted to conformance contract",
+        kind: "evidence",
+        status: "verified",
+        lynxStackPr: 3463,
+        caseIds: ["lifecycle/unmount-cancel"],
+        lossBefore: 6,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F5/M1/R1/C0 · immutable 013e20e motion/react/react-umd set includes #3463 · both renderers unmount during the two-second animation and remain at complete:0 after waiting beyond its original duration · package regression and complete dual-renderer suite lock generation invalidation across the lifecycle bridge · no native or Full Demo claim because this promotes existing cleanup evidence rather than adding a broader usage pattern.",
     },
 ]
