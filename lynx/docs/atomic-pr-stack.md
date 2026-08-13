@@ -171,3 +171,7 @@ initial-value contract. Immutable `2c805a2` provides the exact validation gate.
 Hux evidence PR #82 links lynx-stack #3459's existing property-specific
 transition routing to an upstream multi-property contract. Opacity settles while
 x remains in its own delay, then both reach their targets on immutable `2c805a2`.
+
+Hux evidence PR #83 adds the reverse discrete-display contract: `display`
+remains `block` during an opacity exit and switches to `none` only after the
+animation completes on immutable `2c805a2`.
