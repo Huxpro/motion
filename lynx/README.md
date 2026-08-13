@@ -35,7 +35,7 @@ headless Chromium to verify manifest-backed semantic assertions as well as the
 legacy live/infinite animation, variants, lifecycle, and gesture checks.
 The current dependency gate is the immutable `ed0c9f2` preview set published
 by validation-only [lynx-stack#3491](https://github.com/lynx-family/lynx-stack/pull/3491);
-the complete suite passes 70/70 source-linked behaviors. Capability ownership
+the complete suite passes 71/71 source-linked behaviors. Capability ownership
 remains with the atomic #3483–#3499 stack rather than the validation rollup.
 
 The Web reference in `web-reference/` is pinned to the same upstream Motion
@@ -89,7 +89,8 @@ contract.
   animation; when an inherited parent variant omits a child property, that
   property returns to the child static style rather than its initial variant;
   if no static style owns a removed transform, a memoized inherited child
-  restores Motion's transform identity without needing to rerender
+  restores Motion's transform identity without needing to rerender; a child
+  resolving from a real Suspense boundary also runs its inherited animation
 - `whileTap` plus tap callbacks
 - `whileHover` plus hover callbacks on mouse-capable clients
 - `onAnimationStart` / `onAnimationComplete` for base `animate`, inherited

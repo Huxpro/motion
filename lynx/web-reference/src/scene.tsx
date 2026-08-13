@@ -1,5 +1,5 @@
 import { motion, useMotionValue } from "framer-motion"
-import { CSSProperties, forwardRef, memo, useState } from "react"
+import { CSSProperties, forwardRef, memo, Suspense, useState } from "react"
 import type { ComponentPropsWithoutRef } from "react"
 import {
     ARRAY_VARIANT_DEFINITION_PARITY_CASE,
@@ -35,6 +35,7 @@ import {
     REPEAT_MIRROR_CASE,
     SPRING_CASE,
     STYLE_MOTION_VALUE_CASE,
+    SUSPENSE_INHERITED_CHILD_CASE,
     TRANSITION_FROM_CASE,
     UNSEEN_PROPERTY_CASE,
     VARIANT_INHERIT_OPT_OUT_CASE,
@@ -203,6 +204,36 @@ const MemoizedInheritedRemovedValueChild = memo(() => (
     />
 ))
 
+let suspenseVariantChildResolved = false
+let resolveSuspenseVariantChild: (() => void) | undefined
+
+function SuspenseVariantChild({ onStart }: { onStart: () => void }) {
+    if (!suspenseVariantChildResolved) {
+        throw new Promise<void>((resolve) => {
+            resolveSuspenseVariantChild = () => {
+                suspenseVariantChildResolved = true
+                resolve()
+            }
+        })
+    }
+
+    return (
+        <motion.div
+            id="target-suspense-inherited-child"
+            style={{ ...dot, backgroundColor: "#76c9a0" }}
+            variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                    opacity:
+                        SUSPENSE_INHERITED_CHILD_CASE.expected.visibleOpacity,
+                },
+            }}
+            transition={{ type: false }}
+            onAnimationStart={onStart}
+        />
+    )
+}
+
 export function App() {
     const conformanceMode = new URLSearchParams(window.location.search).get(
         "case"
@@ -234,6 +265,8 @@ export function App() {
         conformanceMode === "dynamic-inherited-child"
     const memoizedInheritedRemovedValueMode =
         conformanceMode === "memoized-inherited-removed-value"
+    const suspenseInheritedChildMode =
+        conformanceMode === "suspense-inherited-child"
     const variantPropagationMode = conformanceMode === "variant-propagation"
     const delayChildrenMode = conformanceMode === "delay-children"
     const variantInheritOptOutMode =
@@ -282,6 +315,7 @@ export function App() {
         useState(1)
     const [memoizedInheritedVisible, setMemoizedInheritedVisible] =
         useState(false)
+    const [suspenseInheritedStarts, setSuspenseInheritedStarts] = useState(0)
     const [visibilityRevealed, setVisibilityRevealed] = useState(false)
     const [unseenPropertyActive, setUnseenPropertyActive] = useState(false)
     const [instantActive, setInstantActive] = useState(false)
@@ -593,6 +627,48 @@ export function App() {
                                     }
                                 >
                                     <MemoizedInheritedRemovedValueChild />
+                                </motion.div>
+                            </div>
+                        </div>
+                    )}
+
+                    {suspenseInheritedChildMode && (
+                        <div
+                            id="example-suspense-inherited-child"
+                            style={conformanceCard}
+                            onClick={() => resolveSuspenseVariantChild?.()}
+                        >
+                            <div style={info}>
+                                <span style={cardTitle}>
+                                    Suspense inherited child
+                                </span>
+                                <span
+                                    id="status-suspense-inherited-child"
+                                    style={code}
+                                >
+                                    {`starts: ${suspenseInheritedStarts}/${SUSPENSE_INHERITED_CHILD_CASE.expected.startCount}`}
+                                </span>
+                            </div>
+                            <div style={demo}>
+                                <motion.div
+                                    initial="hidden"
+                                    animate="visible"
+                                >
+                                    <Suspense
+                                        fallback={
+                                            <span id="fallback-suspense-inherited-child">
+                                                loading
+                                            </span>
+                                        }
+                                    >
+                                        <SuspenseVariantChild
+                                            onStart={() =>
+                                                setSuspenseInheritedStarts(
+                                                    (count) => count + 1
+                                                )
+                                            }
+                                        />
+                                    </Suspense>
                                 </motion.div>
                             </div>
                         </div>

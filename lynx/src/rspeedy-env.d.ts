@@ -19,6 +19,7 @@ declare module '@lynx-js/types' {
       | "inherited-variant-style-fallback"
       | "dynamic-inherited-child"
       | "memoized-inherited-removed-value"
+      | "suspense-inherited-child"
       | "variant-propagation"
       | "delay-children"
       | "variant-inherit-opt-out"

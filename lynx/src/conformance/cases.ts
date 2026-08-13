@@ -1459,6 +1459,32 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         },
     },
     {
+        id: "variants/suspense-inherited-child",
+        category: "Variants",
+        title: "Suspense child enters the inherited variant",
+        summary:
+            "A child that resolves after its parent has started animating still runs its own inherited initial-to-animate transition.",
+        status: "conformant",
+        api: ["variants", "initial", "animate", "Suspense", "lazy loading"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "child inside Suspense boundary should animate from initial variant when parent is already animating"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the Suspense fallback is visible after the parent reaches its animate variant",
+            "resolving the boundary mounts the inherited child",
+            "the child reports its own animation start and settles at visible opacity 1",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: false,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: { visibleOpacity: 1, startCount: 1 },
+    },
+    {
         id: "variants/function-custom",
         category: "Variants",
         title: "Function variant + custom",
@@ -2405,6 +2431,12 @@ export const MEMOIZED_INHERITED_REMOVED_VALUE_CASE = CONFORMANCE_CASES.find(
         visibleX: number
         restoredX: number
     }
+}
+
+export const SUSPENSE_INHERITED_CHILD_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "variants/suspense-inherited-child"
+) as ConformanceCase & {
+    expected: { visibleOpacity: number; startCount: number }
 }
 
 export const FUNCTION_VARIANTS_CASE = CONFORMANCE_CASES.find(
@@ -3745,6 +3777,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "Memoized variant trees are common; ReactLynx only needs to restore portable Motion identity values when inherited ownership removes a key.",
     },
     {
+        caseId: "variants/suspense-inherited-child",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 1,
+        css: 0,
+        rationale:
+            "Lazy-loaded UI is common, ReactLynx officially supports Suspense, and the child reuses existing variant context plus upstream MotionValue execution.",
+    },
+    {
         caseId: "variants/function-custom",
         importance: 3,
         platformFit: 5,
@@ -5033,5 +5075,17 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 7,
         lossAfter: WEIGHTED_LOSS,
         note: "I4/F5/M1/R2/C0 · immutable ed0c9f2 motion/react/react-umd set with matching x-commit-key · before: hidden→visible→hidden left Lynx x at 100 while Web restored x 0; after: inherited removed transforms restore Motion identity without rerendering the memoized child · package declarative 44/44, package full 153/153, focused dual-renderer 1/1, and complete suite 70/70 · native remains unclaimed because the current Rspeedy bundle cannot be decoded by Sandbox Playground SDK 0.0.1 · no Full Demo because this closes ownership semantics rather than a new end-to-end usage pattern.",
+    },
+    {
+        id: "motion-91",
+        date: "2026-08-13",
+        title: "Suspense inherited-child evidence",
+        kind: "evidence",
+        status: "verified",
+        motionPr: 91,
+        caseIds: ["variants/suspense-inherited-child"],
+        lossBefore: 7,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F5/M1/R1/C0 · immutable ed0c9f2 motion/react/react-umd set · a real Suspense boundary first renders fallback, then its asynchronously resolved child reports an inherited animation start and settles at visible opacity 1 in Web and ReactLynx · focused dual-renderer 1/1 and complete suite 71/71 · Sandbox lease endpoint returned no serial and timed out on the bounded retry, so native is unavailable and unclaimed · no Full Demo because this records an already-supported lazy-entry composition rather than newly unblocking a broader pattern.",
     },
 ]

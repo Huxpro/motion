@@ -219,3 +219,13 @@ identity instead of retaining x=100. Hux evidence PR #90 verifies the exact
 hidden→visible→hidden contract against immutable `ed0c9f2`; static child style
 from #3498 still has higher precedence. This is an ownership correction rather
 than a new complete Gallery usage pattern, so it does not add a Full Demo.
+
+Hux evidence PR #91 covers upstream's asynchronous variant-propagation
+contract with a real React/ReactLynx Suspense boundary. The fallback renders
+after the parent starts `visible`; resolving the boundary mounts a child that
+reports its own inherited animation start and settles at opacity 1 on immutable
+`ed0c9f2`. No lynx-stack source diff is required. The Sandbox lease endpoint
+returned no serial and timed out on a bounded retry, so native remains
+unclaimed. This evidence does not add a Full Demo because it confirms an
+already-supported lazy-entry composition rather than unlocking a broader
+presence or orchestration pattern.

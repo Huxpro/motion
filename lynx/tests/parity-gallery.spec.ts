@@ -55,6 +55,7 @@ import {
     SPRING_CASE,
     SPRING_VELOCITY_CASE,
     STYLE_MOTION_VALUE_CASE,
+    SUSPENSE_INHERITED_CHILD_CASE,
     TAP_ANIMATION_LIFECYCLE_CASE,
     TAP_GESTURE_CASE,
     TRANSITION_FROM_CASE,
@@ -2391,6 +2392,54 @@ test("manifest case: a memoized child restores a value removed by its parent var
                         .hiddenOpacity,
                 x: MEMOIZED_INHERITED_REMOVED_VALUE_CASE.expected.restoredX,
             })
+    }
+
+    await Promise.all([lynxPage.close(), webPage.close()])
+})
+
+test("manifest case: a child resolving from Suspense animates the inherited variant", async ({
+    browser,
+}) => {
+    const webPage = await browser.newPage()
+    const lynxPage = await browser.newPage()
+    await lynxPage.addInitScript(() => {
+        localStorage.setItem(
+            "lynx-web-core-global-props",
+            JSON.stringify({ conformanceMode: "suspense-inherited-child" })
+        )
+    })
+    await webPage.goto(
+        "http://localhost:4173/?mode=baseline&case=suspense-inherited-child"
+    )
+    await lynxPage.goto(`http://localhost:3000${previewUrl}`)
+
+    for (const [renderer, page] of [
+        ["Web", webPage],
+        ["Lynx", lynxPage],
+    ] as const) {
+        const card = page.locator("#example-suspense-inherited-child")
+        await expect(
+            page.locator("#fallback-suspense-inherited-child"),
+            `${renderer} fallback`
+        ).toBeVisible()
+        await card.click()
+        const target = page.locator("#target-suspense-inherited-child")
+        await expect(target, `${renderer} child mounted`).toBeVisible()
+        await expect
+            .poll(
+                () =>
+                    target.evaluate((element) =>
+                        Number(getComputedStyle(element).opacity)
+                    ),
+                { message: `${renderer} inherited visible` }
+            )
+            .toBe(SUSPENSE_INHERITED_CHILD_CASE.expected.visibleOpacity)
+        await expect(
+            page.locator("#status-suspense-inherited-child"),
+            `${renderer} lifecycle`
+        ).toHaveText(
+            `starts: ${SUSPENSE_INHERITED_CHILD_CASE.expected.startCount}/${SUSPENSE_INHERITED_CHILD_CASE.expected.startCount}`
+        )
     }
 
     await Promise.all([lynxPage.close(), webPage.close()])
