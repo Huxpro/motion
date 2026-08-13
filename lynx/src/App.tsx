@@ -1,7 +1,7 @@
 import type { CSSProperties } from "@lynx-js/types"
 import type { IntrinsicElements } from "@lynx-js/types"
 import type { MotionStyle } from "@lynx-js/motion"
-import { useState } from "@lynx-js/react"
+import { memo, useState } from "@lynx-js/react"
 import {
     ARRAY_VARIANT_DEFINITION_PARITY_CASE,
     DELAY_CASE,
@@ -22,6 +22,7 @@ import {
     INITIAL_FALSE_PROPAGATION_CASE,
     KEYFRAME_TIMES_CASE,
     KEYFRAMES_CASE,
+    MEMOIZED_INHERITED_REMOVED_VALUE_CASE,
     MOTION_CREATE_CASE,
     NAMED_EASING_CASE,
     NAMED_VARIANTS_CASE,
@@ -181,6 +182,27 @@ function ForwardingView(props: IntrinsicElements["view"]) {
 
 const MotionForwardingView = motion.create(ForwardingView)
 
+const MemoizedInheritedRemovedValueChild = memo(() => (
+    <motion.view
+        id="target-memoized-inherited-removed-value"
+        style={{ ...dot, backgroundColor: "#d3df63" }}
+        variants={{
+            visible: {
+                x: MEMOIZED_INHERITED_REMOVED_VALUE_CASE.expected.visibleX,
+                opacity:
+                    MEMOIZED_INHERITED_REMOVED_VALUE_CASE.expected
+                        .visibleOpacity,
+            },
+            hidden: {
+                opacity:
+                    MEMOIZED_INHERITED_REMOVED_VALUE_CASE.expected
+                        .hiddenOpacity,
+            },
+        }}
+        transition={{ type: false }}
+    />
+))
+
 export function App() {
     const conformanceMode = lynx.__globalProps.conformanceMode
     const isolateTapLifecycle =
@@ -208,6 +230,8 @@ export function App() {
         conformanceMode === "inherited-variant-style-fallback"
     const dynamicInheritedChildMode =
         conformanceMode === "dynamic-inherited-child"
+    const memoizedInheritedRemovedValueMode =
+        conformanceMode === "memoized-inherited-removed-value"
     const variantPropagationMode = conformanceMode === "variant-propagation"
     const delayChildrenMode = conformanceMode === "delay-children"
     const variantInheritOptOutMode =
@@ -257,6 +281,8 @@ export function App() {
         useState(0)
     const [dynamicInheritedChildCount, setDynamicInheritedChildCount] =
         useState(1)
+    const [memoizedInheritedVisible, setMemoizedInheritedVisible] =
+        useState(false)
     const [visibilityRevealed, setVisibilityRevealed] = useState(false)
     const [unseenPropertyActive, setUnseenPropertyActive] = useState(false)
     const [instantActive, setInstantActive] = useState(false)
@@ -537,6 +563,41 @@ export function App() {
                                             )
                                         )}
                                     </motion.view>
+                                </motion.view>
+                            </view>
+                        </view>
+                    )}
+
+                    {memoizedInheritedRemovedValueMode && (
+                        <view
+                            id="example-memoized-inherited-removed-value"
+                            style={conformanceCard}
+                            bindtap={() =>
+                                setMemoizedInheritedVisible((visible) =>
+                                    !visible
+                                )
+                            }
+                        >
+                            <view style={info}>
+                                <text style={cardTitle}>
+                                    Memoized inherited child
+                                </text>
+                                <text style={code}>
+                                    {memoizedInheritedVisible
+                                        ? 'animate="visible"'
+                                        : 'animate="hidden"'}
+                                </text>
+                            </view>
+                            <view style={demo}>
+                                <motion.view
+                                    initial={{ x: 0 }}
+                                    animate={
+                                        memoizedInheritedVisible
+                                            ? "visible"
+                                            : "hidden"
+                                    }
+                                >
+                                    <MemoizedInheritedRemovedValueChild />
                                 </motion.view>
                             </view>
                         </view>

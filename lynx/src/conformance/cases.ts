@@ -1428,6 +1428,37 @@ export const CONFORMANCE_CASES: readonly ConformanceCase[] = [
         expected: { visibleOpacity: 1, visibleX: 100 },
     },
     {
+        id: "variants/memoized-inherited-removed-value",
+        category: "Variants",
+        title: "Memoized child restores an omitted inherited value",
+        summary:
+            "A memoized child restores Motion's identity value when the next inherited variant omits a previously animated transform.",
+        status: "conformant",
+        api: ["variants", "initial", "animate", "inheritance", "memo"],
+        upstream: source(
+            "packages/framer-motion/src/motion/__tests__/variant.test.tsx",
+            "Children correctly animate to removed values even when not rendering along with parents"
+        ),
+        baseline: "framer-motion@13.0.0",
+        assertions: [
+            "the inherited hidden variant begins at opacity 0 and x 0",
+            "the inherited visible variant reaches opacity 1 and x 100",
+            "returning to hidden restores omitted x to Motion's identity value 0 even though the memoized child does not rerender",
+        ],
+        evidence: {
+            gallery: true,
+            packageTest: true,
+            dualRenderer: true,
+            native: false,
+        },
+        expected: {
+            hiddenOpacity: 0,
+            visibleOpacity: 1,
+            visibleX: 100,
+            restoredX: 0,
+        },
+    },
+    {
         id: "variants/function-custom",
         category: "Variants",
         title: "Function variant + custom",
@@ -2363,6 +2394,17 @@ export const DYNAMIC_INHERITED_CHILD_CASE = CONFORMANCE_CASES.find(
     (item) => item.id === "variants/dynamic-inherited-child"
 ) as ConformanceCase & {
     expected: { visibleOpacity: number; visibleX: number }
+}
+
+export const MEMOIZED_INHERITED_REMOVED_VALUE_CASE = CONFORMANCE_CASES.find(
+    (item) => item.id === "variants/memoized-inherited-removed-value"
+) as ConformanceCase & {
+    expected: {
+        hiddenOpacity: number
+        visibleOpacity: number
+        visibleX: number
+        restoredX: number
+    }
 }
 
 export const FUNCTION_VARIANTS_CASE = CONFORMANCE_CASES.find(
@@ -3693,6 +3735,16 @@ export const CONFORMANCE_PRIORITIES: readonly GapPriority[] = [
             "Dynamic list and card insertion is a common Motion pattern that composes through existing ReactLynx context and upstream MotionValue execution.",
     },
     {
+        caseId: "variants/memoized-inherited-removed-value",
+        importance: 4,
+        platformFit: 5,
+        mts: 1,
+        reactLynx: 2,
+        css: 0,
+        rationale:
+            "Memoized variant trees are common; ReactLynx only needs to restore portable Motion identity values when inherited ownership removes a key.",
+    },
+    {
         caseId: "variants/function-custom",
         importance: 3,
         platformFit: 5,
@@ -4968,5 +5020,18 @@ export const CONVERGENCE_HISTORY: readonly ConvergenceRecord[] = [
         lossBefore: 7,
         lossAfter: WEIGHTED_LOSS,
         note: "I5/F5/M1/R1/C0 · immutable cd567e7 motion/react/react-umd set · after the parent settles at visible, a newly mounted child under a neutral Motion wrapper resolves inherited hidden and reaches opacity 1 / x 100 in both renderers · focused dual-renderer 1/1 and complete suite 69/69 · Android Sandbox Playground SDK 0.0.1 created the target session but could not decode the current Rspeedy bundle, so native remains unclaimed · no Full Demo because entry-only insertion does not yet include presence-driven exit.",
+    },
+    {
+        id: "lynx-3499-motion-90",
+        date: "2026-08-13",
+        title: "Restore omitted inherited transforms for memoized children",
+        kind: "capability",
+        status: "verified",
+        lynxStackPr: 3499,
+        motionPr: 90,
+        caseIds: ["variants/memoized-inherited-removed-value"],
+        lossBefore: 7,
+        lossAfter: WEIGHTED_LOSS,
+        note: "I4/F5/M1/R2/C0 · immutable ed0c9f2 motion/react/react-umd set with matching x-commit-key · before: hidden→visible→hidden left Lynx x at 100 while Web restored x 0; after: inherited removed transforms restore Motion identity without rerendering the memoized child · package declarative 44/44, package full 153/153, focused dual-renderer 1/1, and complete suite 70/70 · native remains unclaimed because the current Rspeedy bundle cannot be decoded by Sandbox Playground SDK 0.0.1 · no Full Demo because this closes ownership semantics rather than a new end-to-end usage pattern.",
     },
 ]
