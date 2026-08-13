@@ -136,3 +136,7 @@ Hux evidence PR #74 adds the upstream neutral-wrapper propagation contract
 against the same immutable package set. It needs no lynx-stack source diff:
 variant context already survives intermediate Motion components without an
 `animate` prop.
+
+Hux evidence PR #75 adds the upstream deep `initial={false}` propagation
+contract against the same immutable package set. It needs no lynx-stack source
+diff: the no-mount-animation context already survives a neutral Motion wrapper.

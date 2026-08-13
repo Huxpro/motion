@@ -4,6 +4,7 @@ import type { ComponentPropsWithoutRef } from "react"
 import {
     DELAY_CASE,
     DELAY_CHILDREN_CASE,
+    DEEP_INITIAL_FALSE_PROPAGATION_CASE,
     DEEP_VARIANT_PROPAGATION_CASE,
     DEFAULT_TRANSITION_CASE,
     DISPLAY_REVEAL_CASE,
@@ -194,6 +195,8 @@ export function App() {
         conformanceMode === "inherited-variant-value-update"
     const deepVariantPropagationMode =
         conformanceMode === "deep-variant-propagation"
+    const deepInitialFalsePropagationMode =
+        conformanceMode === "deep-initial-false-propagation"
     const liveX = useMotionValue(STYLE_MOTION_VALUE_CASE.expected.startX)
     let styleMotionValueRenders = 0
     styleMotionValueRenders += 1
@@ -575,6 +578,47 @@ export function App() {
                                                 },
                                             }}
                                             transition={{ type: false }}
+                                        />
+                                    </motion.div>
+                                </motion.div>
+                            </div>
+                        </div>
+                    )}
+
+                    {deepInitialFalsePropagationMode && (
+                        <div
+                            id="example-deep-initial-false-propagation"
+                            style={conformanceCard}
+                        >
+                            <div style={info}>
+                                <span style={cardTitle}>
+                                    Deep initial=false
+                                </span>
+                                <span style={code}>first frame: visible</span>
+                            </div>
+                            <div style={demo}>
+                                <motion.div
+                                    initial={false}
+                                    animate="visible"
+                                >
+                                    <motion.div>
+                                        <motion.div
+                                            id="target-deep-initial-false-propagation"
+                                            style={{
+                                                ...dot,
+                                                backgroundColor: "#d3df63",
+                                            }}
+                                            variants={{
+                                                hidden: { opacity: 0, x: -24 },
+                                                visible: {
+                                                    opacity:
+                                                        DEEP_INITIAL_FALSE_PROPAGATION_CASE
+                                                            .expected.opacity,
+                                                    x: DEEP_INITIAL_FALSE_PROPAGATION_CASE
+                                                        .expected.x,
+                                                },
+                                            }}
+                                            transition={{ duration: 0.4 }}
                                         />
                                     </motion.div>
                                 </motion.div>
