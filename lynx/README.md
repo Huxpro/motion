@@ -38,8 +38,9 @@ by validation-only [lynx-stack#3491](https://github.com/lynx-family/lynx-stack/p
 the complete suite passes 74/74 source-linked behaviors. Capability ownership
 for that immutable evidence remains with the historical atomic stack rather
 than the validation rollup. Current review topology is now
-`main → #3477 → #3509 → #3515…#3524`; the Overview monitor lists every layer's
-remote state, confidence, evidence gate, and superseded PR. Published metrics
+`main → #3477 → #3509 → #3515…#3524`, summarized in the portal's Overview
+header; the full per-layer review state lives in
+[`docs/atomic-pr-stack.md`](./docs/atomic-pr-stack.md). Published metrics
 stay pinned until this canonical stack produces a matching immutable preview.
 
 The Web reference in `web-reference/` is pinned to the same upstream Motion
