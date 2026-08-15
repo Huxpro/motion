@@ -399,7 +399,9 @@ button {
     height: 3px;
     display: block;
     background: var(--accent);
-}.validation-gates {
+}
+
+.validation-gates {
     border-bottom: 1px solid var(--border);
 }
 

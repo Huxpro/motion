@@ -127,7 +127,7 @@ export const CANONICAL_STACK: readonly CanonicalStackLayer[] = [
         confidence: "very-confident",
         assessment: "ready",
         enables: "Typed main-thread object identity, hydration, and disposal",
-        validation: "Core build, type and runtime CI green; Motion stack 132/132",
+        validation: "Core CI green across Linux, Windows, Rust, Vitest and Android",
         caveat: "Author-owned fork PR; ready recommendation, PR remains draft.",
     },
     {
@@ -135,12 +135,12 @@ export const CANONICAL_STACK: readonly CanonicalStackLayer[] = [
         title: "Declarative Motion foundation",
         role: "foundation",
         prState: "draft",
-        confidence: "very-confident",
-        assessment: "ready",
+        confidence: "ok",
+        assessment: "iterate",
         enables: "motion.* components, variants, MotionValue, tap and hover",
-        validation: "Ubuntu/Windows, type, React, Vitest and Android CI green",
+        validation: "Full repository CI green after unrelated Web coverage rerun",
         supersedes: [3436, 3474, 3491],
-        caveat: "True Git base on #3477; fork PR cannot join GitHub Stack UI.",
+        caveat: "True Git base on #3477; completion ownership still needs review.",
     },
     {
         pr: 3515,
@@ -150,7 +150,7 @@ export const CANONICAL_STACK: readonly CanonicalStackLayer[] = [
         confidence: "very-confident",
         assessment: "ready",
         enables: "Skip mount animation and render the final animate target",
-        validation: "Focused package tests; full stack 132/132 + TypeScript",
+        validation: "Focused package tests; full stack 134/134 + TypeScript",
         supersedes: [3457],
     },
     {
@@ -161,7 +161,7 @@ export const CANONICAL_STACK: readonly CanonicalStackLayer[] = [
         confidence: "very-confident",
         assessment: "ready",
         enables: "MotionValue in CSS properties and transform aliases",
-        validation: "Compile-time coverage; full stack 132/132 + TypeScript",
+        validation: "Compile-time coverage; full stack 134/134 + TypeScript",
         supersedes: [3458],
     },
     {
@@ -172,7 +172,7 @@ export const CANONICAL_STACK: readonly CanonicalStackLayer[] = [
         confidence: "very-confident",
         assessment: "ready",
         enables: "Independent transition.opacity, transition.x, and fallback",
-        validation: "Routing and hydration tests; full stack 132/132",
+        validation: "Routing and hydration tests; full stack 134/134",
         supersedes: [3459],
     },
     {
@@ -183,7 +183,7 @@ export const CANONICAL_STACK: readonly CanonicalStackLayer[] = [
         confidence: "very-confident",
         assessment: "ready",
         enables: "Restore style/initial ownership when animate drops a key",
-        validation: "Ownership regression tests; full stack 132/132",
+        validation: "Ownership regression tests; full stack 134/134",
         supersedes: [3489],
     },
     {
@@ -194,7 +194,7 @@ export const CANONICAL_STACK: readonly CanonicalStackLayer[] = [
         confidence: "very-confident",
         assessment: "ready",
         enables: "Apply final discrete styles after the owning animation",
-        validation: "Animated, instant and stale-completion tests; 132/132",
+        validation: "Animated, instant and stale-completion tests; 134/134",
         supersedes: [3462],
     },
     {
@@ -205,7 +205,7 @@ export const CANONICAL_STACK: readonly CanonicalStackLayer[] = [
         confidence: "very-confident",
         assessment: "ready",
         enables: "Suppress completion callbacks after component teardown",
-        validation: "MTS binding + cancellation regression; 132/132",
+        validation: "MTS binding + cancellation regression; 134/134",
         supersedes: [3463],
     },
     {
@@ -216,7 +216,7 @@ export const CANONICAL_STACK: readonly CanonicalStackLayer[] = [
         confidence: "very-confident",
         assessment: "ready",
         enables: "display/visibility exits without a Lynx compatibility shim",
-        validation: "Zero-code platform-fit proof; full stack 132/132",
+        validation: "Zero-code platform-fit proof; full stack 134/134",
         supersedes: [3465],
     },
     {
@@ -227,7 +227,7 @@ export const CANONICAL_STACK: readonly CanonicalStackLayer[] = [
         confidence: "very-confident",
         assessment: "ready",
         enables: "Animate and type --* targets through the existing style PAPI",
-        validation: "Static, animated and type coverage; full stack 132/132",
+        validation: "Static, animated and type coverage; full stack 134/134",
         supersedes: [3466],
         caveat: "Native var() consumption remains separately tracked in issue #57.",
     },
@@ -239,9 +239,9 @@ export const CANONICAL_STACK: readonly CanonicalStackLayer[] = [
         confidence: "ok",
         assessment: "iterate",
         enables: "Tap-driven onAnimationStart/onAnimationComplete",
-        validation: "Package 132/132; headless press/release lifecycle passes",
+        validation: "Package 134/134; tap start, settle and restoration covered",
         supersedes: [3483],
-        caveat: "Cross-thread completion and interruption ownership need review.",
+        caveat: "Completion/cancellation acceptance and native proof remain open.",
     },
     {
         pr: 3524,
@@ -251,9 +251,9 @@ export const CANONICAL_STACK: readonly CanonicalStackLayer[] = [
         confidence: "ok",
         assessment: "iterate",
         enables: "Hover lifecycle plus an observable gesture probe",
-        validation: "Headless idle→hover→press→release→leave: 5/5",
+        validation: "Package 134/134; hover entry, settle and restoration covered",
         supersedes: [3484],
-        caveat: "Pointer-only semantics; native proof awaits a current host SDK.",
+        caveat: "Completion/interruption and global-pointer native proof remain open.",
     },
 ]
 

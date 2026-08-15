@@ -4287,7 +4287,7 @@ test("evidence portal exposes examples, API inventory, and conformance metrics",
     ).toBeVisible()
     await expect(page.locator(".monitor-metric")).toHaveCount(6)
     await expect(page.locator(".validation-grid article")).toHaveCount(3)
-    await expect(page.locator(".validation-grid")).toContainText("132 / 132")
+    await expect(page.locator(".validation-grid")).toContainText("134 / 134")
     await expect(page.locator(".validation-grid")).toContainText("5 / 5")
     await expect(page.locator(".validation-grid")).toContainText("SDK 0.0.1")
     // The canonical-stack table was retired from the site; its one-line
