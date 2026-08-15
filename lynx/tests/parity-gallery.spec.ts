@@ -4,7 +4,6 @@ import {
     API_METRICS,
     ARRAY_VARIANT_DEFINITION_PARITY_CASE,
     BEFORE_CHILDREN_CASE,
-    CANONICAL_STACK,
     COLOR_HSLA_RGBA_CASE,
     COLOR_KEYFRAMES_CASE,
     COMPLEX_GRADIENT_CASE,
@@ -4291,15 +4290,10 @@ test("evidence portal exposes examples, API inventory, and conformance metrics",
     await expect(page.locator(".validation-grid")).toContainText("134 / 134")
     await expect(page.locator(".validation-grid")).toContainText("5 / 5")
     await expect(page.locator(".validation-grid")).toContainText("SDK 0.0.1")
-    await expect(page.locator(".stack-row:not(.stack-row-head)")).toHaveCount(
-        CANONICAL_STACK.length
-    )
-    await expect(page.locator(".stack-monitor")).toContainText("#3477")
-    await expect(page.locator(".stack-monitor")).toContainText("#3524")
-    await expect(page.locator(".stack-state-ready")).toHaveCount(8)
-    await expect(page.locator(".stack-state-draft")).toHaveCount(4)
-    await expect(page.locator(".stack-confidence-ok")).toHaveCount(3)
-    await expect(page.locator(".stack-confidence-dirty-hacky")).toHaveCount(0)
+    // The canonical-stack table was retired from the site; its one-line
+    // topology summary in the header is the only remaining mention.
+    await expect(page.locator(".stack-monitor")).toHaveCount(0)
+    await expect(page.locator(".monitor-title")).toContainText("#3477")
     await expect(
         page.locator(".capability-row:not(.capability-row-head)")
     ).toHaveCount(7)
@@ -4322,7 +4316,7 @@ test("evidence portal exposes examples, API inventory, and conformance metrics",
         Math.min(4, CONVERGENCE_HISTORY.length)
     )
     await page.locator(".recent-step a").first().click()
-    await expect(page).toHaveURL(/view=conformance#rec-/)
+    await expect(page).toHaveURL(/sub=history#rec-/)
     await expect(
         page.locator(".convergence-ledger li.row-targeted")
     ).toBeInViewport()
@@ -4338,12 +4332,12 @@ test("evidence portal exposes examples, API inventory, and conformance metrics",
     ).toBeGreaterThan(10)
 
     await page.getByRole("link", { name: "Conformance" }).click()
+    // Contracts and convergence history are separate sub-views now.
+    await expect(page.locator(".sub-nav a")).toHaveCount(2)
     await expect(page.locator(".case-row")).toHaveCount(
         CONFORMANCE_METRICS.tracked
     )
-    await expect(page.locator(".convergence-ledger li")).toHaveCount(
-        CONVERGENCE_HISTORY.length
-    )
+    await expect(page.locator(".convergence-ledger")).toHaveCount(0)
     await expect(page.locator(".case-evidence")).toHaveCount(
         CONFORMANCE_METRICS.tracked
     )
@@ -4354,17 +4348,21 @@ test("evidence portal exposes examples, API inventory, and conformance metrics",
             )
             .count()
     ).toBeGreaterThan(0)
+    await page.locator(".sub-nav a").nth(1).click()
+    await expect(page.locator(".convergence-ledger li")).toHaveCount(
+        CONVERGENCE_HISTORY.length
+    )
+    await expect(page.locator(".case-row")).toHaveCount(0)
 
     await page.getByRole("link", { name: "Examples" }).click()
+    await expect(page.locator(".scenario-rail")).toBeVisible()
     await expect(page.locator(".scenario-row")).toHaveCount(
         GALLERY_EXAMPLES.length
     )
     await expect(page.locator("iframe")).toHaveCount(2)
     await expect(page.locator(".compare-toolbar")).toBeVisible()
     await expect(page.locator(".compare-status")).toBeVisible()
-    await expect(page.locator(".scenario-run")).toHaveCount(
-        GALLERY_EXAMPLES.length
-    )
+    await expect(page.locator(".scenario-picker")).toHaveCount(1)
 })
 
 test("evidence portal renders the Chinese locale and keeps it across views", async ({
@@ -4397,8 +4395,18 @@ test("evidence portal keeps every view usable at mobile width", async ({
 }) => {
     await page.setViewportSize({ width: 390, height: 844 })
 
-    for (const view of ["overview", "examples", "api", "conformance"]) {
-        await page.goto(`http://localhost:4173/?view=${view}`)
+    for (const view of [
+        "overview",
+        "examples",
+        "api",
+        "conformance",
+        "conformance&sub=history",
+    ]) {
+        // domcontentloaded: layout checks must not wait on the embedded
+        // panes (the dev Lynx iframe can take >30s on a cold compile).
+        await page.goto(`http://localhost:4173/?view=${view}`, {
+            waitUntil: "domcontentloaded",
+        })
         await expect(page.locator("main")).toBeVisible()
         const undersizedText = await page.evaluate(() =>
             Array.from(document.querySelectorAll("body *"))

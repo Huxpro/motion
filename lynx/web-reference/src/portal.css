@@ -401,122 +401,6 @@ button {
     background: var(--accent);
 }
 
-.stack-monitor {
-    border-bottom: 1px solid var(--border);
-}
-
-.stack-header {
-    padding-right: 0;
-    padding-left: 0;
-}
-
-.stack-header > div {
-    max-width: 760px;
-}
-
-.stack-header p {
-    margin: 8px 0 0;
-    color: var(--foreground-feint);
-    font-size: 0.9375rem;
-    line-height: 1.55;
-}
-
-.stack-header > span {
-    color: var(--foreground-feint);
-    font-size: 0.9375rem;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.stack-table {
-    overflow-x: auto;
-}
-
-.stack-row {
-    min-width: 960px;
-    min-height: 74px;
-    display: grid;
-    grid-template-columns: 74px minmax(330px, 1.4fr) 86px 132px minmax(230px, 1fr);
-    align-items: center;
-    gap: 18px;
-    border-bottom: 1px solid var(--border);
-}
-
-.stack-row:last-child {
-    border-bottom: 0;
-}
-
-.stack-row-head {
-    min-height: 42px;
-    color: var(--foreground-feint);
-    font: 700 0.875rem var(--font-mono);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-
-.stack-row > a {
-    color: var(--accent);
-    font: 700 0.875rem var(--font-mono);
-    text-underline-offset: 3px;
-}
-
-.stack-layer {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    padding: 13px 0;
-}
-
-.stack-layer strong {
-    font-size: 1rem;
-    line-height: 1.3;
-}
-
-.stack-layer span,
-.stack-validation {
-    color: var(--foreground-feint);
-    font-size: 0.875rem;
-    line-height: 1.45;
-}
-
-.stack-layer small {
-    color: color-mix(in oklch, var(--foreground-feint) 82%, var(--accent));
-    font-size: 0.875rem;
-    line-height: 1.45;
-}
-
-.stack-state,
-.stack-confidence {
-    font-size: 0.875rem;
-    font-weight: 700;
-    line-height: 1.35;
-}
-
-.stack-meta {
-    display: contents;
-}
-
-.stack-state small,
-.stack-confidence small,
-.stack-validation small {
-    display: none;
-}
-
-.stack-state-ready,
-.stack-confidence-very-confident {
-    color: var(--supported);
-}
-
-.stack-state-draft,
-.stack-confidence-ok {
-    color: var(--partial);
-}
-
-.stack-confidence-dirty-hacky {
-    color: var(--blocked);
-}
-
 .validation-gates {
     border-bottom: 1px solid var(--border);
 }
@@ -1112,31 +996,6 @@ button {
     font-weight: 700;
 }
 
-.scenario-index > * {
-    min-width: 0;
-}
-
-.section-heading {
-    padding: 72px clamp(28px, 5vw, 64px) 72px 0;
-}
-
-.section-heading h2 {
-    max-width: 500px;
-    margin: 0;
-    font-size: clamp(2rem, 4vw, 3.5rem);
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: -0.045em;
-}
-
-.section-heading > p:last-child {
-    max-width: 470px;
-    margin: 24px 0 0;
-    color: var(--foreground-feint);
-    font-size: 1rem;
-    line-height: 1.6;
-}
-
 .page-intro {
     position: relative;
     min-height: 200px;
@@ -1253,6 +1112,10 @@ button {
     background: var(--partial);
 }
 
+.compare-status em {
+    font-style: normal;
+}
+
 .compare-status-linked i {
     background: var(--supported);
 }
@@ -1261,8 +1124,36 @@ button {
     background: var(--border);
 }
 
+/* Desktop: the config wrapper is layout-transparent; the disclosure
+   toggle only exists on small screens. */
+.compare-config {
+    display: contents;
+}
+
+.config-toggle {
+    display: none;
+    min-width: 44px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    background: transparent;
+    cursor: pointer;
+    color: var(--foreground-feint);
+    font-size: 1rem;
+}
+
+.config-toggle.toggle-active,
+.config-toggle:hover,
+.config-toggle:focus-visible {
+    border-color: var(--accent);
+    color: var(--foreground);
+    outline: none;
+}
+
 .compare-stage {
-    height: max(560px, calc(100vh - 220px));
+    min-height: 0;
+    height: 100%;
     scroll-margin-top: 96px;
 }
 
@@ -1270,7 +1161,6 @@ button {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1px;
-    padding: 1px 0;
     background: var(--border);
 }
 
@@ -1402,35 +1292,6 @@ button {
     pointer-events: none;
 }
 
-.scenario-index {
-    display: grid;
-    grid-template-columns: minmax(260px, 0.58fr) minmax(0, 1.42fr);
-    border-top: 1px solid var(--border);
-}
-
-.compact-heading {
-    padding-top: 48px;
-}
-
-.scenario-list {
-    border-left: 1px solid var(--border);
-}
-
-.scenario-row {
-    min-height: 112px;
-    display: grid;
-    grid-template-columns: 44px minmax(190px, 0.8fr) minmax(210px, 1fr) auto;
-    align-items: center;
-    gap: 20px;
-    padding: 18px 24px;
-    border-bottom: 1px solid var(--border);
-    transition: background 120ms var(--ease-out);
-}
-
-.scenario-row:hover {
-    background: var(--layer);
-}
-
 .scenario-number,
 .case-index {
     color: var(--accent);
@@ -1438,23 +1299,9 @@ button {
     letter-spacing: 0.04em;
 }
 
-.scenario-row h3 {
-    margin: 0 0 7px;
-    font-size: 1.125rem;
-    font-weight: 700;
-    line-height: 1.15;
-}
-
-.scenario-row p {
-    margin: 0;
-    color: var(--foreground-feint);
-    font-size: 0.875rem;
-    line-height: 1.55;
-}
-
-.scenario-row code,
 .matrix-row code,
-.case-main .api-chips {
+.case-main .api-chips,
+.scenario-copy .api-chips {
     color: var(--accent);
     font: 500 0.8125rem/1.5 var(--font-mono);
     overflow-wrap: anywhere;
@@ -1471,37 +1318,147 @@ button {
     text-decoration-color: currentColor;
 }
 
-.scenario-actions {
+/* Examples app shell: toolbar on top, scenario rail + stage below. */
+.page.examples-app {
+    width: 100%;
+    height: calc(100dvh - 80px);
+    min-height: 560px;
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    gap: 10px;
 }
 
-.scenario-run {
-    min-height: 44px;
-    padding: 0 14px;
-    border: 1px solid var(--accent);
+.examples-app .compare-toolbar {
+    flex: 0 0 auto;
+    padding: 10px var(--page-gutter);
+}
+
+.compare-title {
+    margin: 0 8px 0 0;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+}
+
+.compare-shell {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(250px, 320px) minmax(0, 1fr);
+}
+
+.scenario-rail {
+    min-height: 0;
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+}
+
+.scenario-rail-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 14px 18px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--background);
+}
+
+.scenario-rail-header h2 {
+    margin: 0;
+    color: var(--foreground-feint);
+    font: 700 0.75rem var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.scenario-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.scenario-row {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 26px minmax(0, 1fr) 9px;
+    align-items: baseline;
+    gap: 10px;
+    padding: 13px 18px;
+    border: 0;
+    border-bottom: 1px solid var(--border);
     background: transparent;
     cursor: pointer;
-    color: var(--accent);
-    font: 700 0.75rem var(--font-mono);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    transition: background 120ms var(--ease-out), color 120ms var(--ease-out);
+    color: var(--foreground);
+    font: inherit;
+    text-align: left;
+    transition: background 120ms var(--ease-out);
 }
 
-.scenario-run:hover:not(:disabled),
-.scenario-run:focus-visible {
-    background: var(--accent);
-    color: var(--on-accent);
+.scenario-row:hover:not(:disabled),
+.scenario-row:focus-visible {
+    background: var(--layer);
     outline: none;
 }
 
-.scenario-run:disabled {
-    border-color: var(--border);
-    color: var(--foreground-feint);
+.scenario-row:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.scenario-row:disabled {
     cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.scenario-active,
+.scenario-row.scenario-active:hover {
+    background: var(--layer);
+    box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.scenario-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.scenario-copy strong {
+    font-size: 0.875rem;
+    line-height: 1.3;
+}
+
+.scenario-summary {
+    color: var(--foreground-feint);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+}
+
+.evidence-dot {
+    width: 7px;
+    height: 7px;
+    display: block;
+    align-self: center;
+}
+
+.evidence-dot.evidence-dual-renderer {
+    background: var(--supported);
+}
+
+.evidence-dot.evidence-lynx-e2e {
+    background: var(--partial);
+}
+
+.scenario-picker {
+    display: none;
+    min-height: 44px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    background: var(--background);
+    color: var(--foreground);
+    font: 600 0.8125rem var(--font-mono);
+}
+
+.scenario-picker:disabled {
+    color: var(--foreground-feint);
     opacity: 0.55;
 }
 
@@ -1744,6 +1701,57 @@ button {
     color: var(--foreground-feint);
 }
 
+.sub-nav {
+    display: flex;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.sub-nav a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 0 18px;
+    border: 1px solid var(--border);
+    border-right: 0;
+    color: var(--foreground-feint);
+    font: 700 0.8125rem var(--font-mono);
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: color 120ms var(--ease-out), background 120ms var(--ease-out);
+}
+
+.sub-nav a:last-child {
+    border-right: 1px solid var(--border);
+}
+
+.sub-nav a b {
+    font-weight: 500;
+    opacity: 0.75;
+    font-variant-numeric: tabular-nums;
+}
+
+.sub-nav a:hover,
+.sub-nav a:focus-visible {
+    color: var(--foreground);
+    outline: none;
+}
+
+.sub-nav a:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.sub-nav .sub-nav-active {
+    background: var(--accent);
+    color: var(--on-accent);
+}
+
+.sub-nav .sub-nav-active b {
+    opacity: 1;
+}
+
 .case-row {
     display: grid;
     grid-template-columns: 64px minmax(0, 1fr) 180px;
@@ -1930,7 +1938,6 @@ button {
         grid-row: 1;
     }
 
-    .scenario-index,
     .matrix-group {
         grid-template-columns: 1fr;
     }
@@ -1976,19 +1983,27 @@ button {
         grid-column: 2;
     }
 
-    .scenario-list,
     .matrix-table {
         border-top: 1px solid var(--border);
         border-left: 0;
     }
 
-    .compare-split {
-        height: auto;
+    .compare-shell {
         grid-template-columns: 1fr;
     }
 
-    .compare-split .runtime-frame {
-        height: min(640px, 72vh);
+    .scenario-rail {
+        display: none;
+    }
+
+    .scenario-picker {
+        display: block;
+        flex: 1 1 100%;
+    }
+
+    .compare-split {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr;
     }
 
     .compare-status {
@@ -2114,70 +2129,6 @@ button {
         grid-template-columns: 1fr;
     }
 
-    .stack-header > span {
-        white-space: normal;
-    }
-
-    .stack-row {
-        min-width: 0;
-        grid-template-columns: 58px minmax(0, 1fr);
-        gap: 8px 14px;
-        padding: 18px 0;
-        align-items: start;
-    }
-
-    .stack-row-head {
-        display: none;
-    }
-
-    .stack-row > a {
-        grid-column: 1;
-        grid-row: 1;
-        padding-top: 2px;
-    }
-
-    .stack-layer {
-        grid-column: 2;
-        grid-row: 1;
-        padding: 0;
-    }
-
-    .stack-meta {
-        grid-column: 2;
-        grid-row: 2;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px 18px;
-        padding-top: 3px;
-    }
-
-    .stack-state,
-    .stack-confidence {
-        display: inline-flex;
-        gap: 6px;
-        align-items: baseline;
-        font-size: 0.875rem;
-    }
-
-    .stack-state small,
-    .stack-confidence small,
-    .stack-validation small {
-        display: inline;
-        color: var(--foreground-feint);
-        font: 600 0.75rem var(--font-mono);
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-    }
-
-    .stack-validation {
-        grid-column: 2;
-        grid-row: 3;
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-        padding-top: 3px;
-        font-size: 0.875rem;
-    }
 
     .validation-grid article,
     .validation-grid article:first-child {
@@ -2215,7 +2166,12 @@ button {
         padding: 0;
     }
 
+    /* Sparkline mode: keep the loss curve, shed the label layer. */
     .loss-chart-wrap {
+        padding: 16px 0 6px;
+    }
+
+    .loss-chart text {
         display: none;
     }
 
@@ -2262,10 +2218,6 @@ button {
         overflow-wrap: anywhere;
     }
 
-    .section-heading {
-        padding: 56px 0;
-    }
-
     .coverage-ledger {
         grid-template-columns: 1fr;
     }
@@ -2283,28 +2235,83 @@ button {
         display: none;
     }
 
-    .compare-stage {
-        height: max(480px, calc(100vh - 300px));
+    /* App mode: full-bleed, and one viewport tall once the masthead is
+       scrolled away. The toolbar collapses to a single sticky row —
+       scenario picker, config disclosure, link-status dot — with the
+       layout/sync controls in a dropdown panel. */
+    .page.examples-app {
+        width: 100%;
+        height: 100dvh;
+        min-height: 480px;
     }
 
-    .compare-split .runtime-frame {
-        height: min(560px, 64vh);
+    .examples-app .compare-toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 16;
+        flex-wrap: nowrap;
+        padding: 8px 12px;
+        gap: 8px;
+        background: color-mix(in oklch, var(--background) 94%, transparent);
+        backdrop-filter: blur(12px);
     }
 
-    .scenario-row {
-        grid-template-columns: 32px 1fr;
-        align-items: start;
+    .compare-title {
+        display: none;
     }
 
-    .scenario-row .api-chips,
-    .scenario-row .scenario-actions {
-        grid-column: 2;
+    .scenario-picker {
+        flex: 1 1 auto;
+        min-width: 0;
     }
 
-    .scenario-actions {
-        align-items: center;
-        flex-direction: row;
-        justify-content: space-between;
+    .config-toggle {
+        display: inline-flex;
+        flex: 0 0 auto;
+    }
+
+    .compare-status {
+        flex: 0 0 auto;
+        margin-left: 0;
+        padding: 0 4px;
+    }
+
+    .compare-status em {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        clip-path: inset(50%);
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .compare-config {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        left: 0;
+        z-index: 15;
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px;
+        border-bottom: 1px solid var(--border);
+        background: var(--background);
+        box-shadow: 0 18px 30px rgb(0 0 0 / 45%);
+    }
+
+    .compare-config.config-open {
+        display: flex;
+    }
+
+    .compare-config .compare-modes,
+    .compare-config .compare-switches {
+        flex-wrap: wrap;
+    }
+
+    .compare-config button {
+        flex: 1 1 auto;
     }
 
     .filter-bar {

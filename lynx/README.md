@@ -38,8 +38,9 @@ by validation-only [lynx-stack#3491](https://github.com/lynx-family/lynx-stack/p
 the complete suite passes 74/74 source-linked behaviors. Capability ownership
 for that immutable evidence remains with the historical atomic stack rather
 than the validation rollup. Current review topology is now
-`main → #3477 → #3509 → #3515…#3524`; the Overview monitor lists every layer's
-remote state, confidence, evidence gate, and superseded PR. Published metrics
+`main → #3477 → #3509 → #3515…#3524`, summarized in the portal's Overview
+header; the full per-layer review state lives in
+[`docs/atomic-pr-stack.md`](./docs/atomic-pr-stack.md). Published metrics
 stay pinned until this canonical stack produces a matching immutable preview.
 
 The Web reference in `web-reference/` is pinned to the same upstream Motion
@@ -48,23 +49,27 @@ major as the lynx-stack preview package.
 ## Evidence portal
 
 `npm run build:evidence` assembles a local static site in `evidence-dist/` and
-refreshes the existing Vercel artifact at `dev/html/motion-lynx-demo/`. The
-repository-level config can publish the local output; the established
-`dev/html/vercel.json` project serves the committed artifact. Both apply the
-cross-origin isolation headers required by Lynx for Web. Every PR preview
-exposes four shareable views:
+refreshes the committed evidence snapshot at `dev/html/motion-lynx-demo/`.
+One Vercel project (`motion-lynx`) deploys previews: the repository-level
+`vercel.json` builds the portal from source on every push and publishes
+`lynx/evidence-dist/` with the cross-origin isolation headers required by
+Lynx for Web. The committed snapshot stays in the repository as reviewable
+evidence but is not deployed separately. Every PR preview exposes four
+shareable views:
 
-- `/?view=overview` — current verdict, metrics, and the weighted-loss chart;
-  every chart point and the latest-steps strip beneath it deep-link into the
-  convergence ledger on the Conformance view;
-- `/?view=examples` — live Web and ReactLynx galleries with synchronized
-  scrolling, mirrored taps, a dual-runtime "run both" trigger per scenario,
-  and an overlay slider layout for small screens;
+- `/?view=overview` — current verdict, metrics, and the weighted-loss chart
+  (a label-free sparkline on small screens); every chart point and the
+  latest-steps strip beneath it deep-link into the convergence ledger;
+- `/?view=examples` — an app-shell comparison: a scenario rail (desktop) or
+  scenario picker (mobile) drives full-height Web and ReactLynx panes with
+  synchronized scrolling, mirrored taps, dual-runtime scenario triggers,
+  and an overlay slider layout that goes edge-to-edge on small screens;
 - `/?view=api` — filterable atomic API support/boundary matrix, with each
   API linked to its Motion.dev documentation page; and
-- `/?view=conformance` — the convergence ledger plus upstream source paths
-  (linked to `motiondivision/motion` at the pinned version), test names,
-  acceptance criteria, and per-case evidence marks.
+- `/?view=conformance` — two sub-views: tracked contracts (upstream source
+  paths linked to `motiondivision/motion` at the pinned version, test
+  names, acceptance criteria, per-case evidence marks) and the convergence
+  history ledger (`?sub=history`).
 
 Every view is available in English and Simplified Chinese via the `lang`
 query parameter (persisted to `localStorage`); the masthead carries the
@@ -151,3 +156,6 @@ The main long-term reuse boundary is:
 See `docs/web-mts-crossmodule-bug.md` for the historical runtime failures that
 made the original local fallback necessary and how the lynx-stack work now
 avoids them.
+
+Preview deployments are published by the `motion-lynx` Vercel project from
+the repository-level `vercel.json`.

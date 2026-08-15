@@ -65,36 +65,6 @@ const STRINGS = {
         en: "Upstream source 12.40.0 · Web baseline 13.0.0",
         zh: "上游源码 12.40.0 · Web 基线 13.0.0",
     },
-    "stack.title": { en: "Canonical review stack", zh: "当前标准审查栈" },
-    "stack.desc": {
-        en: "Operational snapshot: what each PR enables, whether it is actually ready or draft, the confidence assessment, and the evidence behind that decision. Historical loss records keep their original PR provenance below.",
-        zh: "当前操作快照：每个 PR 启用了什么、远端实际为 Ready 还是 Draft、信心判断及其证据。下方历史损失记录继续保留原始 PR 来源。",
-    },
-    "stack.summary": {
-        en: "{0} recommended ready · {1} iteration layers",
-        zh: "{0} 个建议可审查 · {1} 层待优化",
-    },
-    "stack.tableLabel": {
-        en: "Canonical Motion conformance pull request stack",
-        zh: "Motion 一致性标准 PR 栈",
-    },
-    "stack.pr": { en: "PR", zh: "PR" },
-    "stack.layer": { en: "Capability / usage pattern", zh: "能力 / 使用模式" },
-    "stack.state": { en: "Remote state", zh: "远端状态" },
-    "stack.confidence": { en: "Assessment", zh: "判断" },
-    "stack.evidence": { en: "Evidence gate", zh: "证据关卡" },
-    "stack.supersedes": { en: "Supersedes", zh: "替代" },
-    "stack.state.ready": { en: "Ready", zh: "Ready" },
-    "stack.state.draft": { en: "Draft", zh: "Draft" },
-    "stack.confidence.very-confident": {
-        en: "Very confident",
-        zh: "非常有信心",
-    },
-    "stack.confidence.ok": { en: "OK · iterate", zh: "尚可 · 继续优化" },
-    "stack.confidence.dirty-hacky": {
-        en: "Dirty / hacky",
-        zh: "脏 / 临时方案",
-    },
     "overview.metricsLabel": {
         en: "Current progress metrics",
         zh: "当前进度指标",
@@ -200,11 +170,7 @@ const STRINGS = {
     },
     "showoff.cta": { en: "Open Web / Lynx Gallery →", zh: "打开 Web / Lynx 画廊 →" },
 
-    "examples.title": { en: "Compare Web and Lynx.", zh: "对比 Web 与 Lynx。" },
-    "examples.desc": {
-        en: "The Web pane runs the locked upstream baseline; the Lynx pane runs immutable preview 013e20e through Lynx for Web. Scrolling and taps can drive both panes at once.",
-        zh: "Web 栏运行锁定的上游基线；Lynx 栏通过 Lynx for Web 运行不可变预览 013e20e。滚动与点按可同时驱动两栏。",
-    },
+    "examples.title": { en: "Web ⇄ Lynx", zh: "Web ⇄ Lynx" },
     "examples.sectionLabel": {
         en: "Web and Lynx live examples",
         zh: "Web 与 Lynx 实时示例",
@@ -234,16 +200,20 @@ const STRINGS = {
         en: "Drag to reveal · Lynx ⇄ Web",
         zh: "拖动对比 · Lynx ⇄ Web",
     },
+    "compare.config": { en: "Comparison controls", zh: "对比设置" },
 
-    "scenarios.title": { en: "{0} executable combinations", zh: "{0} 个可执行组合" },
-    "scenarios.desc": {
-        en: "Human-facing compositions. Exact upstream coverage is tracked in Conformance.",
-        zh: "面向人工审阅的组合场景。精确上游覆盖见一致性页。",
-    },
-    "scenarios.run": { en: "Run both ▶", zh: "双端运行 ▶" },
+    "scenarios.title": { en: "Scenarios · {0}", zh: "场景 · {0}" },
     "scenarios.runLabel": {
         en: "Scroll both panes to {0} and trigger it",
         zh: "滚动双栏到 {0} 并触发",
+    },
+    "scenarios.pickerLabel": {
+        en: "Jump to a scenario and run it in both panes",
+        zh: "跳转场景并在双栏运行",
+    },
+    "scenarios.pickerPlaceholder": {
+        en: "Run a scenario… ({0})",
+        zh: "运行场景…（{0}）",
     },
 
     "api.title": { en: "Supported API surface.", zh: "受支持的 API 面。" },
@@ -273,6 +243,7 @@ const STRINGS = {
         en: "This denominator is a source-linked declarative slice selected for Lynx convergence. It is deliberately not presented as coverage of Motion's entire upstream test suite.",
         zh: "该分母是为 Lynx 收敛选取的、与源码关联的声明式子集，特意不宣称覆盖 Motion 上游全部测试套件。",
     },
+    "conformance.tabContracts": { en: "Tracked contracts", zh: "跟踪契约" },
     "conformance.historyTitle": { en: "Convergence history", zh: "收敛历史" },
     "conformance.historyDesc": {
         en: "Each row records the PR state and weighted loss at that point in time. Current review state is listed on the Overview; the loss chart is unchanged by a topology-only restack.",

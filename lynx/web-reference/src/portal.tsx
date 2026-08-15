@@ -8,7 +8,6 @@ import {
 import {
     API_METRICS,
     ATOMIC_CAPABILITIES,
-    CANONICAL_STACK,
     CONVERGENCE_HISTORY,
     CONFORMANCE_CASES,
     CONFORMANCE_METRICS,
@@ -284,6 +283,7 @@ function LossMonitor({ lang, t }: { lang: Lang; t: Translate }) {
                             <a
                                 href={`${localizedHref(lang, {
                                     view: "conformance",
+                                    sub: "history",
                                 })}#rec-${record.id}`}
                                 aria-label={`${recordLabel(record)} · ${
                                     record.title
@@ -365,7 +365,12 @@ function LossMonitor({ lang, t }: { lang: Lang; t: Translate }) {
             <div className="recent-steps">
                 <header>
                     <h3>{t("loss.recentTitle")}</h3>
-                    <a href={localizedHref(lang, { view: "conformance" })}>
+                    <a
+                        href={localizedHref(lang, {
+                            view: "conformance",
+                            sub: "history",
+                        })}
+                    >
                         {t("loss.history")}
                     </a>
                 </header>
@@ -378,6 +383,7 @@ function LossMonitor({ lang, t }: { lang: Lang; t: Translate }) {
                                 <a
                                     href={`${localizedHref(lang, {
                                         view: "conformance",
+                                        sub: "history",
                                     })}#rec-${record.id}`}
                                 >
                                     <span>{recordLabel(record)}</span>
@@ -441,12 +447,6 @@ function Overview({ lang, t }: { lang: Lang; t: Translate }) {
     const blockers = ATOMIC_CAPABILITIES.filter(
         (item) => item.status === "blocked"
     )
-    const reviewReady = CANONICAL_STACK.filter(
-        (item) => item.assessment === "ready"
-    ).length
-    const iterationCount = CANONICAL_STACK.filter(
-        (item) => item.assessment === "iterate"
-    ).length
 
     return (
         <main className="page overview-page" id="main-content">
@@ -490,77 +490,6 @@ function Overview({ lang, t }: { lang: Lang; t: Translate }) {
                     <span>{t("overview.versions")}</span>
                 </div>
             </header>
-
-            <section
-                className="stack-monitor"
-                aria-labelledby="stack-heading"
-            >
-                <header className="monitor-section-header stack-header">
-                    <div>
-                        <h2 id="stack-heading">{t("stack.title")}</h2>
-                        <p>{t("stack.desc")}</p>
-                    </div>
-                    <span>
-                        {t("stack.summary", reviewReady, iterationCount)}
-                    </span>
-                </header>
-                <div className="stack-table" role="table" aria-label={t("stack.tableLabel")}>
-                    <div className="stack-row stack-row-head" role="row">
-                        <span role="columnheader">{t("stack.pr")}</span>
-                        <span role="columnheader">{t("stack.layer")}</span>
-                        <span role="columnheader">{t("stack.state")}</span>
-                        <span role="columnheader">{t("stack.confidence")}</span>
-                        <span role="columnheader">{t("stack.evidence")}</span>
-                    </div>
-                    {CANONICAL_STACK.map((item) => (
-                        <div className="stack-row" role="row" key={item.pr}>
-                            <a
-                                role="cell"
-                                href={`https://github.com/lynx-family/lynx-stack/pull/${item.pr}`}
-                                target="_blank"
-                                rel="noreferrer"
-                            >
-                                #{item.pr}
-                            </a>
-                            <div className="stack-layer" role="cell">
-                                <strong>{item.title}</strong>
-                                <span>{item.enables}</span>
-                                {(item.supersedes || item.caveat) && (
-                                    <small>
-                                        {item.supersedes?.length
-                                            ? `${t("stack.supersedes")} ${item.supersedes.map((pr) => `#${pr}`).join(", ")}`
-                                            : ""}
-                                        {item.supersedes?.length && item.caveat
-                                            ? " · "
-                                            : ""}
-                                        {item.caveat ?? ""}
-                                    </small>
-                                )}
-                            </div>
-                            <div className="stack-meta">
-                                <span
-                                    role="cell"
-                                    className={`stack-state stack-state-${item.prState}`}
-                                >
-                                    <small>{t("stack.state")}</small>
-                                    {t(`stack.state.${item.prState}`)}
-                                </span>
-                                <span
-                                    role="cell"
-                                    className={`stack-confidence stack-confidence-${item.confidence}`}
-                                >
-                                    <small>{t("stack.confidence")}</small>
-                                    {t(`stack.confidence.${item.confidence}`)}
-                                </span>
-                            </div>
-                            <span className="stack-validation" role="cell">
-                                <small>{t("stack.evidence")}</small>
-                                {item.validation}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-            </section>
 
             <section
                 className="monitor-metrics"
@@ -641,6 +570,8 @@ function Overview({ lang, t }: { lang: Lang; t: Translate }) {
                     <i style={{ width: `${Math.max(3, nativePercent)}%` }} />
                 </a>
             </section>
+
+            <LossMonitor lang={lang} t={t} />
 
             <section
                 className="validation-gates"
@@ -797,8 +728,6 @@ function Overview({ lang, t }: { lang: Lang; t: Translate }) {
                 </aside>
             </section>
 
-            <LossMonitor lang={lang} t={t} />
-
             <section className="gallery-showoff">
                 <h2>{t("showoff.title", GALLERY_EXAMPLES.length)}</h2>
                 <p>{t("showoff.desc")}</p>
@@ -865,6 +794,8 @@ function Examples({ lang, t }: { lang: Lang; t: Translate }) {
     )
     const [reveal, setReveal] = useState(50)
     const [reloadTick, setReloadTick] = useState(0)
+    const [activeScenario, setActiveScenario] = useState("")
+    const [configOpen, setConfigOpen] = useState(false)
 
     const syncScrollRef = useRef(syncScroll)
     syncScrollRef.current = syncScroll
@@ -997,10 +928,11 @@ function Examples({ lang, t }: { lang: Lang; t: Translate }) {
     const replayBoth = () => setReloadTick((tick) => tick + 1)
 
     const runScenario = (scenarioId: string) => {
+        setActiveScenario(scenarioId)
         const cardId = scenarioCardId(scenarioId)
         stageRef.current?.scrollIntoView({
             behavior: "smooth",
-            block: "start",
+            block: "nearest",
         })
         const sides: PaneSide[] = ["web", "lynx"]
         for (const side of sides) {
@@ -1075,74 +1007,170 @@ function Examples({ lang, t }: { lang: Lang; t: Translate }) {
     )
 
     return (
-        <main className="page examples-page" id="main-content">
-            <header className="page-intro split-intro">
-                <div>
-                    <h1>{t("examples.title")}</h1>
-                </div>
-                <p>{t("examples.desc")}</p>
-            </header>
-
+        <main className="page examples-page examples-app" id="main-content">
             <div
                 className="compare-toolbar"
                 role="toolbar"
                 aria-label={t("compare.layoutLabel")}
             >
-                <div className="compare-modes">
-                    <button
-                        className={layout === "split" ? "toggle-active" : ""}
-                        aria-pressed={layout === "split"}
-                        onClick={() => setLayout("split")}
-                    >
-                        {t("compare.sideBySide")}
-                    </button>
-                    <button
-                        className={layout === "overlay" ? "toggle-active" : ""}
-                        aria-pressed={layout === "overlay"}
-                        onClick={() => setLayout("overlay")}
-                    >
-                        {t("compare.overlay")}
-                    </button>
-                </div>
-                <div className="compare-switches">
-                    <button
-                        className={syncScroll ? "toggle-active" : ""}
-                        aria-pressed={syncScroll}
-                        disabled={linkState === "unavailable"}
-                        onClick={() => setSyncScroll((value) => !value)}
-                    >
-                        {t("compare.syncScroll")}
-                    </button>
-                    <button
-                        className={mirrorTaps ? "toggle-active" : ""}
-                        aria-pressed={mirrorTaps}
-                        disabled={linkState === "unavailable"}
-                        onClick={() => setMirrorTaps((value) => !value)}
-                    >
-                        {t("compare.mirrorTaps")}
-                    </button>
-                    <button className="compare-replay" onClick={replayBoth}>
-                        {t("compare.replay")}
-                    </button>
+                <h1 className="compare-title">{t("examples.title")}</h1>
+                <select
+                    className="scenario-picker"
+                    aria-label={t("scenarios.pickerLabel")}
+                    value={activeScenario}
+                    disabled={linkState !== "linked"}
+                    onChange={(event) => {
+                        if (event.target.value) runScenario(event.target.value)
+                    }}
+                >
+                    <option value="">
+                        {t(
+                            "scenarios.pickerPlaceholder",
+                            GALLERY_EXAMPLES.length
+                        )}
+                    </option>
+                    {GALLERY_EXAMPLES.map((example, index) => (
+                        <option key={example.id} value={example.id}>
+                            {String(index + 1).padStart(2, "0")} ·{" "}
+                            {example.title}
+                        </option>
+                    ))}
+                </select>
+                <button
+                    className={
+                        configOpen ? "config-toggle toggle-active" : "config-toggle"
+                    }
+                    aria-expanded={configOpen}
+                    aria-label={t("compare.config")}
+                    onClick={() => setConfigOpen((value) => !value)}
+                >
+                    ⚙
+                </button>
+                <div
+                    className={
+                        configOpen
+                            ? "compare-config config-open"
+                            : "compare-config"
+                    }
+                >
+                    <div className="compare-modes">
+                        <button
+                            className={
+                                layout === "split" ? "toggle-active" : ""
+                            }
+                            aria-pressed={layout === "split"}
+                            onClick={() => setLayout("split")}
+                        >
+                            {t("compare.sideBySide")}
+                        </button>
+                        <button
+                            className={
+                                layout === "overlay" ? "toggle-active" : ""
+                            }
+                            aria-pressed={layout === "overlay"}
+                            onClick={() => setLayout("overlay")}
+                        >
+                            {t("compare.overlay")}
+                        </button>
+                    </div>
+                    <div className="compare-switches">
+                        <button
+                            className={syncScroll ? "toggle-active" : ""}
+                            aria-pressed={syncScroll}
+                            disabled={linkState === "unavailable"}
+                            onClick={() => setSyncScroll((value) => !value)}
+                        >
+                            {t("compare.syncScroll")}
+                        </button>
+                        <button
+                            className={mirrorTaps ? "toggle-active" : ""}
+                            aria-pressed={mirrorTaps}
+                            disabled={linkState === "unavailable"}
+                            onClick={() => setMirrorTaps((value) => !value)}
+                        >
+                            {t("compare.mirrorTaps")}
+                        </button>
+                        <button
+                            className="compare-replay"
+                            onClick={replayBoth}
+                        >
+                            {t("compare.replay")}
+                        </button>
+                    </div>
                 </div>
                 <span
                     className={`compare-status compare-status-${linkState}`}
                     role="status"
                 >
                     <i aria-hidden="true" />
-                    {linkState === "linked"
-                        ? t("compare.linked")
-                        : linkState === "connecting"
-                          ? t("compare.connecting")
-                          : t("compare.unavailable")}
+                    <em>
+                        {linkState === "linked"
+                            ? t("compare.linked")
+                            : linkState === "connecting"
+                              ? t("compare.connecting")
+                              : t("compare.unavailable")}
+                    </em>
                 </span>
             </div>
 
-            <section
-                ref={stageRef}
-                className={`compare-stage compare-${layout}`}
-                aria-label={t("examples.sectionLabel")}
-            >
+            <div className="compare-shell">
+                <aside
+                    className="scenario-rail"
+                    aria-label={t("scenarios.title", GALLERY_EXAMPLES.length)}
+                >
+                    <header className="scenario-rail-header">
+                        <h2>
+                            {t("scenarios.title", GALLERY_EXAMPLES.length)}
+                        </h2>
+                    </header>
+                    <ol className="scenario-list">
+                        {GALLERY_EXAMPLES.map((example, index) => (
+                            <li key={example.id}>
+                                <button
+                                    className={
+                                        activeScenario === example.id
+                                            ? "scenario-row scenario-active"
+                                            : "scenario-row"
+                                    }
+                                    disabled={linkState !== "linked"}
+                                    aria-label={t(
+                                        "scenarios.runLabel",
+                                        example.title
+                                    )}
+                                    onClick={() => runScenario(example.id)}
+                                >
+                                    <span className="scenario-number">
+                                        {String(index + 1).padStart(2, "0")}
+                                    </span>
+                                    <span className="scenario-copy">
+                                        <strong>{example.title}</strong>
+                                        {activeScenario === example.id && (
+                                            <>
+                                                <span className="scenario-summary">
+                                                    {example.summary}
+                                                </span>
+                                                <ApiChips
+                                                    apis={example.api}
+                                                />
+                                            </>
+                                        )}
+                                    </span>
+                                    <i
+                                        className={`evidence-dot evidence-${example.evidence}`}
+                                        title={example.evidence}
+                                        aria-hidden="true"
+                                    />
+                                </button>
+                            </li>
+                        ))}
+                    </ol>
+                </aside>
+
+                <section
+                    ref={stageRef}
+                    className={`compare-stage compare-${layout}`}
+                    aria-label={t("examples.sectionLabel")}
+                >
                 {layout === "split" ? (
                     <>
                         <article className="runtime-frame">
@@ -1201,46 +1229,8 @@ function Examples({ lang, t }: { lang: Lang; t: Translate }) {
                         </span>
                     </div>
                 )}
-            </section>
-
-            <section className="scenario-index">
-                <div className="section-heading compact-heading">
-                    <h2>{t("scenarios.title", GALLERY_EXAMPLES.length)}</h2>
-                    <p>{t("scenarios.desc")}</p>
-                </div>
-                <div className="scenario-list">
-                    {GALLERY_EXAMPLES.map((example, index) => (
-                        <article className="scenario-row" key={example.id}>
-                            <span className="scenario-number">
-                                {String(index + 1).padStart(2, "0")}
-                            </span>
-                            <div>
-                                <h3>{example.title}</h3>
-                                <p>{example.summary}</p>
-                            </div>
-                            <ApiChips apis={example.api} />
-                            <div className="scenario-actions">
-                                <span
-                                    className={`evidence-tag evidence-${example.evidence}`}
-                                >
-                                    {example.evidence}
-                                </span>
-                                <button
-                                    className="scenario-run"
-                                    disabled={linkState !== "linked"}
-                                    aria-label={t(
-                                        "scenarios.runLabel",
-                                        example.title
-                                    )}
-                                    onClick={() => runScenario(example.id)}
-                                >
-                                    {t("scenarios.run")}
-                                </button>
-                            </div>
-                        </article>
-                    ))}
-                </div>
-            </section>
+                </section>
+            </div>
         </main>
     )
 }
@@ -1354,10 +1344,19 @@ function ApiMatrix({ t }: { t: Translate }) {
     )
 }
 
+type ConformanceSub = "contracts" | "history"
+
+function currentConformanceSub(): ConformanceSub {
+    return new URLSearchParams(window.location.search).get("sub") === "history"
+        ? "history"
+        : "contracts"
+}
+
 function Conformance({ lang, t }: { lang: Lang; t: Translate }) {
     const exact = Math.round(
         (CONFORMANCE_METRICS.conformant / CONFORMANCE_METRICS.tracked) * 100
     )
+    const sub = currentConformanceSub()
 
     // Deep links from the overview loss chart (#rec-*) land after React
     // renders, so the native anchor scroll never fired and :target was
@@ -1369,7 +1368,7 @@ function Conformance({ lang, t }: { lang: Lang; t: Translate }) {
         if (!row) return
         row.classList.add("row-targeted")
         row.scrollIntoView({ block: "start" })
-    }, [])
+    }, [sub])
 
     return (
         <main className="page conformance-page" id="main-content">
@@ -1383,6 +1382,43 @@ function Conformance({ lang, t }: { lang: Lang; t: Translate }) {
                 </div>
             </header>
 
+            <nav className="sub-nav" aria-label={t("nav.conformance")}>
+                <a
+                    className={sub === "contracts" ? "sub-nav-active" : ""}
+                    aria-current={sub === "contracts" ? "page" : undefined}
+                    href={localizedHref(lang, { view: "conformance" })}
+                >
+                    {t("conformance.tabContracts")}
+                    <b>{CONFORMANCE_METRICS.tracked}</b>
+                </a>
+                <a
+                    className={sub === "history" ? "sub-nav-active" : ""}
+                    aria-current={sub === "history" ? "page" : undefined}
+                    href={localizedHref(lang, {
+                        view: "conformance",
+                        sub: "history",
+                    })}
+                >
+                    {t("conformance.historyTitle")}
+                    <b>{CONVERGENCE_HISTORY.length}</b>
+                </a>
+            </nav>
+
+            {sub === "history" ? (
+                <ConformanceHistory lang={lang} t={t} />
+            ) : (
+                <ConformanceContracts t={t} />
+            )}
+        </main>
+    )
+}
+
+function ConformanceContracts({ t }: { t: Translate }) {
+    const exact = Math.round(
+        (CONFORMANCE_METRICS.conformant / CONFORMANCE_METRICS.tracked) * 100
+    )
+    return (
+        <>
             <section
                 className="coverage-ledger"
                 aria-label={t("conformance.coverageLabel")}
@@ -1424,45 +1460,6 @@ function Conformance({ lang, t }: { lang: Lang; t: Translate }) {
             </section>
 
             <p className="method-note">{t("conformance.method")}</p>
-
-            <section className="convergence-monitor">
-                <header className="monitor-section-header convergence-header">
-                    <div>
-                        <h2>{t("conformance.historyTitle")}</h2>
-                        <p>{t("conformance.historyDesc")}</p>
-                    </div>
-                    <a href={localizedHref(lang, { view: "overview" })}>
-                        {t("nav.overview")} →
-                    </a>
-                </header>
-                <ol className="convergence-ledger">
-                    {CONVERGENCE_HISTORY.map((record) => (
-                        <li key={record.id} id={`rec-${record.id}`}>
-                            <a
-                                href={recordHref(record)}
-                                target="_blank"
-                                rel="noreferrer"
-                            >
-                                {recordLabel(record)}
-                            </a>
-                            <div>
-                                <strong>{record.title}</strong>
-                                <p>{record.note}</p>
-                            </div>
-                            <span
-                                className={`record-status status-${record.status}`}
-                            >
-                                {t(`record.${record.status}`)}
-                            </span>
-                            <b>
-                                {record.lossBefore} → {record.lossAfter}
-                                {record.expectedLossAfter !== undefined &&
-                                    ` → ${record.expectedLossAfter}?`}
-                            </b>
-                        </li>
-                    ))}
-                </ol>
-            </section>
 
             <section
                 className="case-list"
@@ -1566,7 +1563,49 @@ function Conformance({ lang, t }: { lang: Lang; t: Translate }) {
                     </article>
                 ))}
             </section>
-        </main>
+        </>
+    )
+}
+
+function ConformanceHistory({ lang, t }: { lang: Lang; t: Translate }) {
+    return (
+        <section className="convergence-monitor">
+            <header className="monitor-section-header convergence-header">
+                <div>
+                    <p>{t("conformance.historyDesc")}</p>
+                </div>
+                <a href={localizedHref(lang, { view: "overview" })}>
+                    {t("nav.overview")} →
+                </a>
+            </header>
+            <ol className="convergence-ledger">
+                {CONVERGENCE_HISTORY.map((record) => (
+                    <li key={record.id} id={`rec-${record.id}`}>
+                        <a
+                            href={recordHref(record)}
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            {recordLabel(record)}
+                        </a>
+                        <div>
+                            <strong>{record.title}</strong>
+                            <p>{record.note}</p>
+                        </div>
+                        <span
+                            className={`record-status status-${record.status}`}
+                        >
+                            {t(`record.${record.status}`)}
+                        </span>
+                        <b>
+                            {record.lossBefore} → {record.lossAfter}
+                            {record.expectedLossAfter !== undefined &&
+                                ` → ${record.expectedLossAfter}?`}
+                        </b>
+                    </li>
+                ))}
+            </ol>
+        </section>
     )
 }
 
@@ -1609,7 +1648,7 @@ export function EvidencePortal() {
                     <a href="https://github.com/Huxpro/motion/blob/main/lynx/src/conformance/cases.ts">
                         {t("footer.manifest")}
                     </a>
-                    <a href="https://github.com/Huxpro/motion/pull/100/checks">
+                    <a href="https://github.com/Huxpro/motion/pull/103/checks">
                         {t("footer.checks")}
                     </a>
                 </div>
