@@ -771,9 +771,13 @@ type LinkState = "connecting" | "linked" | "unavailable"
 type CompareLayout = "split" | "overlay"
 
 function Examples({ lang, t }: { lang: Lang; t: Translate }) {
+    // Prod uses the extensionless path: cleanUrls 308-redirects
+    // /lynx/index.html → /lynx, and Safari refuses redirects inside a
+    // COEP frame ("Redirection was blocked by Cross-Origin-Embedder-
+    // Policy"); /lynx hits the rewrite directly with no redirect.
     const lynxUrl = import.meta.env.DEV
         ? "http://localhost:3000/__web_preview?casename=main.web.bundle"
-        : "./lynx/index.html"
+        : "./lynx"
     const webUrl = "?mode=baseline"
 
     const stageRef = useRef<HTMLElement>(null)
