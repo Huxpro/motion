@@ -19,4 +19,10 @@ export default defineConfig({
     web: {},
     lynx: {},
   },
+  // Playwright asserts zero console errors on gallery pages; the HMR
+  // websocket client can flap in sandboxed CI containers and litter the
+  // console with reconnect errors, so test runs disable it entirely.
+  dev: process.env.RSPEEDY_DISABLE_HMR
+    ? { hmr: false, liveReload: false }
+    : {},
 })

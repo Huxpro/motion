@@ -84,12 +84,64 @@ const h1: CSSProperties = {
     fontWeight: "bold",
     fontFamily: "sans-serif",
 }
+/**
+ * The gallery header identifies its runtime, but its metrics are pinned
+ * (fixed-height clipping wrappers, identical on the Lynx side) so both
+ * galleries keep exactly the same layout for sync scrolling and future
+ * visual diffing. The ⓘ panel carries the full identity and stays
+ * closed by default.
+ */
+const headerRow: CSSProperties = {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    height: "34px",
+}
+const infoButton: CSSProperties = {
+    width: "26px",
+    height: "26px",
+    borderRadius: "13px",
+    border: "1px solid #3a3a55",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+}
+const infoGlyph: CSSProperties = {
+    color: "#8a8aa0",
+    fontSize: "13px",
+    fontWeight: "bold",
+    fontFamily: "monospace",
+}
+const subClip: CSSProperties = {
+    height: "24px",
+    overflow: "hidden",
+    marginTop: "4px",
+    marginBottom: "16px",
+}
 const sub: CSSProperties = {
     color: "#8a8aa0",
     fontSize: "14px",
     fontFamily: "sans-serif",
-    marginTop: "4px",
-    marginBottom: "20px",
+}
+const infoPanel: CSSProperties = {
+    height: "96px",
+    overflow: "hidden",
+    display: "flex",
+    flexDirection: "column",
+    backgroundColor: "#14141f",
+    borderRadius: "12px",
+    paddingTop: "12px",
+    paddingLeft: "16px",
+    paddingRight: "16px",
+    marginBottom: "16px",
+}
+const infoLine: CSSProperties = {
+    width: "100%",
+    height: "24px",
+    color: "#8a8aa0",
+    fontSize: "12px",
+    fontFamily: "monospace",
 }
 const card: CSSProperties = {
     display: "flex",
@@ -367,6 +419,7 @@ export function App() {
     const liveX = useMotionValue(STYLE_MOTION_VALUE_CASE.expected.startX)
     let styleMotionValueRenders = 0
     styleMotionValueRenders += 1
+    const [infoOpen, setInfoOpen] = useState(false)
     const [tapCount, setTapCount] = useState(0)
     const [hoverCount, setHoverCount] = useState(0)
     const [gestureStatus, setGestureStatus] = useState("resting")
@@ -447,10 +500,32 @@ export function App() {
         <div style={page}>
             <div style={scroll}>
                 <div style={inner}>
-                    <span style={h1}>motion-lynx</span>
-                    <span style={sub}>
-                        the declarative motion/react API, running on Lynx
-                    </span>
+                    <div style={headerRow}>
+                        <span style={h1}>motion-lynx</span>
+                        <div
+                            id="gallery-info-toggle"
+                            style={{ ...infoButton, cursor: "pointer" }}
+                            onClick={() => setInfoOpen((open) => !open)}
+                        >
+                            <span style={infoGlyph}>i</span>
+                        </div>
+                    </div>
+                    <div style={subClip}>
+                        <span style={sub}>Web · framer-motion@13.0.0</span>
+                    </div>
+                    {infoOpen && (
+                        <div id="gallery-info-panel" style={infoPanel}>
+                            <span style={infoLine}>
+                                runtime: Web reference (React DOM)
+                            </span>
+                            <span style={infoLine}>
+                                package: framer-motion@13.0.0
+                            </span>
+                            <span style={infoLine}>
+                                upstream: motion@12.40.0 sources
+                            </span>
+                        </div>
+                    )}
 
                     <span style={{ ...cardTitle, marginBottom: 10 }}>
                         Conformance cases

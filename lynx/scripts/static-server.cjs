@@ -20,8 +20,15 @@ const MIME = {
 
 http.createServer((req, res) => {
     const urlPath = decodeURIComponent(req.url.split("?")[0])
-    // Resolve directory indexes: "/" and any "/foo/" → ".../index.html".
-    const rel = urlPath.endsWith("/") ? urlPath + "index.html" : urlPath
+    // Resolve directory indexes: "/" and any "/foo/" → ".../index.html",
+    // and extensionless paths ("/lynx") → ".../lynx/index.html", matching
+    // the production rewrite semantics (Vercel serves /lynx without a
+    // redirect — Safari blocks redirects inside COEP frames).
+    const rel = urlPath.endsWith("/")
+        ? urlPath + "index.html"
+        : path.extname(urlPath) === ""
+          ? urlPath + "/index.html"
+          : urlPath
     const filePath = path.join(path.resolve(root), rel)
     fs.readFile(filePath, (err, data) => {
         if (err) {

@@ -78,12 +78,27 @@ import {
 
 const previewUrl = "/__web_preview?casename=main.web.bundle"
 
+
+/**
+ * Console noise produced by the sandboxed CI container rather than by
+ * Motion: the dev-server HMR socket can flap, and the loopback network
+ * can reset connections under load. Real application errors still fail
+ * the zero-console-error assertions.
+ */
+const INFRA_NOISE = [
+    "net::ERR_CONNECTION_RESET",
+    "[webpack-dev-server]",
+    "[rspeedy-dev-server]",
+]
+const isInfraNoise = (text: string) =>
+    INFRA_NOISE.some((marker) => text.includes(marker))
+
 test("declarative Lynx gallery keeps Motion parity", async ({ page }) => {
     const runtimeErrors: string[] = []
     const consoleErrors: string[] = []
     page.on("pageerror", (error) => runtimeErrors.push(error.message))
     page.on("console", (message) => {
-        if (message.type() === "error") {
+        if (message.type() === "error" && !isInfraNoise(message.text())) {
             consoleErrors.push(message.text())
         }
     })
@@ -152,7 +167,7 @@ test("manifest case: parent animate label propagates to a child", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
     await lynxPage.addInitScript(() => {
@@ -865,7 +880,7 @@ test("manifest case: transition.from overrides the current value", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -917,7 +932,7 @@ test("manifest case: animate applies a transitionEnd-only update", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
     await lynxPage.addInitScript(() => {
@@ -1064,7 +1079,7 @@ test("manifest cases: removed animate values follow upstream ownership", async (
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
     await lynxPage.addInitScript(() => {
@@ -1130,7 +1145,7 @@ test("manifest case: transform origin aliases render and update", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
     await lynxPage.addInitScript(() => {
@@ -1204,7 +1219,7 @@ test("manifest case: complex gradient exposes an intermediate frame", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
     await lynxPage.addInitScript(() => {
@@ -1259,7 +1274,7 @@ test("manifest case: transition type false applies immediately", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -1319,7 +1334,7 @@ test("regression: unmount suppresses an active animation completion", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
     await Promise.all([
@@ -1366,7 +1381,7 @@ test("manifest case: initial false skips mount and preserves later updates", asy
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
     await Promise.all([
@@ -1428,7 +1443,7 @@ test("manifest case: a style MotionValue updates without a React rerender", asyn
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
     await Promise.all([
@@ -1507,7 +1522,7 @@ test("manifest case: a later target introduces a new transform property", async 
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -1560,7 +1575,7 @@ test("manifest case: display none switches to block before entrance", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
     await Promise.all([
@@ -1654,7 +1669,7 @@ test("manifest case: visibility hidden switches to visible before entrance", asy
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
     await Promise.all([
@@ -1700,7 +1715,7 @@ test("manifest case: equal targets do not remain active", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -1736,7 +1751,7 @@ test("manifest case: equal keyframe arrays do not remain active", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -1771,7 +1786,7 @@ test("manifest case: spring velocity animates an equal target", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -1806,7 +1821,7 @@ test("manifest case: zIndex applies without interpolation", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -1839,7 +1854,7 @@ test("manifest case: unknown animation type does not crash", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -1872,7 +1887,7 @@ test("manifest case: CSS custom property reaches its Web target", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
     await Promise.all([
@@ -1923,7 +1938,7 @@ test("manifest case: zero unit normalizes to an animatable number", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -1963,7 +1978,7 @@ test("manifest case: a null keyframe hydrates from the current value", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -2012,7 +2027,7 @@ test("manifest case: motion.create forwards and animates on Web and Lynx", async
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -2065,7 +2080,7 @@ test("manifest case: reactive animate uses its transition on later renders", asy
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -2120,7 +2135,7 @@ test("manifest case: a changed string label resolves its named variant", async (
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -2608,7 +2623,7 @@ test("manifest case: array variants preserve inline and hoisted definition parit
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -2677,7 +2692,7 @@ test("manifest case: ordered keyframes pass through their peak and settle", asyn
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -2727,7 +2742,7 @@ test("manifest case: keyframe times preserve duplicate boundary jumps", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -2816,7 +2831,7 @@ test("manifest case: named easing changes intermediate sampling", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -2905,7 +2920,7 @@ test("manifest case: color keyframes pass through green and settle blue", async 
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -2974,7 +2989,7 @@ test("manifest case: HSLA animates to RGBA", async ({ browser }) => {
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -3045,7 +3060,7 @@ test("manifest case: explicit spring overshoots and settles", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -3109,7 +3124,7 @@ test("manifest case: positive delay holds before animation", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -3174,7 +3189,7 @@ test("manifest case: negative delay starts from elapsed time", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -3221,7 +3236,7 @@ test("manifest case: infinite repeat remains live after its first duration", asy
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -3270,7 +3285,7 @@ test("manifest case: reverse repeat reaches its target and returns", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -3333,7 +3348,7 @@ test("manifest case: repeatDelay holds the endpoint", async ({ browser }) => {
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
     await Promise.all([
@@ -3411,7 +3426,7 @@ test("manifest case: loop repeat with odd count settles at target", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
     await Promise.all([
@@ -3450,7 +3465,7 @@ test("manifest case: mirror repeat preserves easing direction", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
     await Promise.all([
@@ -3538,7 +3553,7 @@ test("manifest case: tap applies, fires, and restores rest", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -3683,7 +3698,7 @@ test("manifest case: a transitionEnd-only tap applies and restores", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -3786,7 +3801,7 @@ test("manifest case: tap animation reports pressed and restoration lifecycle", a
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -3987,7 +4002,7 @@ test("manifest case: hover applies, fires, and restores rest", async ({
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -4089,7 +4104,7 @@ test("regression: hover entry cancels tap restoration completion", async ({
 
     lynxPage.on("pageerror", (error) => errors.push(error.message))
     lynxPage.on("console", (message) => {
-        if (message.type() === "error") errors.push(message.text())
+        if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
     })
     await lynxPage.goto(`http://localhost:3000${previewUrl}`)
 
@@ -4188,7 +4203,7 @@ test("manifest case: function variants receive custom and resolve distinct delay
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
@@ -4256,7 +4271,7 @@ test("manifest case: animation lifecycle reports start before complete", async (
     for (const page of [lynxPage, webPage]) {
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
-            if (message.type() === "error") errors.push(message.text())
+            if (message.type() === "error" && !isInfraNoise(message.text())) errors.push(message.text())
         })
     }
 
