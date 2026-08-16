@@ -80,12 +80,62 @@ const h1: CSSProperties = {
     fontWeight: "bold",
     fontFamily: "sans-serif",
 }
+/**
+ * Header metrics are pinned to match the Web reference exactly (same
+ * fixed-height wrappers), so runtime-identifying text never shifts the
+ * shared card layout. The ⓘ panel carries the full identity.
+ */
+const headerRow: CSSProperties = {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    height: "34px",
+}
+const infoButton: CSSProperties = {
+    width: "26px",
+    height: "26px",
+    borderRadius: "13px",
+    border: "1px solid #3a3a55",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+}
+const infoGlyph: CSSProperties = {
+    color: "#8a8aa0",
+    fontSize: "13px",
+    fontWeight: "bold",
+    fontFamily: "monospace",
+}
+const subClip: CSSProperties = {
+    height: "24px",
+    overflow: "hidden",
+    marginTop: "4px",
+    marginBottom: "16px",
+}
 const sub: CSSProperties = {
     color: "#8a8aa0",
     fontSize: "14px",
     fontFamily: "sans-serif",
-    marginTop: "4px",
-    marginBottom: "20px",
+}
+const infoPanel: CSSProperties = {
+    height: "96px",
+    overflow: "hidden",
+    display: "flex",
+    flexDirection: "column",
+    backgroundColor: "#14141f",
+    borderRadius: "12px",
+    paddingTop: "12px",
+    paddingLeft: "16px",
+    paddingRight: "16px",
+    marginBottom: "16px",
+}
+const infoLine: CSSProperties = {
+    width: "100%",
+    height: "24px",
+    color: "#8a8aa0",
+    fontSize: "12px",
+    fontFamily: "monospace",
 }
 const card: CSSProperties = {
     display: "flex",
@@ -368,6 +418,7 @@ export function App() {
     function moveLiveValue() {
         liveX.set(STYLE_MOTION_VALUE_CASE.expected.endX)
     }
+    const [infoOpen, setInfoOpen] = useState(false)
     const [tapCount, setTapCount] = useState(0)
     const [hoverCount, setHoverCount] = useState(0)
     const [gestureStatus, setGestureStatus] = useState("resting")
@@ -448,10 +499,34 @@ export function App() {
         <view style={page}>
             <scroll-view scroll-orientation="vertical" style={scroll}>
                 <view style={inner}>
-                    <text style={h1}>motion-lynx</text>
-                    <text style={sub}>
-                        the declarative motion/react API, running on Lynx
-                    </text>
+                    <view style={headerRow}>
+                        <text style={h1}>motion-lynx</text>
+                        <view
+                            id="gallery-info-toggle"
+                            style={infoButton}
+                            bindtap={() => setInfoOpen((open) => !open)}
+                        >
+                            <text style={infoGlyph}>i</text>
+                        </view>
+                    </view>
+                    <view style={subClip}>
+                        <text style={sub}>
+                            Lynx · @lynx-js/motion 013e20e
+                        </text>
+                    </view>
+                    {infoOpen && (
+                        <view id="gallery-info-panel" style={infoPanel}>
+                            <text style={infoLine}>
+                                runtime: ReactLynx · Lynx for Web
+                            </text>
+                            <text style={infoLine}>
+                                package: @lynx-js/motion · preview 013e20e
+                            </text>
+                            <text style={infoLine}>
+                                upstream: motion@12.40.0 sources
+                            </text>
+                        </view>
+                    )}
 
                     <text style={{ ...cardTitle, marginBottom: "10px" }}>
                         Conformance cases

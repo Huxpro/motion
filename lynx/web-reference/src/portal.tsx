@@ -975,10 +975,11 @@ function Examples({ lang, t }: { lang: Lang; t: Translate }) {
         handle.addEventListener("pointercancel", up)
     }
 
+    // Package identity lives inside each gallery's own header now (behind
+    // the ⓘ toggle), so the pane bars stay minimal.
     const webPaneHeader = (
         <header>
             <span>{t("examples.webPane")}</span>
-            <b>framer-motion@13.0.0</b>
             <a href={webUrl} target="_blank" rel="noreferrer">
                 {t("examples.open")}
             </a>
@@ -987,7 +988,6 @@ function Examples({ lang, t }: { lang: Lang; t: Translate }) {
     const lynxPaneHeader = (
         <header>
             <span>{t("examples.lynxPane")}</span>
-            <b>@lynx-js/motion · preview 013e20e</b>
             <a href={lynxUrl} target="_blank" rel="noreferrer">
                 {t("examples.open")}
             </a>
@@ -1057,50 +1057,71 @@ function Examples({ lang, t }: { lang: Lang; t: Translate }) {
                             : "compare-config"
                     }
                 >
-                    <div className="compare-modes">
-                        <button
-                            className={
-                                layout === "split" ? "toggle-active" : ""
-                            }
-                            aria-pressed={layout === "split"}
-                            onClick={() => setLayout("split")}
-                        >
-                            {t("compare.sideBySide")}
-                        </button>
-                        <button
-                            className={
-                                layout === "overlay" ? "toggle-active" : ""
-                            }
-                            aria-pressed={layout === "overlay"}
-                            onClick={() => setLayout("overlay")}
-                        >
-                            {t("compare.overlay")}
-                        </button>
+                    <div className="config-group">
+                        <span className="config-label">
+                            {t("compare.layoutLabel")}
+                        </span>
+                        <div className="compare-modes">
+                            <button
+                                className={
+                                    layout === "split" ? "toggle-active" : ""
+                                }
+                                aria-pressed={layout === "split"}
+                                onClick={() => setLayout("split")}
+                            >
+                                {t("compare.sideBySide")}
+                            </button>
+                            <button
+                                className={
+                                    layout === "overlay" ? "toggle-active" : ""
+                                }
+                                aria-pressed={layout === "overlay"}
+                                onClick={() => setLayout("overlay")}
+                            >
+                                {t("compare.overlay")}
+                            </button>
+                        </div>
                     </div>
-                    <div className="compare-switches">
-                        <button
-                            className={syncScroll ? "toggle-active" : ""}
-                            aria-pressed={syncScroll}
-                            disabled={linkState === "unavailable"}
-                            onClick={() => setSyncScroll((value) => !value)}
-                        >
-                            {t("compare.syncScroll")}
-                        </button>
-                        <button
-                            className={mirrorTaps ? "toggle-active" : ""}
-                            aria-pressed={mirrorTaps}
-                            disabled={linkState === "unavailable"}
-                            onClick={() => setMirrorTaps((value) => !value)}
-                        >
-                            {t("compare.mirrorTaps")}
-                        </button>
-                        <button
-                            className="compare-replay"
-                            onClick={replayBoth}
-                        >
-                            {t("compare.replay")}
-                        </button>
+                    <div className="config-group">
+                        <span className="config-label">
+                            {t("compare.bridgeLabel")}
+                        </span>
+                        <div className="compare-switches">
+                            <button
+                                className={
+                                    syncScroll
+                                        ? "switch-row toggle-active"
+                                        : "switch-row"
+                                }
+                                aria-pressed={syncScroll}
+                                disabled={linkState === "unavailable"}
+                                onClick={() =>
+                                    setSyncScroll((value) => !value)
+                                }
+                            >
+                                <span>{t("compare.syncScroll")}</span>
+                                <i className="switch-knob" aria-hidden="true" />
+                            </button>
+                            <button
+                                className={
+                                    mirrorTaps
+                                        ? "switch-row toggle-active"
+                                        : "switch-row"
+                                }
+                                aria-pressed={mirrorTaps}
+                                disabled={linkState === "unavailable"}
+                                onClick={() =>
+                                    setMirrorTaps((value) => !value)
+                                }
+                            >
+                                <span>{t("compare.mirrorTaps")}</span>
+                                <i className="switch-knob" aria-hidden="true" />
+                            </button>
+                        </div>
                     </div>
+                    <button className="compare-replay" onClick={replayBoth}>
+                        {t("compare.replay")}
+                    </button>
                 </div>
                 <span
                     className={`compare-status compare-status-${linkState}`}

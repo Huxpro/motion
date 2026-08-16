@@ -1124,10 +1124,20 @@ button {
     background: var(--border);
 }
 
-/* Desktop: the config wrapper is layout-transparent; the disclosure
-   toggle only exists on small screens. */
-.compare-config {
+/* Desktop: the config wrapper, its groups, and labels are
+   layout-transparent; the disclosure toggle and switch knobs only
+   exist on small screens. */
+.compare-config,
+.config-group {
     display: contents;
+}
+
+.config-label {
+    display: none;
+}
+
+.switch-knob {
+    display: none;
 }
 
 .config-toggle {
@@ -1176,7 +1186,7 @@ button {
     min-height: 52px;
     flex: 0 0 auto;
     display: grid;
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: 1fr auto;
     align-items: center;
     gap: 18px;
     padding: 0 18px;
@@ -1184,12 +1194,6 @@ button {
     background: var(--layer);
     font: 700 0.75rem var(--font-mono);
     letter-spacing: 0.06em;
-}
-
-.runtime-frame header b {
-    color: var(--foreground-feint);
-    font-weight: 500;
-    letter-spacing: 0;
 }
 
 .runtime-frame header a {
@@ -2235,14 +2239,6 @@ button {
         padding: 56px 0;
     }
 
-    .runtime-frame header {
-        grid-template-columns: 1fr auto;
-    }
-
-    .runtime-frame header b {
-        display: none;
-    }
-
     /* App mode: full-bleed, and one viewport tall once the masthead is
        scrolled away. The toolbar collapses to a single sticky row —
        scenario picker, config disclosure, link-status dot — with the
@@ -2302,8 +2298,8 @@ button {
         z-index: 15;
         display: none;
         flex-direction: column;
-        gap: 8px;
-        padding: 10px 12px;
+        gap: 16px;
+        padding: 14px 14px 16px;
         border-bottom: 1px solid var(--border);
         background: var(--background);
         box-shadow: 0 18px 30px rgb(0 0 0 / 45%);
@@ -2313,14 +2309,99 @@ button {
         display: flex;
     }
 
-    .compare-config .compare-modes,
-    .compare-config .compare-switches {
-        flex-wrap: wrap;
+    .config-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
     }
 
-    .compare-config button {
-        min-height: 40px;
-        flex: 1 1 auto;
+    .config-label {
+        display: block;
+        color: var(--foreground-feint);
+        font: 700 0.75rem var(--font-mono);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    /* Layout: a segmented control with two equal cells. */
+    .compare-config .compare-modes {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border: 1px solid var(--border);
+    }
+
+    .compare-config .compare-modes button {
+        min-height: 44px;
+        border: 0;
+        border-right: 1px solid var(--border);
+    }
+
+    .compare-config .compare-modes button:last-child {
+        border-right: 0;
+    }
+
+    /* Bridge toggles: settings-style rows with a real switch. */
+    .compare-config .compare-switches {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--border);
+    }
+
+    .compare-config .switch-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        min-height: 48px;
+        padding: 0 14px;
+        border: 0;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+    }
+
+    .compare-config .switch-row:last-child {
+        border-bottom: 0;
+    }
+
+    .compare-config .switch-row.toggle-active {
+        background: transparent;
+        color: var(--foreground);
+    }
+
+    .switch-knob {
+        position: relative;
+        display: block;
+        width: 40px;
+        height: 24px;
+        flex: 0 0 auto;
+        border-radius: 12px;
+        background: var(--border);
+        transition: background 160ms var(--ease-out);
+    }
+
+    .switch-knob::after {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--foreground-feint);
+        content: "";
+        transition: transform 160ms var(--ease-out),
+            background 160ms var(--ease-out);
+    }
+
+    .switch-row.toggle-active .switch-knob {
+        background: var(--accent);
+    }
+
+    .switch-row.toggle-active .switch-knob::after {
+        background: var(--on-accent);
+        transform: translateX(16px);
+    }
+
+    .compare-config .compare-replay {
+        min-height: 48px;
     }
 
     .filter-bar {

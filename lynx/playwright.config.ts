@@ -12,7 +12,7 @@ export default defineConfig({
     },
     webServer: [
         {
-            command: "npm run dev",
+            command: "RSPEEDY_DISABLE_HMR=1 npm run dev",
             url: "http://localhost:3000/__web_preview?casename=main.web.bundle",
             reuseExistingServer: false,
             timeout: 120_000,

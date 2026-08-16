@@ -161,6 +161,27 @@ test("scenario rail rows enable once the panes are linked", async ({
     await expect(page.locator(".scenario-row").first()).toBeEnabled()
 })
 
+test("gallery info panels identify each runtime without shifting layout", async ({
+    page,
+}) => {
+    await openLinkedExamples(page)
+    const frames = page.frameLocator("iframe")
+    const webToggle = frames.first().locator("#gallery-info-toggle")
+    const lynxToggle = frames.nth(1).locator("#gallery-info-toggle")
+
+    await webToggle.click()
+    await expect(frames.first().locator("#gallery-info-panel")).toContainText(
+        "framer-motion@13.0.0"
+    )
+    // Identity is per-pane: the Lynx panel stays closed.
+    await expect(frames.nth(1).locator("#gallery-info-panel")).toHaveCount(0)
+
+    await lynxToggle.click()
+    await expect(frames.nth(1).locator("#gallery-info-panel")).toContainText(
+        "@lynx-js/motion"
+    )
+})
+
 test("a mouse click presses the Lynx whileTap card directly", async ({
     page,
 }) => {

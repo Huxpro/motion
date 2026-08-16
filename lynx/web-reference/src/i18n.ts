@@ -201,6 +201,7 @@ const STRINGS = {
         zh: "拖动对比 · Lynx ⇄ Web",
     },
     "compare.config": { en: "Comparison controls", zh: "对比设置" },
+    "compare.bridgeLabel": { en: "Pane bridge", zh: "双栏联动" },
 
     "scenarios.title": { en: "Scenarios · {0}", zh: "场景 · {0}" },
     "scenarios.runLabel": {
