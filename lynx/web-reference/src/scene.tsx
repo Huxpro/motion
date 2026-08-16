@@ -61,7 +61,7 @@ const page: CSSProperties = {
     flexDirection: "column",
     width: "100vw",
     height: "100vh",
-    backgroundColor: "#0b0b14",
+    backgroundColor: "#0d1111",
     margin: 0,
     boxSizing: "border-box",
 }
@@ -102,13 +102,13 @@ const infoButton: CSSProperties = {
     width: "26px",
     height: "26px",
     borderRadius: "13px",
-    border: "1px solid #3a3a55",
+    border: "1px solid #283033",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
 }
 const infoGlyph: CSSProperties = {
-    color: "#8a8aa0",
+    color: "#979d97",
     fontSize: "13px",
     fontWeight: "bold",
     fontFamily: "monospace",
@@ -120,7 +120,7 @@ const subClip: CSSProperties = {
     marginBottom: "16px",
 }
 const sub: CSSProperties = {
-    color: "#8a8aa0",
+    color: "#979d97",
     fontSize: "14px",
     fontFamily: "sans-serif",
 }
@@ -129,7 +129,7 @@ const infoPanel: CSSProperties = {
     overflow: "hidden",
     display: "flex",
     flexDirection: "column",
-    backgroundColor: "#14141f",
+    backgroundColor: "#171d1f",
     borderRadius: "12px",
     paddingTop: "12px",
     paddingLeft: "16px",
@@ -139,7 +139,7 @@ const infoPanel: CSSProperties = {
 const infoLine: CSSProperties = {
     width: "100%",
     height: "24px",
-    color: "#8a8aa0",
+    color: "#979d97",
     fontSize: "12px",
     fontFamily: "monospace",
 }
@@ -148,7 +148,7 @@ const card: CSSProperties = {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#14141f",
+    backgroundColor: "#171d1f",
     borderRadius: "16px",
     paddingTop: "18px",
     paddingBottom: "18px",
@@ -171,7 +171,7 @@ const cardTitle: CSSProperties = {
     marginBottom: "4px",
 }
 const code: CSSProperties = {
-    color: "#8ab4ff",
+    color: "#3e98ff",
     fontSize: "12px",
     fontFamily: "monospace",
 }
@@ -225,7 +225,7 @@ const badge: CSSProperties = {
 }
 const provenance: CSSProperties = {
     width: "100%",
-    color: "#a4a4b8",
+    color: "#abb1af",
     fontSize: 10,
     fontFamily: "monospace",
     marginTop: 5,
@@ -2033,7 +2033,7 @@ export function App() {
                                 <span
                                     style={{
                                         ...glyph,
-                                        color: "#0b0b14",
+                                        color: "#0d1111",
                                         fontSize: "18px",
                                         fontWeight: "bold",
                                     }}
@@ -3308,7 +3308,7 @@ export function App() {
                             </span>
                             <span
                                 id="events-animation-lifecycle"
-                                style={{ ...code, color: "#a4a4b8" }}
+                                style={{ ...code, color: "#abb1af" }}
                             >
                                 {lifecycleEvents}
                             </span>
