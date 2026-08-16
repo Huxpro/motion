@@ -17,6 +17,21 @@
                 width: 100vw;
                 height: 100vh;
             }
+            #boot-report {
+                position: fixed;
+                right: 12px;
+                bottom: 12px;
+                left: 12px;
+                z-index: 99;
+                padding: 14px 16px;
+                border: 1px solid #ff5470;
+                border-radius: 8px;
+                background: #1a1020;
+                color: #ffd7de;
+                font: 12px/1.6 ui-monospace, monospace;
+                white-space: pre-wrap;
+                overflow-wrap: anywhere;
+            }
         </style>
         <script type="module" src="/lynx/static/js/client.js"></script>
     </head>
@@ -25,5 +40,90 @@
             url="/lynx/main.web.bundle"
             style="height: 100vh; width: 100vw"
         ></lynx-view>
+        <script>
+            // Boot watchdog: Lynx for Web fails silently (blank pane) when a
+            // worker, wasm module, or the bundle cannot load — e.g. behind an
+            // auth proxy or a header-stripping CDN. Surface the reason
+            // instead, so a phone screenshot is enough to diagnose it.
+            ;(function () {
+                var TIMEOUT_MS = 12000
+                var problems = []
+                function record(text) {
+                    if (text && problems.length < 8) problems.push(text)
+                }
+                try {
+                    new PerformanceObserver(function (list) {
+                        list.getEntries().forEach(function (entry) {
+                            if (
+                                entry.responseStatus &&
+                                entry.responseStatus >= 400
+                            ) {
+                                record(
+                                    entry.responseStatus +
+                                        " ← " +
+                                        entry.name
+                                            .split("/")
+                                            .slice(-2)
+                                            .join("/")
+                                )
+                            }
+                        })
+                    }).observe({ type: "resource", buffered: true })
+                } catch (e) {}
+                window.addEventListener(
+                    "error",
+                    function (event) {
+                        record(
+                            String(
+                                (event && event.message) ||
+                                    (event &&
+                                        event.target &&
+                                        event.target.src) ||
+                                    event
+                            ).slice(0, 160)
+                        )
+                    },
+                    true
+                )
+                window.addEventListener("unhandledrejection", function (event) {
+                    record(String(event.reason).slice(0, 160))
+                })
+                function hasRenderedContent(root, depth) {
+                    if (!root || depth > 14) return false
+                    var all = root.querySelectorAll("*")
+                    for (var i = 0; i < all.length; i++) {
+                        var tag = all[i].tagName
+                        if (tag === "X-VIEW" || tag === "SCROLL-VIEW")
+                            return true
+                        if (
+                            all[i].shadowRoot &&
+                            hasRenderedContent(all[i].shadowRoot, depth + 1)
+                        )
+                            return true
+                    }
+                    return false
+                }
+                setTimeout(function () {
+                    if (hasRenderedContent(document, 0)) return
+                    var box = document.createElement("div")
+                    box.id = "boot-report"
+                    box.textContent =
+                        "Lynx pane failed to boot within " +
+                        TIMEOUT_MS / 1000 +
+                        "s\n" +
+                        "crossOriginIsolated: " +
+                        String(self.crossOriginIsolated) +
+                        "\nSharedArrayBuffer: " +
+                        String(typeof SharedArrayBuffer !== "undefined") +
+                        "\n" +
+                        (problems.length
+                            ? "errors:\n" + problems.join("\n")
+                            : "no failed requests or script errors recorded") +
+                        "\n" +
+                        navigator.userAgent
+                    document.body.appendChild(box)
+                }, TIMEOUT_MS)
+            })()
+        </script>
     </body>
 </html>

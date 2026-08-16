@@ -2054,23 +2054,31 @@ button {
 
     .masthead {
         position: relative;
+        min-height: 0;
     }
 
     .build-stamp {
-        padding: 11px 12px;
+        padding: 9px 10px;
     }
 
     .lang-toggle {
-        padding: 0 10px;
+        min-height: 40px;
+        padding: 0 9px;
     }
 
     .wordmark {
-        min-height: 64px;
+        min-height: 48px;
+        font-size: 16px;
+    }
+
+    .nav {
+        height: 44px;
     }
 
     .nav-link {
-        min-width: 92px;
-        padding: 0 10px;
+        min-width: 0;
+        min-height: 44px;
+        padding: 0 8px;
     }
 
     .page {
@@ -2294,8 +2302,8 @@ button {
         z-index: 15;
         display: none;
         flex-direction: column;
-        gap: 10px;
-        padding: 12px;
+        gap: 8px;
+        padding: 10px 12px;
         border-bottom: 1px solid var(--border);
         background: var(--background);
         box-shadow: 0 18px 30px rgb(0 0 0 / 45%);
@@ -2311,6 +2319,7 @@ button {
     }
 
     .compare-config button {
+        min-height: 40px;
         flex: 1 1 auto;
     }
 
