@@ -892,8 +892,49 @@ function Examples({ lang, t }: { lang: Lang; t: Translate }) {
                         dispatchTouchTap(target)
                     }
                 }
+                // Hover coordinate adapter: @lynx-js/motion hit-tests
+                // whileHover against layout rects cached at boot (content
+                // coordinates), while real mouse events carry viewport
+                // coordinates — hover silently dies once the pane is
+                // scrolled. Swallow the raw move and re-dispatch it with
+                // the scroll offset folded in; the engine's root listener
+                // accepts synthetic events, so only the corrected
+                // coordinates reach the hit test.
+                const onMouseMove = (event: Event) => {
+                    if (!event.isTrusted) return
+                    event.stopPropagation()
+                    const mouse = event as MouseEvent
+                    const target = event.composedPath?.()[0] as
+                        | Element
+                        | undefined
+                    if (typeof target?.dispatchEvent !== "function") return
+                    target.dispatchEvent(
+                        new MouseEvent("mousemove", {
+                            bubbles: true,
+                            composed: true,
+                            clientX:
+                                mouse.clientX + pane.scroller.scrollLeft,
+                            clientY: mouse.clientY + pane.scroller.scrollTop,
+                        })
+                    )
+                }
+                // Leaving the pane must end the hover; park the pointer far
+                // outside every cached rect. Dispatched on a card so the
+                // event still passes through the engine's root listener.
+                const onMouseLeave = () => {
+                    pane.cards[0]?.dispatchEvent(
+                        new MouseEvent("mousemove", {
+                            bubbles: true,
+                            composed: true,
+                            clientX: -99999,
+                            clientY: -99999,
+                        })
+                    )
+                }
                 pane.doc.addEventListener("touchstart", onNativeTouch, true)
                 pane.doc.addEventListener("click", onAdaptClick, true)
+                pane.doc.addEventListener("mousemove", onMouseMove, true)
+                pane.doc.addEventListener("mouseleave", onMouseLeave, true)
                 cleanups.push(() => {
                     pane.doc.removeEventListener(
                         "touchstart",
@@ -901,6 +942,12 @@ function Examples({ lang, t }: { lang: Lang; t: Translate }) {
                         true
                     )
                     pane.doc.removeEventListener("click", onAdaptClick, true)
+                    pane.doc.removeEventListener("mousemove", onMouseMove, true)
+                    pane.doc.removeEventListener(
+                        "mouseleave",
+                        onMouseLeave,
+                        true
+                    )
                 })
             }
             return true

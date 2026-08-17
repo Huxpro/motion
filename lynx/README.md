@@ -80,16 +80,26 @@ bridge degrades gracefully (controls disable) in `npm run dev`, where the
 Lynx preview is served cross-origin; `tests/portal-compare.spec.ts` covers
 it against the assembled `evidence-dist/` artifact.
 
-One deliberate userspace shim lives in the Examples view: Lynx for Web's
-platform layer synthesizes Lynx touch events from DOM *touch* input only
-(no pointer/mouse mapping anywhere in `@lynx-js/web-core`/`web-elements`),
-so motion gestures such as `whileTap` cannot be pressed with a mouse.
-The portal re-dispatches real mouse clicks in the Lynx pane as synthetic
-touch taps — safe because Lynx routes `bindtap` from click and gestures
-from touch, two disjoint channels. The proper fix belongs upstream in
-lynx-stack's web event synthesis (map pointer events to Lynx touch), at
-which point the adapter can be deleted; `@lynx-js/motion`'s use of
-`bindtouchstart`/`main-thread:bindtouchstart` is platform-correct as-is.
+Two deliberate userspace shims live in the Examples view, both awaiting
+upstream fixes in lynx-stack's web layer:
+
+- **Tap**: Lynx for Web synthesizes Lynx touch events from DOM *touch*
+  input only (no pointer/mouse mapping in `@lynx-js/web-core`/
+  `web-elements`), so motion gestures such as `whileTap` cannot be
+  pressed with a mouse. The portal re-dispatches real mouse clicks in
+  the Lynx pane as synthetic touch taps — safe because Lynx routes
+  `bindtap` from click and gestures from touch, two disjoint channels.
+- **Hover**: `@lynx-js/motion` hit-tests `whileHover` against layout
+  rects cached at boot (`bindlayoutchange` fires from a ResizeObserver,
+  so the rects never track scrolling), while `global-bindmousemove`
+  events carry live viewport coordinates — hover silently dies once the
+  pane scrolls. The portal swallows raw mouse moves in the Lynx pane
+  and re-dispatches them with the scroll offset folded in; the durable
+  fix is scroll-aware hover hit-testing upstream in `@lynx-js/motion`.
+
+`@lynx-js/motion`'s use of `bindtouchstart`/`main-thread:bindtouchstart`
+is platform-correct as-is; both adapters can be deleted once the web
+event layer closes these gaps.
 
 The portal, Gallery, and Playwright checks consume
 [`src/conformance/cases.ts`](./src/conformance/cases.ts). Counts and percentages
