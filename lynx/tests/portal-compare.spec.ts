@@ -182,6 +182,23 @@ test("gallery info panels identify each runtime without shifting layout", async 
     )
 })
 
+test("hovering the Lynx whileHover card works after the pane scrolls", async ({
+    page,
+}) => {
+    // @lynx-js/motion hit-tests hover against boot-time layout rects, so
+    // without the portal's coordinate adapter this dies once the pane is
+    // scrolled away from its initial position.
+    await openLinkedExamples(page)
+    const lynxFrame = page.frameLocator("iframe").nth(1)
+    const lynxTarget = lynxFrame.locator("#target-gesture-priority")
+    await lynxTarget.scrollIntoViewIfNeeded()
+    await page.waitForTimeout(600)
+    await lynxTarget.hover()
+    await expect(
+        lynxFrame.locator("#example-gesture-priority")
+    ).toContainText("hovering", { timeout: 5_000 })
+})
+
 test("a mouse click presses the Lynx whileTap card directly", async ({
     page,
 }) => {
