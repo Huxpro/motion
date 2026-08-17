@@ -81,6 +81,7 @@ const inner: CSSProperties = {
 const h1: CSSProperties = {
     color: "#ffffff",
     fontSize: "24px",
+    lineHeight: "34px",
     fontWeight: "bold",
     fontFamily: "sans-serif",
 }
@@ -122,6 +123,7 @@ const subClip: CSSProperties = {
 const sub: CSSProperties = {
     color: "#979d97",
     fontSize: "14px",
+    lineHeight: "24px",
     fontFamily: "sans-serif",
 }
 const infoPanel: CSSProperties = {
@@ -141,6 +143,7 @@ const infoLine: CSSProperties = {
     height: "24px",
     color: "#979d97",
     fontSize: "12px",
+    lineHeight: "24px",
     fontFamily: "monospace",
 }
 const card: CSSProperties = {
@@ -166,6 +169,7 @@ const info: CSSProperties = {
 const cardTitle: CSSProperties = {
     color: "#ffffff",
     fontSize: "17px",
+    lineHeight: "22px",
     fontWeight: "bold",
     fontFamily: "sans-serif",
     marginBottom: "4px",
@@ -173,6 +177,7 @@ const cardTitle: CSSProperties = {
 const code: CSSProperties = {
     color: "#3e98ff",
     fontSize: "12px",
+    lineHeight: "16px",
     fontFamily: "monospace",
 }
 const demo: CSSProperties = {
@@ -227,6 +232,7 @@ const provenance: CSSProperties = {
     width: "100%",
     color: "#abb1af",
     fontSize: 10,
+    lineHeight: "14px",
     fontFamily: "monospace",
     marginTop: 5,
 }

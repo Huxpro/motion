@@ -182,6 +182,47 @@ test("gallery info panels identify each runtime without shifting layout", async 
     )
 })
 
+test("both galleries align pixel-perfect at rest", async ({ page }) => {
+    // Explicit px line-heights pin the header typography on both
+    // runtimes; without them, differing 'normal' line-height defaults
+    // accumulate a visible offset before the first card.
+    await openLinkedExamples(page)
+    const deltas = await page.evaluate(
+        ({ pierceSource }) => {
+            const pierceFn = new Function(
+                "root",
+                "selector",
+                `const pierce = ${pierceSource}; return pierce(root, selector)`
+            ) as (root: ParentNode, selector: string) => Element | null
+            const frames = Array.from(document.querySelectorAll("iframe"))
+            const ids = [
+                "case-component/motion-create",
+                "example-reactive-target",
+                "example-gesture-priority",
+            ]
+            const out: Record<string, number> = {}
+            for (const id of ids) {
+                const web = frames[0].contentDocument!.getElementById(id)
+                const lynx = pierceFn(
+                    frames[1].contentDocument!,
+                    `[id="${id}"]`
+                )
+                if (web && lynx) {
+                    out[id] =
+                        web.getBoundingClientRect().top -
+                        lynx.getBoundingClientRect().top
+                }
+            }
+            return out
+        },
+        { pierceSource: pierce.toString() }
+    )
+    expect(Object.keys(deltas).length).toBe(3)
+    for (const [id, delta] of Object.entries(deltas)) {
+        expect(Math.abs(delta), `${id} misaligned by ${delta}px`).toBeLessThanOrEqual(2)
+    }
+})
+
 test("hovering the Lynx whileHover card works after the pane scrolls", async ({
     page,
 }) => {
